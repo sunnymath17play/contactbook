@@ -499,9 +499,21 @@ function showMsg(t){const m=$("msg");m.textContent=t;m.classList.toggle("show",!
 async function post(payload){
   if(qs("preview")==="1") return {ok:true};                 // ?preview=1 只看動畫、不寄出
   if(!ENDPOINT) return {ok:false,err:"not_ready"};
-  const r=await fetch(ENDPOINT,{method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
-  return await r.json();
+  const body=JSON.stringify(payload);
+  try{
+    const ctl=new AbortController(); const tm=setTimeout(()=>ctl.abort(),10000);
+    const r=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body,signal:ctl.signal});
+    clearTimeout(tm);
+    return await r.json();
+  }catch(e){
+    // 有些手機（例如 LINE 內建瀏覽器）讀不到 Google 的回覆，但其實已經送到了。
+    // 改用 sendBeacon 再送一次保底：若第一次已送到，後台 60 秒內同名會擋掉，不會重複。
+    try{
+      if(navigator.sendBeacon && navigator.sendBeacon(ENDPOINT,new Blob([body],{type:"text/plain;charset=utf-8"})))
+        return {ok:true,via:"beacon"};
+    }catch(e2){}
+    throw e;
+  }
 }
 
 $("send").onclick=async()=>{
@@ -531,9 +543,10 @@ $("send").onclick=async()=>{
     text, time:new Date().toISOString()
   };
   const btn=$("send");btn.disabled=true;
+  const btnHTML=btn.innerHTML; btn.innerHTML="<span>🕊️</span>正在飛往樹洞…";
   let res;
   try{ res=await post(payload); }catch(e){ res={ok:false,err:"network"}; }
-  btn.disabled=false;
+  btn.disabled=false; btn.innerHTML=btnHTML;
 
   if(res && res.ok){ lsDel("wh_pending"); lsSet(SENT_KEY,todayStr()); showDone(false); return; }
   if(res && res.err==="daily_limit"){ lsDel("wh_pending"); lsSet(SENT_KEY,todayStr()); showDone(true); return; }
