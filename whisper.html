@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>悄悄話樹洞｜SUNNY 魔法數學</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF6E9; --peach:#FFE9CC; --sun:#FF9E4A; --sun-deep:#F57C3A;
+    --gold:#FFD36B; --leaf:#8FBF7F; --bark:#B98A5E; --sky:#7FA9D6;
+    --ink:#5A4632; --ink-soft:#8A7355; --card:#FFFFFF; --warn:#D9534F;
+    --font:"Baloo 2",-apple-system,BlinkMacSystemFont,"PingFang TC","Heiti TC","Microsoft JhengHei",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{min-height:100%;}
+  body{
+    font-family:var(--font);color:var(--ink);
+    background:linear-gradient(175deg,var(--cream),var(--peach));
+    padding:calc(18px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+    -webkit-user-select:none;user-select:none;
+  }
+  input,textarea{-webkit-user-select:text;user-select:text;}
+  .wrap{max-width:440px;margin:0 auto;}
+
+  .head{text-align:center;margin-bottom:14px;}
+  .tree{width:96px;height:96px;margin:0 auto 6px;display:block;}
+  .title{font-weight:800;font-size:24px;color:var(--sun-deep);}
+  .badge{display:inline-block;margin-top:4px;background:var(--sun);color:#fff;font-weight:800;
+    font-size:13px;border-radius:999px;padding:2px 12px;}
+  .badge:empty{display:none;}
+  .sub{font-size:13.5px;color:var(--ink-soft);margin-top:5px;font-weight:600;}
+  .today{margin:12px auto 0;background:#fff;border:2px dashed var(--gold);border-radius:16px;
+    padding:10px 14px;font-weight:700;font-size:15.5px;line-height:1.5;color:var(--ink);}
+  .today small{display:block;font-size:12px;color:var(--ink-soft);font-weight:700;margin-bottom:2px;}
+  .today:empty{display:none;}
+
+  .card{
+    background:var(--card);border-radius:20px;padding:18px 16px;margin-bottom:14px;
+    box-shadow:0 6px 18px rgba(180,120,60,.12);
+  }
+  .q{font-weight:800;font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .q .n{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;
+    font-size:14px;display:grid;place-items:center;flex:0 0 auto;}
+  .hint{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-left:2px;}
+
+  #name{
+    width:100%;border:2.5px solid var(--peach);border-radius:14px;
+    padding:14px 16px;font-family:var(--font);font-size:19px;font-weight:700;color:var(--ink);
+    background:#FFFDF8;text-align:center;
+  }
+  #name:focus{outline:none;border-color:var(--sun);}
+  #name::placeholder{color:#D8C3A6;}
+  .shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+
+  .group{margin-bottom:12px;}
+  .group:last-child{margin-bottom:0;}
+  .glabel{font-size:13px;font-weight:800;color:var(--ink-soft);margin-bottom:7px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    border:2px solid var(--peach);background:#FFFDF8;color:var(--ink);
+    border-radius:999px;padding:9px 14px;font-family:var(--font);font-weight:700;font-size:14.5px;
+    cursor:pointer;transition:transform .1s,background .15s,border-color .15s;
+  }
+  .chip:active{transform:scale(.94);}
+  .chip.on{background:var(--sun);border-color:var(--sun);color:#fff;box-shadow:0 3px 10px rgba(245,124,58,.3);}
+
+  /* 還想多說一點（摺疊） */
+  .more-toggle{width:100%;background:transparent;border:2.5px dashed #E8CFA8;color:var(--ink-soft);
+    border-radius:18px;padding:13px;font-family:var(--font);font-weight:800;font-size:15.5px;
+    cursor:pointer;margin-bottom:14px;}
+  .more-toggle .arr{display:inline-block;transition:transform .2s;}
+  .more-toggle.open .arr{transform:rotate(180deg);}
+  #more{display:none;}
+  #more.show{display:block;animation:drop .3s ease;}
+
+  .moods{display:flex;justify-content:space-between;gap:4px;}
+  .mood{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;
+    border-radius:14px;cursor:pointer;transition:transform .12s,background .15s;opacity:.7;filter:grayscale(.35);}
+  .mood .e{font-size:28px;line-height:1;}
+  .mood .t{font-size:11.5px;font-weight:800;color:var(--ink-soft);}
+  .mood:active{transform:scale(.9);}
+  .mood.on{background:var(--peach);filter:none;opacity:1;transform:scale(1.08);}
+
+  .stars{display:flex;justify-content:center;gap:6px;}
+  .star{font-size:38px;cursor:pointer;color:#E7D3B5;transition:transform .12s;}
+  .star:active{transform:scale(.85);}
+  .star.on{color:var(--gold);}
+
+  .help-toggle{width:100%;justify-content:center;display:flex;align-items:center;
+    font-size:16px;padding:14px;border-radius:16px;}
+  .help-panel{display:none;margin-top:14px;padding-top:14px;border-top:2px dashed var(--peach);
+    animation:drop .3s ease;}
+  .help-panel.show{display:block;}
+  @keyframes drop{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  .reexplain{margin-top:10px;border-color:var(--sky);color:var(--sky);background:#F4F9FF;font-size:15px;}
+  .reexplain.on{background:var(--sky);border-color:var(--sky);color:#fff;box-shadow:0 3px 10px rgba(127,169,214,.35);}
+  #detail{width:100%;margin-top:12px;border:2.5px solid var(--peach);border-radius:14px;
+    padding:11px 14px;font-family:var(--font);font-size:16px;color:var(--ink);background:#FFFDF8;text-align:center;}
+  #detail:focus{outline:none;border-color:var(--sun);}
+  #detail::placeholder{color:#D8C3A6;font-size:14px;}
+
+  textarea{
+    width:100%;border:2.5px solid var(--peach);border-radius:14px;padding:12px 14px;
+    font-family:var(--font);font-size:16px;color:var(--ink);background:#FFFDF8;resize:none;min-height:74px;
+  }
+  textarea:focus{outline:none;border-color:var(--sun);}
+
+  .msg{display:none;text-align:center;font-weight:800;font-size:14.5px;color:var(--warn);
+    background:#FFF0EE;border-radius:14px;padding:10px 12px;margin-bottom:12px;line-height:1.5;}
+  .msg.show{display:block;}
+
+  .send{
+    width:100%;border:none;border-radius:22px;padding:20px;
+    font-family:var(--font);font-weight:800;font-size:21px;color:#fff;
+    background:linear-gradient(180deg,var(--gold),var(--sun));
+    box-shadow:0 9px 0 var(--sun-deep),0 14px 24px rgba(245,124,58,.3);
+    cursor:pointer;transition:transform .12s,box-shadow .12s;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+  }
+  .send:active{transform:translateY(6px);box-shadow:0 3px 0 var(--sun-deep);}
+  .send:disabled{opacity:.7;}
+
+  .done{
+    position:fixed;inset:0;background:linear-gradient(175deg,var(--cream),var(--peach));
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:30px;z-index:20;overflow-y:auto;
+  }
+  .done.show{display:flex;animation:fade .4s;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  .done .big{font-size:80px;animation:fly .8s cubic-bezier(.2,.9,.3,1.2);}
+  @keyframes fly{from{transform:translateY(40px) scale(.5);opacity:0;}to{transform:none;opacity:1;}}
+  .done h2{font-size:24px;color:var(--sun-deep);margin:14px 0 6px;}
+  .done p{font-size:15px;color:var(--ink-soft);font-weight:600;line-height:1.6;}
+  .done .today{max-width:360px;margin-top:18px;}
+  .done .safe{margin-top:16px;font-size:13.5px;color:var(--ink);font-weight:700;}
+  .again{margin-top:22px;background:#fff;border:2.5px solid var(--sun);color:var(--sun-deep);
+    border-radius:18px;padding:13px 26px;font-family:var(--font);font-weight:800;font-size:16px;cursor:pointer;}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <svg class="tree" viewBox="0 0 100 100" aria-hidden="true">
+      <ellipse cx="50" cy="92" rx="30" ry="6" fill="#EAD9BE"/>
+      <rect x="42" y="58" width="16" height="34" rx="6" fill="var(--bark)"/>
+      <circle cx="50" cy="40" r="30" fill="var(--leaf)"/>
+      <circle cx="30" cy="46" r="16" fill="#A2CE92"/>
+      <circle cx="70" cy="46" r="16" fill="#7FB06F"/>
+      <ellipse cx="50" cy="66" rx="9" ry="11" fill="#4A3524"/>
+      <circle cx="46" cy="63" r="2.4" fill="#fff" opacity=".7"/>
+    </svg>
+    <div class="title">SUNNY 的悄悄話樹洞</div>
+    <div class="badge" id="badge"></div>
+    <div class="sub">🌳 你的話會偷偷送給 SUNNY，只有 SUNNY 看得到</div>
+    <div class="today" id="today"></div>
+  </div>
+
+  <!-- 1 名字 -->
+  <div class="card" id="nameCard">
+    <div class="q"><span class="n">1</span><span id="askName"></span></div>
+    <input id="name" type="text" inputmode="text" maxlength="10" placeholder="打上你的名字～">
+  </div>
+
+  <!-- 2 預設句 -->
+  <div class="card" id="presetCard">
+    <div class="q"><span class="n">2</span>想跟 SUNNY 說什麼？<span class="hint">可以點很多個</span></div>
+    <div id="presets"></div>
+  </div>
+
+  <!-- 還想多說一點 -->
+  <button class="more-toggle" id="moreToggle">還想多說一點 <span class="arr">▾</span></button>
+  <div id="more">
+    <div class="card">
+      <div class="q">今天的心情</div>
+      <div class="moods" id="moods"></div>
+    </div>
+
+    <div class="card">
+      <div class="q"><span id="starQ"></span></div>
+      <div class="stars" id="stars"></div>
+    </div>
+
+    <div class="card">
+      <div class="q">有沒有不懂的地方？</div>
+      <button class="chip help-toggle" id="helpToggle"></button>
+      <div class="help-panel" id="helpPanel">
+        <div class="glabel" id="askWhere"></div>
+        <div class="chips" id="whereChips"></div>
+        <button class="chip reexplain" id="reexplainChip"></button>
+        <input id="detail" type="text" inputmode="text" maxlength="30" placeholder="第幾頁／第幾題？（可以不填）">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q">打字給 SUNNY</div>
+      <textarea id="text" maxlength="200" placeholder="想說什麼都可以（可以不打）"></textarea>
+    </div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+  <button class="send" id="send"><span>🕊️</span>偷偷送出去</button>
+</div>
+
+<div class="done" id="done">
+  <div class="big">🌳💛</div>
+  <h2>咻～ 送到樹洞了！</h2>
+  <p>你的悄悄話已經偷偷飛進 SUNNY 的樹洞，<br>只有 SUNNY 看得到喔！</p>
+  <div class="today" id="today2"></div>
+  <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
+  <button class="again" id="again">再說一則悄悄話</button>
+</div>
+
+<script>
+/* ============================================================
+   ▼▼▼  想改內容，只要改這裡  ▼▼▼
+   ============================================================ */
+const CONFIG = {
+  askName: "來者何人呀？",
+  presets: {
+    "💪 學習": ["我數學進步了！","這題我終於會了","今天我有聽懂","我想多練習"],
+    "😊 心情": ["我今天很開心","上數學課很好玩","我有點緊張"],
+    "💛 想對 SUNNY 說": ["謝謝 SUNNY","我喜歡上你的課"],
+  },
+  moods: [["😄","開心"],["🙂","還不錯"],["😐","普通"],["😢","難過"],["😴","想睡"],["😤","生氣"]],
+  starQuestion: "今天上課我聽懂了嗎？",
+  help: {
+    toggle: "🙋 我有地方聽不懂",
+    askWhere: "是哪個部分不會呢？（可以點很多個）",
+    where: ["📖 講義","📝 考卷","🧑‍🏫 上課內容"],
+    reexplain: "🔁 想請 SUNNY 再講解一次",
+  },
+  // 每日一句鼓勵：每天自動換一句（全班同一句）。
+  // ⚠ 只放 SUNNY 審過的句子。新句子先寫進「鼓勵句草稿.md」，審過再搬進來。
+  encourage: [
+    "今天的努力，明天的實力！","每天進步一點點，就是超能力。","練習，讓困難變簡單。",
+    "不怕慢，只怕站，持續就會到。","一步一腳印，天天在進步。","錯了沒關係，訂正就變厲害。",
+    "不會，只是還沒學會。","難題，是讓你變強的機會。","勇敢挑戰，越難越有趣。","犯錯，是學習的開始。",
+    "動動腦，數學好好玩。","想清楚，再下筆。","數學不是背，是懂道理。","一題一題慢慢想，答案自然來。",
+    "專心五分鐘，勝過亂做半小時。","先訂正，再前進。","今天的功課，今天完成。","認真聽、仔細算、細心檢查。",
+    "字寫工整，分數更漂亮。","好習慣，成就好成績。","你比昨天的自己更棒了！","堅持到底，就是贏家。",
+    "慢慢來，比較快。","只要開始，永遠不嫌晚。","相信自己，你一定可以！",
+  ],
+};
+
+// Google Apps Script 網址（部署後貼在這裡）
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbxzTq_cMJsTW5a-FTGWnJFwQ6-QNeiKc5Ihus3uwhv9qC_NI0SKqoZN_LK8U_M3XoH-/exec";
+
+// 班級名冊：跟聯絡本同一套（id＝網址 ?c= 代號＝入班年份，v＝班別碼 0 單班／1、2 兩班）
+const CHANNELS = [
+  {id:"2026",  y:2026, v:0},
+  {id:"2025",  y:2025, v:0},
+  {id:"2024a", y:2024, v:1},
+  {id:"2024b", y:2024, v:2},
+  {id:"2023",  y:2023, v:0},
+];
+/* ▲▲▲  改上面就好，下面不用動  ▲▲▲ */
+
+const $=id=>document.getElementById(id);
+const qs=k=>new URLSearchParams(location.search).get(k);
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+const lsDel=k=>{try{localStorage.removeItem(k);}catch(e){}};
+
+/* ---------- 班級：8/1 自動升年級（同聯絡本） ---------- */
+const CN={3:"三",4:"四",5:"五",6:"六"};
+function schoolYear(){
+  const f=qs("sy"); if(f && /^\d{4}$/.test(f)) return +f;
+  const d=new Date(); return (d.getMonth()+1)>=8 ? d.getFullYear() : d.getFullYear()-1;
+}
+function titleOf(ch){
+  const g=3+(schoolYear()-ch.y);
+  if(g>6) return "已畢業"; if(g<3) return "尚未開班";
+  return CN[g]+"年級"+(ch.v===1?"A":ch.v===2?"B":"");
+}
+const CH=CHANNELS.find(c=>c.id===qs("c"))||null;
+const CLASS_NAME=CH?titleOf(CH):"";
+$("badge").textContent=CLASS_NAME;
+
+/* ---------- 每日一句 ---------- */
+(function(){
+  const list=CONFIG.encourage; if(!list.length) return;
+  const d=new Date();
+  const day=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000);
+  const html=`<small>🌞 SUNNY 今日一句</small>${list[day%list.length]}`;
+  $("today").innerHTML=html; $("today2").innerHTML=html;
+})();
+
+const state={presets:[],mood:"",stars:0,help:{active:false,where:[],reexplain:false}};
+
+$("askName").textContent=CONFIG.askName;
+$("starQ").textContent=CONFIG.starQuestion;
+$("name").value=lsGet("wh_name")||"";
+
+// 預設句
+const pv=$("presets");
+Object.entries(CONFIG.presets).forEach(([cat,list])=>{
+  const g=document.createElement("div");g.className="group";
+  const lb=document.createElement("div");lb.className="glabel";lb.textContent=cat;g.appendChild(lb);
+  const box=document.createElement("div");box.className="chips";
+  list.forEach(t=>{
+    const c=document.createElement("button");c.className="chip";c.textContent=t;
+    c.onclick=()=>{c.classList.toggle("on");
+      state.presets=c.classList.contains("on")?[...state.presets,t]:state.presets.filter(x=>x!==t);};
+    box.appendChild(c);
+  });
+  g.appendChild(box);pv.appendChild(g);
+});
+
+// 還想多說一點
+$("moreToggle").onclick=()=>{
+  const open=$("more").classList.toggle("show");
+  $("moreToggle").classList.toggle("open",open);
+};
+
+// 心情
+const mv=$("moods");
+CONFIG.moods.forEach(([e,t])=>{
+  const b=document.createElement("div");b.className="mood";
+  b.innerHTML=`<span class="e">${e}</span><span class="t">${t}</span>`;
+  const val=e+t;
+  b.onclick=()=>{mv.querySelectorAll(".mood").forEach(x=>x.classList.remove("on"));
+    if(state.mood===val){state.mood="";}else{b.classList.add("on");state.mood=val;}};
+  mv.appendChild(b);
+});
+
+// 星星
+const sv=$("stars");
+for(let i=1;i<=5;i++){
+  const s=document.createElement("span");s.className="star";s.textContent="★";
+  s.onclick=()=>{state.stars=(state.stars===i?0:i);
+    sv.querySelectorAll(".star").forEach((x,idx)=>x.classList.toggle("on",idx<state.stars));};
+  sv.appendChild(s);
+}
+
+// 聽不懂 分支
+const helpToggle=$("helpToggle"),helpPanel=$("helpPanel");
+helpToggle.textContent=CONFIG.help.toggle;
+$("askWhere").textContent=CONFIG.help.askWhere;
+$("reexplainChip").textContent=CONFIG.help.reexplain;
+const wc=$("whereChips");
+CONFIG.help.where.forEach(w=>{
+  const c=document.createElement("button");c.className="chip";c.textContent=w;
+  c.onclick=()=>{c.classList.toggle("on");
+    state.help.where=c.classList.contains("on")?[...state.help.where,w]:state.help.where.filter(x=>x!==w);};
+  wc.appendChild(c);
+});
+helpToggle.onclick=()=>{
+  state.help.active=!state.help.active;
+  helpToggle.classList.toggle("on",state.help.active);
+  helpPanel.classList.toggle("show",state.help.active);
+  if(!state.help.active){
+    state.help.where=[];state.help.reexplain=false;$("detail").value="";
+    wc.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+    $("reexplainChip").classList.remove("on");
+  }
+};
+$("reexplainChip").onclick=()=>{
+  state.help.reexplain=!state.help.reexplain;
+  $("reexplainChip").classList.toggle("on",state.help.reexplain);
+};
+
+/* ---------- 送出 ---------- */
+function shake(el){el.classList.add("shake");setTimeout(()=>el.classList.remove("shake"),400);}
+function showMsg(t){const m=$("msg");m.textContent=t;m.classList.toggle("show",!!t);}
+
+async function post(payload){
+  if(qs("preview")==="1") return {ok:true};                 // ?preview=1 只看動畫、不寄出
+  if(!ENDPOINT) return {ok:false,err:"not_ready"};
+  const r=await fetch(ENDPOINT,{method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
+  return await r.json();
+}
+
+$("send").onclick=async()=>{
+  showMsg("");
+  const name=$("name").value.trim();
+  if(!name){ shake($("nameCard")); $("name").focus(); showMsg("先打上你的名字喔～"); return; }
+  const text=$("text").value.trim();
+  const hasSomething=state.presets.length||text||state.mood||state.stars||state.help.active;
+  if(!hasSomething){ shake($("presetCard")); showMsg("點一句想說的話，或打字給 SUNNY 喔～"); return; }
+
+  lsSet("wh_name",name);
+  const payload={
+    classId:CH?CH.id:"", className:CLASS_NAME, name,
+    presets:state.presets, mood:state.mood, stars:state.stars,
+    help: state.help.active ? {
+      where:state.help.where, reexplain:state.help.reexplain, detail:$("detail").value.trim()
+    } : null,
+    text, time:new Date().toISOString()
+  };
+  const btn=$("send");btn.disabled=true;
+  let res;
+  try{ res=await post(payload); }catch(e){ res={ok:false,err:"network"}; }
+  btn.disabled=false;
+
+  if(res && res.ok){ lsDel("wh_pending"); $("done").classList.add("show"); return; }
+  lsSet("wh_pending",JSON.stringify(payload));   // 內容先留在手機裡
+  showMsg(res&&res.err==="too_fast" ? "你剛剛才送過一則，等一分鐘再送喔～"
+        : res&&res.err==="not_ready" ? "樹洞還在準備中，過幾天再來喔～"
+        : "咦？沒送出去 😢 檢查一下網路，再按一次試試");
+};
+
+// 上次沒送出去的，打開時自動再送一次
+(async()=>{
+  const p=lsGet("wh_pending"); if(!p||!ENDPOINT) return;
+  try{ const r=await post(JSON.parse(p)); if(r&&r.ok) lsDel("wh_pending"); }catch(e){}
+})();
+
+$("again").onclick=()=>location.reload();
+</script>
+</body>
+</html>
