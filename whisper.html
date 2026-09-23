@@ -528,10 +528,12 @@ async function fetchLetters(q){
     return (j&&j.rows)||[];
   }catch(e){ return []; }
 }
-// 打開就自動查這支手機的回信
+// 打開就自動查回信：先用這支手機的裝置代號，查不到就用記住的名字
 (async()=>{
-  const d=lsGet("wh_device"); if(!d) return;
-  showLetters(await fetchLetters("device="+encodeURIComponent(d)));
+  const d=lsGet("wh_device");
+  if(d && showLetters(await fetchLetters("device="+encodeURIComponent(d)))) return;
+  const nm=lsGet("wh_name");   // 裝置代號上線前送過的孩子，靠記住的名字也看得到
+  if(nm) showLetters(await fetchLetters("name="+encodeURIComponent(nm)+"&class="+encodeURIComponent(CH?CH.id:"")));
 })();
 // 換手機／清過資料 → 用名字查
 $("askLetter").onclick=async()=>{
