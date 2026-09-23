@@ -150,6 +150,18 @@
   .again{margin-top:22px;background:#fff;border:2.5px solid var(--sun);color:var(--sun-deep);
     border-radius:18px;padding:13px 26px;font-family:var(--font);font-weight:800;font-size:16px;cursor:pointer;}
 
+  /* SUNNY 的回信 */
+  .letter{background:#FFFDF8;border:2.5px solid var(--sun);border-radius:20px;padding:14px 16px;margin-bottom:14px;
+    box-shadow:0 6px 18px rgba(245,124,58,.18);text-align:left;}
+  .letter h3{font-size:16.5px;color:var(--sun-deep);margin-bottom:8px;text-align:center;}
+  .letter .one{border-top:1.5px dashed var(--peach);padding-top:10px;margin-top:10px;}
+  .letter .one:first-of-type{border-top:none;padding-top:0;margin-top:0;}
+  .letter .when{font-size:12px;color:var(--ink-soft);font-weight:700;margin-bottom:3px;}
+  .letter .body{font-size:15.5px;font-weight:700;line-height:1.6;white-space:pre-wrap;}
+  .letter:empty{display:none;}
+  .ask-letter{width:100%;background:transparent;border:2px dashed #E8CFA8;color:var(--ink-soft);border-radius:16px;
+    padding:11px;font-family:var(--font);font-weight:800;font-size:14.5px;cursor:pointer;margin-top:4px;}
+
   /* 每天一次 提醒 */
   .rule{display:inline-block;margin-top:8px;background:#FFF3D6;color:var(--ink);font-weight:800;
     font-size:13px;border-radius:999px;padding:4px 12px;}
@@ -223,6 +235,8 @@
     <div class="today" id="today"></div>
   </div>
 
+  <div class="letter" id="letter"></div>
+
   <!-- 1 名字 -->
   <div class="card" id="nameCard">
     <div class="q"><span class="n">1</span><span id="askName"></span></div>
@@ -268,12 +282,14 @@
   <div class="msg" id="msg"></div>
   <div class="note">今天只能送一次喔，送出前再檢查一下 ✨</div>
   <button class="send" id="send"><span>🕊️</span>偷偷送出去</button>
+  <button class="ask-letter" id="askLetter">💌 看 SUNNY 的回信</button>
 </div>
 
 <div class="done" id="done">
   <div class="big" id="doneBig">🌳💛</div>
   <h2 id="doneTitle">咻～ 送到樹洞了！</h2>
   <p id="doneText">你的悄悄話已經偷偷飛進 SUNNY 的樹洞，<br>只有 SUNNY 看得到喔！<br>明天還可以再來說一則 🌙</p>
+  <div class="letter" id="letter2"></div>
   <div class="today" id="today2"></div>
   <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
 </div>
@@ -488,6 +504,46 @@ function checkItems(){
 }
 const itemText=it=>it.type==="上課內容" ? `上課：${it.text.trim()}` : `${it.type}p${+it.page}#${+it.q}`;
 
+/* ---------- SUNNY 的回信 ---------- */
+// 每支手機一組亂數代號，送出時一起帶上；SUNNY 回信後，這支手機打開就看得到
+function deviceId(){
+  let d=lsGet("wh_device");
+  if(!d){ d="d"+Math.random().toString(36).slice(2)+Date.now().toString(36); lsSet("wh_device",d); }
+  return d;
+}
+const fmtDay=iso=>{const d=new Date(iso);return (d.getMonth()+1)+"/"+d.getDate();};
+function showLetters(rows){
+  if(!rows||!rows.length) return false;
+  const html="<h3>💌 SUNNY 回你了！</h3>"+rows.map(r=>
+    `<div class="one"><div class="when">${fmtDay(r["回覆時間"]||r["悄悄話時間"])}　給 ${r["名字"]}</div><div class="body">${
+      String(r["回覆"]).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}</div></div>`).join("");
+  $("letter").innerHTML=html; $("letter2").innerHTML=html;
+  return true;
+}
+async function fetchLetters(q){
+  if(!ENDPOINT||qs("preview")==="1") return [];
+  try{
+    const r=await fetch(ENDPOINT+"?mode=replies&"+q);
+    const j=await r.json();
+    return (j&&j.rows)||[];
+  }catch(e){ return []; }
+}
+// 打開就自動查這支手機的回信
+(async()=>{
+  const d=lsGet("wh_device"); if(!d) return;
+  showLetters(await fetchLetters("device="+encodeURIComponent(d)));
+})();
+// 換手機／清過資料 → 用名字查
+$("askLetter").onclick=async()=>{
+  const nm=($("name").value||lsGet("wh_name")||"").trim();
+  if(!nm){ shake($("nameCard")); $("name").focus(); showMsg("先打上你的名字，才找得到你的回信喔～"); return; }
+  const btn=$("askLetter"); btn.disabled=true; btn.textContent="💌 找找看…";
+  const rows=await fetchLetters("name="+encodeURIComponent(nm)+"&class="+encodeURIComponent(CH?CH.id:""));
+  btn.disabled=false; btn.textContent="💌 看 SUNNY 的回信";
+  if(showLetters(rows)){ showMsg(""); $("letter").scrollIntoView({behavior:"smooth",block:"center"}); }
+  else showMsg("還沒有回信喔～SUNNY 看到會回你的 💛");
+};
+
 /* ---------- 每天只能說一次 ---------- */
 const pad=n=>(n<10?"0":"")+n;
 const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());};
@@ -544,7 +600,7 @@ $("send").onclick=async()=>{
   lsSet("wh_name",name);
   const list=state.help.active ? items.map(it=>({type:it.type,page:+it.page||0,q:+it.q||0,text:(it.text||"").trim()})) : [];
   const payload={
-    classId:CH?CH.id:"", className:CLASS_NAME, name,
+    classId:CH?CH.id:"", className:CLASS_NAME, name, device:deviceId(),
     presets:state.presets, mood:state.mood, stars:state.stars,
     help: state.help.active ? {
       items:list, where:[...new Set(list.map(it=>it.type))], reexplain:state.help.reexplain,

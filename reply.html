@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>樹洞回信｜SUNNY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF6E9; --peach:#FFE9CC; --sun:#FF9E4A; --sun-deep:#F57C3A;
+    --gold:#FFD36B; --sky:#7FA9D6; --ink:#5A4632; --ink-soft:#8A7355; --warn:#D9534F;
+    --font:"Baloo 2",-apple-system,BlinkMacSystemFont,"PingFang TC","Heiti TC","Microsoft JhengHei",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{font-family:var(--font);color:var(--ink);background:linear-gradient(175deg,var(--cream),var(--peach));
+    padding:calc(16px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom));min-height:100vh;}
+  .wrap{max-width:520px;margin:0 auto;}
+
+  .head{text-align:center;margin-bottom:12px;}
+  .title{font-weight:800;font-size:22px;color:var(--sun-deep);}
+  .hint{font-size:13px;color:var(--ink-soft);font-weight:700;margin-top:4px;line-height:1.5;}
+  .remind{background:#FFF3D6;border-radius:14px;padding:9px 12px;font-size:13px;font-weight:700;margin-top:10px;line-height:1.5;}
+
+  .card{background:#fff;border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 5px 16px rgba(180,120,60,.12);}
+  .card.alert{border:2.5px solid var(--warn);background:#FFF7F6;}
+  .card.done{opacity:.72;}
+  .who{font-weight:800;font-size:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .tag{font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 8px;background:var(--peach);color:var(--ink-soft);}
+  .tag.red{background:var(--warn);color:#fff;}
+  .tag.ok{background:#DFF0D8;color:#4A7C3F;}
+  .meta{font-size:13px;color:var(--ink-soft);font-weight:700;margin:7px 0 0;line-height:1.6;}
+  .said{font-size:15px;font-weight:700;line-height:1.55;margin-top:6px;white-space:pre-wrap;}
+  .said .q{color:var(--sky);}
+  textarea,input{width:100%;border:2.5px solid var(--peach);border-radius:14px;padding:11px 13px;
+    font-family:var(--font);font-size:16px;color:var(--ink);background:#FFFDF8;}
+  textarea{resize:none;min-height:70px;margin-top:10px;}
+  textarea:focus,input:focus{outline:none;border-color:var(--sun);}
+  .row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+  .btn{border:none;border-radius:14px;padding:12px 16px;font-family:var(--font);font-weight:800;font-size:15px;
+    color:#fff;background:linear-gradient(180deg,var(--gold),var(--sun));box-shadow:0 4px 0 var(--sun-deep);cursor:pointer;}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sun-deep);}
+  .btn:disabled{opacity:.6;}
+  .btn.ghost{background:transparent;border:2px solid var(--peach);color:var(--ink-soft);box-shadow:none;}
+  .said.reply{background:#F4F9FF;border-radius:12px;padding:9px 11px;margin-top:8px;color:#3C5A7A;}
+  .bar{display:flex;gap:8px;margin-bottom:12px;}
+  .bar .btn{flex:1;font-size:14px;padding:10px;}
+  .note{text-align:center;font-size:13.5px;font-weight:700;color:var(--ink-soft);margin:14px 0;}
+  .err{color:var(--warn);}
+  #gate{max-width:340px;margin:60px auto;text-align:center;}
+  #gate .btn{width:100%;margin-top:12px;padding:14px;font-size:17px;}
+  [hidden]{display:none!important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="gate">
+    <div class="title">🌳 樹洞回信</div>
+    <div class="hint" style="margin-bottom:14px;">輸入管理密碼</div>
+    <input id="pw" type="password" inputmode="numeric" placeholder="管理密碼" autocomplete="off">
+    <button class="btn" id="enter">進入</button>
+    <div class="note err" id="gateMsg"></div>
+  </div>
+
+  <div id="app" hidden>
+    <div class="head">
+      <div class="title">🌳 樹洞回信</div>
+      <div class="hint" id="count"></div>
+      <div class="remind">孩子多半用家長的手機，回信請寫<b>家長看到也沒關係</b>的話 💛<br>需要私下講的，當面跟孩子談或直接聯絡家長。</div>
+    </div>
+    <div class="bar">
+      <button class="btn ghost" id="tab">只看還沒回</button>
+      <button class="btn ghost" id="refresh">重新整理</button>
+    </div>
+    <div id="list"></div>
+    <div class="note" id="listMsg"></div>
+  </div>
+</div>
+
+<script>
+/* Apps Script 網址（跟 whisper.html 同一個） */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbxzTq_cMJsTW5a-FTGWnJFwQ6-QNeiKc5Ihus3uwhv9qC_NI0SKqoZN_LK8U_M3XoH-/exec";
+/* ⚠ 管理密碼不放在這裡（網頁是公開的）。密碼存在 Apps Script，由它驗證。 */
+
+const $=id=>document.getElementById(id);
+const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+const lsDel=k=>{try{localStorage.removeItem(k);}catch(e){}};
+const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const when=iso=>{const d=new Date(iso);const w="日一二三四五六"[d.getDay()];
+  return `${d.getMonth()+1}/${d.getDate()}（${w}）${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;};
+
+let KEY=lsGet("wh_admin")||"", rows=[], onlyTodo=true;
+
+async function api(q){
+  const r=await fetch(ENDPOINT+"?mode=admin&key="+encodeURIComponent(KEY)+(q||""));
+  return await r.json();
+}
+async function sendReply(row,text){
+  const r=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({mode:"reply",key:KEY,row,text})});
+  return await r.json();
+}
+
+/* ---------- 密碼關卡 ---------- */
+$("enter").onclick=async()=>{
+  KEY=$("pw").value.trim();
+  if(!KEY){ $("gateMsg").textContent="請輸入密碼"; return; }
+  $("enter").disabled=true; $("gateMsg").textContent="確認中…";
+  try{
+    const j=await api("");
+    if(!j||!j.ok){ $("gateMsg").textContent="密碼不對喔"; $("enter").disabled=false; return; }
+    lsSet("wh_admin",KEY); rows=j.rows||[];
+    $("gate").hidden=true; $("app").hidden=false; render();
+  }catch(e){ $("gateMsg").textContent="連不上，檢查一下網路"; $("enter").disabled=false; }
+};
+$("pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("enter").click(); });
+
+/* ---------- 清單 ---------- */
+function said(r){
+  const p=[];
+  if(r["悄悄話"]) p.push(esc(r["悄悄話"]));
+  if(r["心情"]) p.push("心情"+esc(r["心情"]));
+  if(r["星星"]) p.push("★".repeat(+r["星星"]));
+  if(r["聽不懂"]) p.push(`<span class="q">🙋不懂：${esc(r["第幾頁題"]||r["聽不懂"])}${r["想再講解"]?"，想再講解":""}</span>`);
+  if(r["打字內容"]) p.push("「"+esc(r["打字內容"])+"」");
+  return p.join("　");
+}
+function render(){
+  const list=$("list"); list.innerHTML="";
+  const done=r=>String(r["SUNNY 回覆"]||"").trim();
+  const show=rows.slice().reverse()
+    .sort((a,b)=>(b["需要關心"]?1:0)-(a["需要關心"]?1:0))
+    .filter(r=>onlyTodo?!done(r):true);
+  $("tab").textContent=onlyTodo?"只看還沒回 ✓":"全部（14 天）";
+  const todo=rows.filter(r=>!done(r)).length;
+  $("count").textContent=`近 14 天 ${rows.length} 則，還沒回 ${todo} 則`;
+  $("listMsg").textContent=show.length?"":"沒有了 🌳";
+  show.forEach(r=>{
+    const c=document.createElement("div");
+    c.className="card"+(r["需要關心"]?" alert":"")+(done(r)?" done":"");
+    c.innerHTML=`<div class="who">${esc(r["名字"])}
+        <span class="tag">${esc(r["班級"]||"班級不明")}</span>
+        ${r["需要關心"]?`<span class="tag red">⚠ ${esc(r["需要關心"])}</span>`:""}
+        ${done(r)?'<span class="tag ok">已回 ✓</span>':""}</div>
+      <div class="meta">${when(r["收到時間"])}</div>
+      <div class="said">${said(r)||"（只按了送出）"}</div>
+      ${done(r)?`<div class="said reply">💌 ${esc(r["SUNNY 回覆"])}</div>`:""}`;
+    const ta=document.createElement("textarea");
+    ta.maxLength=300; ta.placeholder=done(r)?"想改回信就在這裡重打":"回一句話給孩子…";
+    const row2=document.createElement("div"); row2.className="row";
+    const btn=document.createElement("button"); btn.className="btn"; btn.textContent=done(r)?"改成這句":"送出回信";
+    btn.onclick=async()=>{
+      const text=ta.value.trim();
+      if(!text){ ta.focus(); return; }
+      btn.disabled=true; btn.textContent="送出中…";
+      try{
+        const j=await sendReply(r.row,text);
+        if(j&&j.ok){ r["SUNNY 回覆"]=text; r["回覆時間"]=new Date().toISOString(); render(); }
+        else { btn.textContent="沒送出去，再按一次"; btn.disabled=false; }
+      }catch(e){ btn.textContent="沒送出去，再按一次"; btn.disabled=false; }
+    };
+    row2.appendChild(btn);
+    c.appendChild(ta); c.appendChild(row2);
+    list.appendChild(c);
+  });
+}
+$("tab").onclick=()=>{ onlyTodo=!onlyTodo; render(); };
+$("refresh").onclick=async()=>{
+  $("refresh").disabled=true; $("refresh").textContent="更新中…";
+  try{ const j=await api(""); if(j&&j.ok){ rows=j.rows||[]; render(); } }catch(e){}
+  $("refresh").disabled=false; $("refresh").textContent="重新整理";
+};
+
+/* 記住密碼就直接進 */
+if(KEY) $("enter").click();
+</script>
+</body>
+</html>
