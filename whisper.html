@@ -515,7 +515,7 @@ const fmtDay=iso=>{const d=new Date(iso);return (d.getMonth()+1)+"/"+d.getDate()
 function showLetters(rows){
   if(!rows||!rows.length) return false;
   const html="<h3>💌 SUNNY 回你了！</h3>"+rows.map(r=>
-    `<div class="one"><div class="when">${fmtDay(r["回覆時間"]||r["悄悄話時間"])}　給 ${r["名字"]}</div><div class="body">${
+    `<div class="one"><div class="when">${fmtDay(r["回覆時間"]||r["悄悄話時間"])}　給 ${String(r["名字"]).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}</div><div class="body">${
       String(r["回覆"]).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}</div></div>`).join("");
   $("letter").innerHTML=html; $("letter2").innerHTML=html;
   return true;
