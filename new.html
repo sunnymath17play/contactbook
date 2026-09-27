@@ -310,6 +310,7 @@
     <div id="linkList"></div>
     <h3 class="admh">舊版資料</h3>
     <button class="morebtn" id="migBtn" style="margin-top:0">把舊版聯絡本搬到新版（只需做一次）</button>
+    <p class="admwho" id="admStatus" style="margin-top:10px;text-align:center"></p>
   </div>
   <div style="height:8px"></div>
   <button class="morebtn" id="admOut" hidden style="margin-top:0">登出老師模式</button>
@@ -392,6 +393,7 @@
     return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
   function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");
     clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show");},2600);}
+  function status(m){ toast(m); var s=document.getElementById("admStatus"); if(s) s.textContent=m; }
   function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
   function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
   function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
@@ -519,7 +521,7 @@
         if(delOld) await imgsCol(fromKey).doc(d.id).delete();
       }
       if(delOld) await entriesCol(fromKey).doc(d.id).delete();
-      n++; toast("搬移中… "+n+"／"+snap.docs.length);
+      n++; status("搬移中… "+n+"／"+snap.docs.length);
     }
     return n;
   }
@@ -537,15 +539,17 @@
       await infoDoc(oldK).delete();
       state.keys[id]=k;
       if(state.ch && state.ch.id===id){ state.key=k; subscribe(); }
-      buildLinkPanel(); toast("已換新連結（搬了 "+n+" 篇）");
-    }catch(e){ toast("換連結失敗："+(e.code||e.message)); }
+      buildLinkPanel(); status("已換新連結（搬了 "+n+" 篇）");
+    }catch(e){ status("換連結失敗："+(e.code||e.message)); }
     state.busy=false;
   }
 
   async function migrateOld(){
     if(state.busy) return;
-    if(!confirm("把舊版聯絡本的資料搬到新版？（舊資料會保留當備份）")) return;
-    state.busy=true;
+    var b=$("migBtn");
+    if(!b._armed){ b._armed=true; b.textContent="再按一次開始搬（舊資料會保留當備份）"; setTimeout(function(){ b._armed=false; b.textContent="把舊版聯絡本搬到新版（只需做一次）"; },6000); return; }
+    b._armed=false; b.textContent="搬移中，請不要關掉頁面…";
+    state.busy=true; status("開始讀取舊資料…");
     try{
       var snap=await state.db.collection(OLD_COL).get(), n=0, skip=0;
       for(var i=0;i<snap.docs.length;i++){
@@ -558,12 +562,13 @@
           var im=await state.db.collection(OLD_COL_IMG).doc(d.id).get();
           if(im.exists && im.data().img) await imgsCol(k).doc(v.date).set({img:im.data().img});
         }
-        n++; toast("搬移中… "+n+"／"+snap.docs.length);
+        n++; status("搬移中… "+n+"／"+snap.docs.length);
       }
       await cfgDoc().set({migratedAt:new Date().toISOString()},{merge:true});
       buildLinkPanel(); subscribe();
-      toast("搬完了："+n+" 篇"+(skip?"（略過 "+skip+" 筆格式不對的）":""));
-    }catch(e){ toast("搬移失敗："+(e.code||e.message)); }
+      status("搬完了："+n+" 篇"+(skip?"（略過 "+skip+" 筆格式不對的）":""));
+    }catch(e){ status("搬移失敗："+(e.code||e.message)); }
+    $("migBtn").textContent="把舊版聯絡本搬到新版（只需做一次）";
     state.busy=false;
   }
 
