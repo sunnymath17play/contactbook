@@ -78,14 +78,11 @@
   .chip:active{transform:scale(.94);}
   .chip.on{background:var(--sun);border-color:var(--sun);color:#fff;box-shadow:0 3px 10px rgba(245,124,58,.3);}
 
-  /* 還想多說一點（摺疊） */
-  .more-toggle{width:100%;background:transparent;border:2.5px dashed #E8CFA8;color:var(--ink-soft);
-    border-radius:18px;padding:13px;font-family:var(--font);font-weight:800;font-size:15.5px;
-    cursor:pointer;margin-bottom:14px;}
-  .more-toggle .arr{display:inline-block;transition:transform .2s;}
-  .more-toggle.open .arr{transform:rotate(180deg);}
-  #more{display:none;}
-  #more.show{display:block;animation:drop .3s ease;}
+  /* 還想多說一點（直接展開，不用點） */
+  .more-head{text-align:center;margin:4px 0 12px;padding:10px 12px;border-radius:16px;
+    background:#FFF6E8;border:2px dashed var(--gold);}
+  .more-head b{display:block;font-size:17px;font-weight:800;color:var(--sun-deep);}
+  .more-head small{display:block;margin-top:2px;font-size:12.5px;font-weight:700;color:var(--ink-soft);}
 
   .moods{display:flex;justify-content:space-between;gap:4px;}
   .mood{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;
@@ -250,20 +247,20 @@
   </div>
 
   <!-- 還想多說一點 -->
-  <button class="more-toggle" id="moreToggle">還想多說一點 <span class="arr">▾</span></button>
+  <div class="more-head"><b>✏️ 還想多說一點嗎？</b><small>下面都可以不填，想寫就寫 😊</small></div>
   <div id="more">
     <div class="card">
-      <div class="q">今天的心情</div>
+      <div class="q"><span class="n">3</span>今天的心情</div>
       <div class="moods" id="moods"></div>
     </div>
 
     <div class="card">
-      <div class="q"><span id="starQ"></span></div>
+      <div class="q"><span class="n">4</span><span id="starQ"></span></div>
       <div class="stars" id="stars"></div>
     </div>
 
     <div class="card">
-      <div class="q">有沒有不懂的地方？</div>
+      <div class="q"><span class="n">5</span>有沒有不懂的地方？</div>
       <button class="chip help-toggle" id="helpToggle"></button>
       <div class="help-panel" id="helpPanel">
         <div class="tip" id="helpTip"></div>
@@ -274,8 +271,8 @@
     </div>
 
     <div class="card">
-      <div class="q">打字給 SUNNY</div>
-      <textarea id="text" maxlength="200" placeholder="想說什麼都可以（可以不打）"></textarea>
+      <div class="q"><span class="n">6</span>打字給 SUNNY</div>
+      <textarea id="text" maxlength="200" placeholder="想跟 SUNNY 說什麼都可以寫在這裡～不寫也沒關係喔"></textarea>
     </div>
   </div>
 
@@ -400,11 +397,6 @@ Object.entries(CONFIG.presets).forEach(([cat,list])=>{
   g.appendChild(box);pv.appendChild(g);
 });
 
-// 還想多說一點
-$("moreToggle").onclick=()=>{
-  const open=$("more").classList.toggle("show");
-  $("moreToggle").classList.toggle("open",open);
-};
 
 // 心情
 const mv=$("moods");
