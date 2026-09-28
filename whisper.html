@@ -41,20 +41,20 @@
   .badge{display:inline-block;margin-top:4px;background:var(--sun);color:#fff;font-weight:800;
     font-size:13px;border-radius:999px;padding:2px 12px;}
   .badge:empty{display:none;}
-  .sub{font-size:13.5px;color:var(--ink-soft);margin-top:5px;font-weight:600;}
+  .sub{font-size:15px;color:var(--ink-soft);margin-top:5px;font-weight:600;}
   .today{margin:12px auto 0;background:#fff;border:2px dashed var(--gold);border-radius:16px;
     padding:10px 14px;font-weight:700;font-size:15.5px;line-height:1.5;color:var(--ink);}
-  .today small{display:block;font-size:12px;color:var(--ink-soft);font-weight:700;margin-bottom:2px;}
+  .today small{display:block;font-size:14px;color:var(--ink-soft);font-weight:700;margin-bottom:2px;}
   .today:empty{display:none;}
 
   .card{
     background:var(--card);border-radius:20px;padding:18px 16px;margin-bottom:14px;
     box-shadow:0 6px 18px rgba(180,120,60,.12);
   }
-  .q{font-weight:800;font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .q{font-weight:800;font-size:18px;margin-bottom:12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
   .q .n{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;
-    font-size:14px;display:grid;place-items:center;flex:0 0 auto;}
-  .hint{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-left:2px;}
+    font-size:15px;display:grid;place-items:center;flex:0 0 auto;}
+  .hint{font-size:14.5px;color:var(--ink-soft);font-weight:600;margin-left:2px;}
 
   #name{
     width:100%;border:2.5px solid var(--peach);border-radius:14px;
@@ -68,11 +68,11 @@
 
   .group{margin-bottom:12px;}
   .group:last-child{margin-bottom:0;}
-  .glabel{font-size:13px;font-weight:800;color:var(--ink-soft);margin-bottom:7px;}
+  .glabel{font-size:15px;font-weight:800;color:var(--ink-soft);margin-bottom:7px;}
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{
     border:2px solid var(--peach);background:#FFFDF8;color:var(--ink);
-    border-radius:999px;padding:9px 14px;font-family:var(--font);font-weight:700;font-size:14.5px;
+    border-radius:999px;padding:10px 15px;font-family:var(--font);font-weight:700;font-size:16.5px;
     cursor:pointer;transition:transform .1s,background .15s,border-color .15s;
   }
   .chip:active{transform:scale(.94);}
@@ -81,21 +81,25 @@
   /* 還想多說一點（直接展開，不用點） */
   .more-head{text-align:center;margin:4px 0 12px;padding:10px 12px;border-radius:16px;
     background:#FFF6E8;border:2px dashed var(--gold);}
-  .more-head b{display:block;font-size:17px;font-weight:800;color:var(--sun-deep);}
-  .more-head small{display:block;margin-top:2px;font-size:12.5px;font-weight:700;color:var(--ink-soft);}
+  .more-head b{display:block;font-size:19px;font-weight:800;color:var(--sun-deep);}
+  .more-head small{display:block;margin-top:3px;font-size:15px;font-weight:700;color:var(--ink-soft);}
 
   .moods{display:flex;justify-content:space-between;gap:4px;}
   .mood{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;
     border-radius:14px;cursor:pointer;transition:transform .12s,background .15s;opacity:.7;filter:grayscale(.35);}
-  .mood .e{font-size:28px;line-height:1;}
-  .mood .t{font-size:11.5px;font-weight:800;color:var(--ink-soft);}
+  .mood .e{font-size:32px;line-height:1;}
+  .mood .t{font-size:14px;font-weight:800;color:var(--ink-soft);}
   .mood:active{transform:scale(.9);}
   .mood.on{background:var(--peach);filter:none;opacity:1;transform:scale(1.08);}
 
-  .stars{display:flex;justify-content:center;gap:6px;}
-  .star{font-size:38px;cursor:pointer;color:#E7D3B5;transition:transform .12s;}
-  .star:active{transform:scale(.85);}
-  .star.on{color:var(--gold);}
+  /* 聽懂了嗎：左右兩顆大按鈕 */
+  .understand{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .uchip{border:2.5px solid var(--peach);background:#FFFDF8;color:var(--ink);border-radius:18px;
+    padding:16px 6px;font-family:var(--font);font-weight:800;font-size:17px;line-height:1.35;
+    cursor:pointer;transition:transform .1s,background .15s,border-color .15s;}
+  .uchip:active{transform:scale(.95);}
+  .uchip.got.on{background:#7FBF7F;border-color:#7FBF7F;color:#fff;box-shadow:0 3px 10px rgba(110,170,110,.35);}
+  .uchip.nogot.on{background:var(--sky);border-color:var(--sky);color:#fff;box-shadow:0 3px 10px rgba(127,169,214,.35);}
 
   .help-toggle{width:100%;justify-content:center;display:flex;align-items:center;
     font-size:16px;padding:14px;border-radius:16px;}
@@ -103,20 +107,20 @@
     animation:drop .3s ease;}
   .help-panel.show{display:block;}
   @keyframes drop{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
-  .reexplain{margin-top:10px;border-color:var(--sky);color:var(--sky);background:#F4F9FF;font-size:15px;}
+  .reexplain{margin-top:10px;border-color:var(--sky);color:var(--sky);background:#F4F9FF;font-size:16.5px;}
   .reexplain.on{background:var(--sky);border-color:var(--sky);color:#fff;box-shadow:0 3px 10px rgba(127,169,214,.35);}
   #detail{width:100%;margin-top:12px;border:2.5px solid var(--peach);border-radius:14px;
     padding:11px 14px;font-family:var(--font);font-size:16px;color:var(--ink);background:#FFFDF8;text-align:center;}
   #detail:focus{outline:none;border-color:var(--sun);}
-  #detail::placeholder{color:#D8C3A6;font-size:14px;}
+  #detail::placeholder{color:#D8C3A6;font-size:15px;}
 
   textarea{
     width:100%;border:2.5px solid var(--peach);border-radius:14px;padding:12px 14px;
-    font-family:var(--font);font-size:16px;color:var(--ink);background:#FFFDF8;resize:none;min-height:74px;
+    font-family:var(--font);font-size:16px;color:var(--ink);background:#FFFDF8;resize:none;min-height:84px;font-size:17px;
   }
   textarea:focus{outline:none;border-color:var(--sun);}
 
-  .msg{display:none;text-align:center;font-weight:800;font-size:14.5px;color:var(--warn);
+  .msg{display:none;text-align:center;font-weight:800;font-size:16px;color:var(--warn);
     background:#FFF0EE;border-radius:14px;padding:10px 12px;margin-bottom:12px;line-height:1.5;}
   .msg.show{display:block;}
 
@@ -162,17 +166,17 @@
   /* 每天一次 提醒 */
   .rule{display:inline-block;margin-top:8px;background:#FFF3D6;color:var(--ink);font-weight:800;
     font-size:13px;border-radius:999px;padding:4px 12px;}
-  .note{text-align:center;font-size:13px;font-weight:700;color:var(--ink-soft);margin:0 0 10px;}
+  .note{text-align:center;font-size:15px;font-weight:700;color:var(--ink-soft);margin:0 0 10px;}
 
   /* 不懂的題目清單 */
-  .tip{background:#F4F9FF;border-radius:14px;padding:10px 12px;font-size:13.5px;font-weight:700;
+  .tip{background:#F4F9FF;border-radius:14px;padding:11px 13px;font-size:15px;font-weight:700;
     color:#4F6F93;line-height:1.55;margin-bottom:12px;}
   .item{border:2px solid var(--peach);border-radius:16px;padding:10px;margin-bottom:10px;background:#FFFDF8;}
   .item.bad{border-color:var(--warn);}
   .item-top{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
-  .item-no{font-weight:800;font-size:13px;color:var(--ink-soft);margin-right:2px;}
+  .item-no{font-weight:800;font-size:14.5px;color:var(--ink-soft);margin-right:2px;}
   .seg{display:flex;gap:6px;flex:1;flex-wrap:wrap;}
-  .seg .chip{padding:6px 10px;font-size:13.5px;}
+  .seg .chip{padding:7px 11px;font-size:15px;}
   .x{border:none;background:transparent;color:#C9AF8C;font-size:20px;font-weight:800;cursor:pointer;padding:0 4px;}
   .pq{display:flex;align-items:center;gap:6px;font-weight:800;font-size:15px;justify-content:center;}
   .pq input{width:64px;border:2.5px solid var(--peach);border-radius:12px;padding:8px 6px;text-align:center;
@@ -180,8 +184,8 @@
   .item input.txt{width:100%;border:2.5px solid var(--peach);border-radius:12px;padding:9px 12px;
     font-family:var(--font);font-size:15px;color:var(--ink);background:#fff;}
   .item input:focus{outline:none;border-color:var(--sun);}
-  .item input::placeholder{color:#D8C3A6;font-size:13.5px;}
-  .eg{font-size:12px;color:var(--ink-soft);font-weight:700;margin-top:6px;text-align:center;}
+  .item input::placeholder{color:#D8C3A6;font-size:15px;}
+  .eg{font-size:14px;color:var(--ink-soft);font-weight:700;margin-top:6px;text-align:center;}
   .add{width:100%;border:2px dashed #BFD3EA;background:transparent;color:var(--sky);border-radius:14px;
     padding:10px;font-family:var(--font);font-weight:800;font-size:14.5px;cursor:pointer;}
   .add:disabled{opacity:.45;}
@@ -250,18 +254,11 @@
   <div class="more-head"><b>✏️ 還想多說一點嗎？</b><small>下面都可以不填，想寫就寫 😊</small></div>
   <div id="more">
     <div class="card">
-      <div class="q"><span class="n">3</span>今天的心情</div>
-      <div class="moods" id="moods"></div>
-    </div>
-
-    <div class="card">
-      <div class="q"><span class="n">4</span><span id="starQ"></span></div>
-      <div class="stars" id="stars"></div>
-    </div>
-
-    <div class="card">
-      <div class="q"><span class="n">5</span>有沒有不懂的地方？</div>
-      <button class="chip help-toggle" id="helpToggle"></button>
+      <div class="q"><span class="n">3</span><span id="starQ"></span></div>
+      <div class="understand">
+        <button class="uchip got" id="gotIt"></button>
+        <button class="uchip nogot" id="helpToggle"></button>
+      </div>
       <div class="help-panel" id="helpPanel">
         <div class="tip" id="helpTip"></div>
         <div id="items"></div>
@@ -271,7 +268,12 @@
     </div>
 
     <div class="card">
-      <div class="q"><span class="n">6</span>打字給 SUNNY</div>
+      <div class="q"><span class="n">4</span>今天的心情</div>
+      <div class="moods" id="moods"></div>
+    </div>
+
+    <div class="card">
+      <div class="q"><span class="n">5</span>打字給 SUNNY</div>
       <textarea id="text" maxlength="200" placeholder="想跟 SUNNY 說什麼都可以寫在這裡～不寫也沒關係喔"></textarea>
     </div>
   </div>
@@ -305,7 +307,9 @@ const CONFIG = {
   moods: [["😄","開心"],["🙂","還不錯"],["😐","普通"],["😢","難過"],["😴","想睡"],["😤","生氣"]],
   starQuestion: "今天上課我聽懂了嗎？",
   help: {
-    toggle: "🙋 我有地方聽不懂",
+    toggle: "🙋 有地方沒聽懂",
+    got: "😊 我都聽懂了",
+    gotPreset: "今天我有聽懂",                    // 選「我都聽懂了」時，送出的悄悄話會帶這句
     tip: "先自己再想一想、翻翻講義上的例題 🤔<br>還是卡住的話，把題目告訴 SUNNY，下次上課我們一起解開它！",
     maxItems: 5,                                  // 最多填幾題
     reexplain: "🔁 想請 SUNNY 再講解一次",
@@ -376,7 +380,7 @@ $("badge").textContent=CLASS_NAME;
   $("today").innerHTML=html; $("today2").innerHTML=html;
 })();
 
-const state={presets:[],mood:"",stars:0,help:{active:false,reexplain:false}};
+const state={presets:[],mood:"",stars:0,got:false,help:{active:false,reexplain:false}};
 
 $("askName").textContent=CONFIG.askName;
 $("starQ").textContent=CONFIG.starQuestion;
@@ -410,13 +414,7 @@ CONFIG.moods.forEach(([e,t])=>{
 });
 
 // 星星
-const sv=$("stars");
-for(let i=1;i<=5;i++){
-  const s=document.createElement("span");s.className="star";s.textContent="★";
-  s.onclick=()=>{state.stars=(state.stars===i?0:i);
-    sv.querySelectorAll(".star").forEach((x,idx)=>x.classList.toggle("on",idx<state.stars));};
-  sv.appendChild(s);
-}
+// （星星已改成「聽懂了嗎」兩顆按鈕）
 
 // 聽不懂 分支：一題一列，最多 5 列，每列都要寫清楚
 const helpToggle=$("helpToggle"),helpPanel=$("helpPanel"),itemsBox=$("items"),addBtn=$("addItem");
@@ -465,8 +463,15 @@ function renderItems(){
 const newItem=()=>({type:"講義",page:"",q:"",text:""});
 addBtn.onclick=()=>{ if(items.length<CONFIG.help.maxItems){ items.push(newItem()); renderItems(); } };
 
+$("gotIt").textContent=CONFIG.help.got;
+function setGot(v){ state.got=v; $("gotIt").classList.toggle("on",v); }
+$("gotIt").onclick=()=>{
+  setGot(!state.got);
+  if(state.got && state.help.active) helpToggle.onclick();   // 兩顆只能選一顆
+};
 helpToggle.onclick=()=>{
   state.help.active=!state.help.active;
+  if(state.help.active) setGot(false);
   helpToggle.classList.toggle("on",state.help.active);
   helpPanel.classList.toggle("show",state.help.active);
   if(state.help.active){ items=[newItem()]; }
@@ -581,7 +586,7 @@ $("send").onclick=async()=>{
   const name=$("name").value.trim();
   if(!name){ shake($("nameCard")); $("name").focus(); showMsg("先打上你的名字喔～"); return; }
   const text=$("text").value.trim();
-  const hasSomething=state.presets.length||text||state.mood||state.stars||state.help.active;
+  const hasSomething=state.presets.length||text||state.mood||state.stars||state.got||state.help.active;
   if(!hasSomething){ shake($("presetCard")); showMsg("點一句想說的話，或打字給 SUNNY 喔～"); return; }
   if(state.help.active){
     const bad=checkItems();
@@ -595,7 +600,7 @@ $("send").onclick=async()=>{
   const list=state.help.active ? items.map(it=>({type:it.type,page:+it.page||0,q:+it.q||0,text:(it.text||"").trim()})) : [];
   const payload={
     classId:CH?CH.id:"", className:CLASS_NAME, name, device:deviceId(),
-    presets:state.presets, mood:state.mood, stars:state.stars,
+    presets:(state.got&&!state.presets.includes(CONFIG.help.gotPreset))?[...state.presets,CONFIG.help.gotPreset]:state.presets, mood:state.mood, stars:state.stars,
     help: state.help.active ? {
       items:list, where:[...new Set(list.map(it=>it.type))], reexplain:state.help.reexplain,
       detail:items.map(itemText).join("、")
