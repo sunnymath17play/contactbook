@@ -141,6 +141,9 @@
     text-align:center;padding:30px;z-index:20;overflow-y:auto;
   }
   .done.show{display:flex;animation:fade .4s;}
+  /* 內容比螢幕高（有影片教室）時從頂端開始捲，不會切掉上面 */
+  .done{justify-content:flex-start;}
+  .done::before,.done::after{content:"";flex:1 0 0;}
   @keyframes fade{from{opacity:0;}to{opacity:1;}}
   .done .big{font-size:80px;animation:fly .8s cubic-bezier(.2,.9,.3,1.2);}
   @keyframes fly{from{transform:translateY(40px) scale(.5);opacity:0;}to{transform:none;opacity:1;}}
@@ -160,6 +163,27 @@
   .letter .when{font-size:12px;color:var(--ink-soft);font-weight:700;margin-bottom:3px;}
   .letter .body{font-size:15.5px;font-weight:700;line-height:1.6;white-space:pre-wrap;}
   .letter:empty{display:none;}
+
+  /* 📺 影片教室 */
+  .videos{background:#F4F9FF;border:2.5px solid var(--sky);border-radius:20px;padding:14px 14px 6px;margin-bottom:14px;
+    box-shadow:0 6px 18px rgba(127,169,214,.2);text-align:left;}
+  .videos:empty{display:none;}
+  .videos h3{font-size:18px;font-weight:800;color:#4F7FB3;text-align:center;margin-bottom:2px;}
+  .videos .vsub{font-size:13.5px;font-weight:700;color:var(--ink-soft);text-align:center;margin-bottom:10px;}
+  .videos .vgroup{font-size:15px;font-weight:800;color:var(--ink-soft);margin:6px 2px 8px;}
+  .vitem{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:10px;box-shadow:0 3px 10px rgba(127,169,214,.18);}
+  .vthumb{position:relative;display:block;width:100%;aspect-ratio:16/9;background:#DDE8F5 center/cover no-repeat;
+    border:none;padding:0;cursor:pointer;}
+  .vthumb::after{content:"▶";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:58px;height:58px;border-radius:50%;background:rgba(245,124,58,.92);color:#fff;font-size:24px;
+    display:grid;place-items:center;padding-left:4px;box-shadow:0 4px 12px rgba(0,0,0,.25);}
+  .vitem iframe{display:block;width:100%;aspect-ratio:16/9;border:0;}
+  .vinfo{padding:9px 12px 10px;}
+  .vtitle{font-size:16px;font-weight:800;line-height:1.4;}
+  .vmeta{font-size:13px;font-weight:700;color:var(--ink-soft);margin-top:2px;}
+  .vnew{display:inline-block;background:var(--warn);color:#fff;font-size:11.5px;font-weight:800;
+    border-radius:999px;padding:0 7px;margin-right:5px;vertical-align:2px;}
+  .done .videos{max-width:360px;width:100%;margin-top:18px;}
   .ask-letter{width:100%;background:transparent;border:2px dashed #E8CFA8;color:var(--ink-soft);border-radius:16px;
     padding:11px;font-family:var(--font);font-weight:800;font-size:14.5px;cursor:pointer;margin-top:4px;}
 
@@ -237,6 +261,7 @@
   </div>
 
   <div class="letter" id="letter"></div>
+  <div class="videos" id="videos"></div>
 
   <!-- 1 名字 -->
   <div class="card" id="nameCard">
@@ -290,6 +315,7 @@
   <p id="doneText">你的悄悄話已經偷偷飛進 SUNNY 的樹洞，<br>只有 SUNNY 看得到喔！<br>明天還可以再來說一則 🌙</p>
   <div class="letter" id="letter2"></div>
   <div class="today" id="today2"></div>
+  <div class="videos" id="videos2"></div>
   <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
 </div>
 
@@ -542,6 +568,37 @@ $("askLetter").onclick=async()=>{
   if(showLetters(rows)){ showMsg(""); $("letter").scrollIntoView({behavior:"smooth",block:"center"}); }
   else showMsg("還沒有回信喔～SUNNY 看到會回你的 💛");
 };
+
+/* ---------- 📺 影片教室（後端只回傳這個班「現在年級」的影片） ---------- */
+const escH=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function renderVideos(list){
+  const isNew=v=>{const t=Date.parse(v.date);return t && Date.now()-t<7*86400000;};
+  const card=v=>`<div class="vitem">
+      <button class="vthumb" data-id="${escH(v.id)}" style="background-image:url('https://i.ytimg.com/vi/${escH(v.id)}/hqdefault.jpg')" aria-label="播放 ${escH(v.title)}"></button>
+      <div class="vinfo"><div class="vtitle">${isNew(v)?'<span class="vnew">新</span>':''}${escH(v.title)}</div>
+      <div class="vmeta">${[v.unit&&"單元："+escH(v.unit), v.q&&"題目："+escH(v.q)].filter(Boolean).join("　")}</div></div>
+    </div>`;
+  const sunny=list.filter(v=>v.type!=="ask"), ask=list.filter(v=>v.type==="ask");
+  const html=`<h3>📺 影片教室</h3><div class="vsub">${escH(CLASS_NAME)}專屬，看不懂可以一直重播喔！</div>`
+    +(sunny.length?`<div class="vgroup">🧑‍🏫 SUNNY 講解</div>`+sunny.map(card).join(""):"")
+    +(ask.length?`<div class="vgroup">🙋 同學問過的題目</div>`+ask.map(card).join(""):"");
+  ["videos","videos2"].forEach(id=>{ $(id).innerHTML=html; });
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest(".vthumb"); if(!b) return;
+  const f=document.createElement("iframe");
+  f.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(b.dataset.id)+"?autoplay=1&rel=0&playsinline=1";
+  f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen=true;
+  b.replaceWith(f);
+});
+(async()=>{
+  if(!CH||!ENDPOINT) return;
+  try{
+    const r=await fetch(ENDPOINT+"?mode=videos&class="+encodeURIComponent(CH.id));
+    const j=await r.json();
+    if(j&&j.ok&&Array.isArray(j.videos)&&j.videos.length) renderVideos(j.videos);
+  }catch(e){}   // 讀不到就不顯示，不影響送悄悄話
+})();
 
 /* ---------- 每天只能說一次 ---------- */
 const pad=n=>(n<10?"0":"")+n;
