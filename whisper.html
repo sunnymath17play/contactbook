@@ -335,7 +335,8 @@
   </div>
 
   <div class="letter" id="letter"></div>
-  <div class="videos" id="videos"></div>
+  <!-- 影片教室按鈕直接寫在網頁裡（不等程式），跟整頁同時出現 -->
+  <div class="videos" id="videos"><button class="vopen hop" type="button" data-vopen="1"><span class="ic">📺</span><span class="tx"><b>影片教室</b><small>點我進去看講解影片</small></span><span class="go">▶</span></button></div>
 
   <!-- 1 名字 -->
   <div class="card" id="nameCard">
@@ -389,7 +390,7 @@
   <p id="doneText">你的悄悄話已經偷偷飛進 SUNNY 的樹洞，<br>只有 SUNNY 看得到喔！<br>明天還可以再來說一則 🌙</p>
   <div class="letter" id="letter2"></div>
   <div class="today" id="today2"></div>
-  <div class="videos" id="videos2"></div>
+  <div class="videos" id="videos2"><button class="vopen" type="button" data-vopen="1"><span class="ic">📺</span><span class="tx"><b>影片教室</b><small>點我進去看講解影片</small></span><span class="go">▶</span></button></div>
   <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
 </div>
 
@@ -840,7 +841,7 @@ document.addEventListener("click",e=>{
   else if(t.dataset.play) play(t.dataset.play);
 });
 (async()=>{
-  if(!CH||!ENDPOINT||!/年級/.test(CLASS_NAME)) return;
+  if(!CH||!ENDPOINT||!/年級/.test(CLASS_NAME)){ ["videos","videos2"].forEach(id=>{ $(id).innerHTML=""; }); return; }
   const KEY="wh_vids_"+CH.id;
   try{ const c=JSON.parse(lsGet(KEY)||"null"); if(Array.isArray(c)) VIDS=c; }catch(e){}
   renderVideos();   // 馬上出現
