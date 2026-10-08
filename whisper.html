@@ -164,26 +164,85 @@
   .letter .body{font-size:15.5px;font-weight:700;line-height:1.6;white-space:pre-wrap;}
   .letter:empty{display:none;}
 
-  /* 📺 影片教室 */
-  .videos{background:#F4F9FF;border:2.5px solid var(--sky);border-radius:20px;padding:14px 14px 6px;margin-bottom:14px;
-    box-shadow:0 6px 18px rgba(127,169,214,.2);text-align:left;}
+  /* 📺 影片教室：樹洞頁上只有一顆入口按鈕 */
   .videos:empty{display:none;}
-  .videos h3{font-size:18px;font-weight:800;color:#4F7FB3;text-align:center;margin-bottom:2px;}
-  .videos .vsub{font-size:13.5px;font-weight:700;color:var(--ink-soft);text-align:center;margin-bottom:10px;}
-  .videos .vgroup{font-size:15px;font-weight:800;color:var(--ink-soft);margin:6px 2px 8px;}
-  .vitem{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:10px;box-shadow:0 3px 10px rgba(127,169,214,.18);}
-  .vthumb{position:relative;display:block;width:100%;aspect-ratio:16/9;background:#DDE8F5 center/cover no-repeat;
-    border:none;padding:0;cursor:pointer;}
-  .vthumb::after{content:"▶";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    width:58px;height:58px;border-radius:50%;background:rgba(245,124,58,.92);color:#fff;font-size:24px;
-    display:grid;place-items:center;padding-left:4px;box-shadow:0 4px 12px rgba(0,0,0,.25);}
-  .vitem iframe{display:block;width:100%;aspect-ratio:16/9;border:0;}
-  .vinfo{padding:9px 12px 10px;}
-  .vtitle{font-size:16px;font-weight:800;line-height:1.4;}
-  .vmeta{font-size:13px;font-weight:700;color:var(--ink-soft);margin-top:2px;}
+  .vopen{width:100%;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;
+    background:linear-gradient(135deg,#8DB8E6,#6E9FD6);border:none;border-radius:20px;padding:14px 16px;margin-bottom:14px;
+    color:#fff;font-family:var(--font);box-shadow:0 6px 0 #5683B8,0 10px 20px rgba(110,159,214,.3);transition:transform .1s,box-shadow .1s;}
+  .vopen:active{transform:translateY(4px);box-shadow:0 2px 0 #5683B8;}
+  .vopen .ic{font-size:38px;line-height:1;}
+  .vopen .tx{flex:1;}
+  .vopen b{display:block;font-size:21px;font-weight:800;}
+  .vopen small{display:block;font-size:14.5px;font-weight:700;opacity:.95;margin-top:1px;}
+  .vopen .go{font-size:22px;font-weight:800;}
+  .vdot{display:inline-block;background:var(--warn);color:#fff;font-size:12.5px;font-weight:800;
+    border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:3px;box-shadow:0 0 0 2px #fff;}
+  .done .videos{max-width:360px;width:100%;margin-top:18px;}
+
+  /* 📺 影片教室：全螢幕 */
+  .vroom{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;
+    background:linear-gradient(175deg,#F4F9FF,#E3EEFA);-webkit-user-select:none;user-select:none;}
+  .vroom.show{display:flex;animation:fade .25s;}
+  .vbar{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+    background:#fff;box-shadow:0 2px 10px rgba(110,159,214,.18);flex:0 0 auto;}
+  .vback{border:none;background:#EAF2FC;color:#4F7FB3;font-family:var(--font);font-weight:800;font-size:16px;
+    border-radius:14px;padding:10px 14px;min-height:48px;cursor:pointer;}
+  .vbar h2{flex:1;text-align:center;font-size:18.5px;font-weight:800;color:#4F7FB3;margin-right:60px;}
+  .vplayer{flex:0 0 auto;background:#000;display:none;}
+  .vplayer.show{display:block;}
+  .vplayer iframe{display:block;width:100%;aspect-ratio:16/9;max-height:42vh;border:0;}
+  .vplayer .now{background:#fff;padding:8px 14px;font-size:15px;font-weight:800;color:var(--ink);}
+  .vbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(24px + env(safe-area-inset-bottom));}
+  .vwrap{max-width:480px;margin:0 auto;}
+  .vsec{font-size:16.5px;font-weight:800;color:var(--ink-soft);margin:16px 2px 9px;}
+  .vsec:first-child{margin-top:2px;}
+
+  .vfind{display:flex;align-items:center;gap:8px;background:#fff;border:2.5px solid var(--sky);border-radius:18px;
+    padding:8px 12px;font-size:18px;font-weight:800;color:var(--ink);}
+  .vfind input{width:76px;border:2px solid #D6E5F5;border-radius:12px;padding:8px 6px;text-align:center;
+    font-family:var(--font);font-size:21px;font-weight:800;color:var(--ink);background:#F8FBFF;-webkit-user-select:text;user-select:text;}
+  .vfind input:focus{outline:none;border-color:var(--sun);}
+  .vfind button{margin-left:auto;border:none;background:var(--sun);color:#fff;font-family:var(--font);font-weight:800;
+    font-size:16px;border-radius:12px;padding:10px 14px;min-height:46px;cursor:pointer;}
+  .vfind-out:empty{display:none;}
+  .vfind-out{margin-top:10px;}
+  .vnone{background:#FFF8EC;border:2px dashed var(--gold);border-radius:16px;padding:12px 14px;
+    font-size:15.5px;font-weight:700;line-height:1.55;color:var(--ink);text-align:center;}
+
+  .vrow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 10px;margin:0 -2px;}
+  .vrow::-webkit-scrollbar{display:none;}
+  .vcard{flex:0 0 72%;max-width:260px;scroll-snap-align:start;background:#fff;border:none;border-radius:16px;overflow:hidden;
+    padding:0;text-align:left;cursor:pointer;font-family:var(--font);box-shadow:0 3px 10px rgba(110,159,214,.2);}
+  .vcard:only-child{flex-basis:100%;max-width:none;}
+  .vimg{position:relative;display:block;width:100%;aspect-ratio:16/9;background:#DDE8F5 center/cover no-repeat;}
+  .vimg::after{content:"▶";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:46px;height:46px;border-radius:50%;background:rgba(245,124,58,.92);color:#fff;font-size:19px;
+    display:grid;place-items:center;padding-left:3px;box-shadow:0 3px 10px rgba(0,0,0,.25);}
+  .vcard .vt{display:block;padding:8px 11px 10px;font-size:15.5px;font-weight:800;color:var(--ink);line-height:1.35;}
+
+  .vtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .vtile{position:relative;border:none;border-radius:18px;padding:14px 8px;min-height:96px;cursor:pointer;
+    font-family:var(--font);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    box-shadow:0 4px 0 rgba(0,0,0,.08);transition:transform .1s;}
+  .vtile:active{transform:scale(.95);}
+  .vtile .e{font-size:34px;line-height:1;}
+  .vtile b{font-size:18px;font-weight:800;}
+  .vtile small{font-size:13.5px;font-weight:700;color:var(--ink-soft);}
+  .vtile .vdot{position:absolute;right:8px;top:8px;margin:0;}
+  .vtile.wide{grid-column:1 / -1;flex-direction:row;gap:10px;min-height:68px;}
+
+  .vlist-head{display:flex;align-items:center;gap:8px;margin:2px 0 10px;}
+  .vlist-head b{font-size:19px;font-weight:800;color:var(--ink);}
+  .vline{width:100%;display:flex;gap:11px;align-items:center;background:#fff;border:none;border-radius:16px;padding:8px;
+    margin-bottom:9px;text-align:left;cursor:pointer;font-family:var(--font);box-shadow:0 3px 10px rgba(110,159,214,.16);}
+  .vline .vimg{flex:0 0 42%;max-width:170px;border-radius:11px;}
+  .vline .vimg::after{width:34px;height:34px;font-size:14px;}
+  .vline .vt{font-size:16px;font-weight:800;color:var(--ink);line-height:1.35;}
+  .vline .vm{font-size:13.5px;font-weight:700;color:var(--ink-soft);margin-top:3px;}
+  .vline.playing{outline:3px solid var(--sun);}
+  .vseen{display:inline-block;font-size:12.5px;font-weight:800;color:#4E9A5B;background:#E7F5E9;border-radius:999px;padding:0 7px;margin-left:4px;}
   .vnew{display:inline-block;background:var(--warn);color:#fff;font-size:11.5px;font-weight:800;
     border-radius:999px;padding:0 7px;margin-right:5px;vertical-align:2px;}
-  .done .videos{max-width:360px;width:100%;margin-top:18px;}
   .ask-letter{width:100%;background:transparent;border:2px dashed #E8CFA8;color:var(--ink-soft);border-radius:16px;
     padding:11px;font-family:var(--font);font-weight:800;font-size:14.5px;cursor:pointer;margin-top:4px;}
 
@@ -317,6 +376,13 @@
   <div class="today" id="today2"></div>
   <div class="videos" id="videos2"></div>
   <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
+</div>
+
+<!-- 📺 影片教室（全螢幕） -->
+<div class="vroom" id="vroom">
+  <div class="vbar"><button class="vback" id="vback">← 回樹洞</button><h2 id="vroomTitle">📺 影片教室</h2></div>
+  <div class="vplayer" id="vplayer"></div>
+  <div class="vbody" id="vbody"><div class="vwrap" id="vwrap"></div></div>
 </div>
 
 <script>
@@ -571,25 +637,102 @@ $("askLetter").onclick=async()=>{
 
 /* ---------- 📺 影片教室（後端只回傳這個班「現在年級」的影片） ---------- */
 const escH=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let VIDS=[];
+const isNew=v=>{const t=Date.parse(v.date);return !!t && Date.now()-t<7*86400000;};
+const seenSet=()=>{try{return new Set(JSON.parse(lsGet("wh_watched")||"[]"));}catch(e){return new Set();}};
+const markSeen=id=>{const s=seenSet();s.add(id);lsSet("wh_watched",JSON.stringify([...s].slice(-300)));};
+const pageOf=v=>{const m=/p(\d+)/.exec(v.q||"");return m?+m[1]:0;};
+const qText=q=>String(q||"").replace(/^(講義|考卷)p(\d+)#(\d+)$/,"$1 第$2頁 第$3題");
+const thumb=id=>`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
+const UNIT_ICON=[["三角","🔺"],["角","📐"],["分數","🍕"],["小數","🔢"],["時間","⏰"],["時刻","⏰"],["乘","✖️"],["除","➗"],
+  ["面積","🟩"],["體積","🧊"],["長度","📏"],["公分","📏"],["重量","⚖️"],["公斤","⚖️"],["容量","🥛"],["公升","🥛"],
+  ["圓","⭕"],["加","➕"],["減","➖"],["數","🔢"]];
+const iconOf=u=>(UNIT_ICON.find(([k])=>String(u).includes(k))||[,"📘"])[1];
+const TILE_BG=["#FFE9CC","#DFF1DA","#E6E0FA","#FFE0E6","#DDEEFF","#FFF3C4"];
+
+// 樹洞頁上：只放一顆入口按鈕（影片再多高度都一樣）
 function renderVideos(list){
-  const isNew=v=>{const t=Date.parse(v.date);return t && Date.now()-t<7*86400000;};
-  const card=v=>`<div class="vitem">
-      <button class="vthumb" data-id="${escH(v.id)}" style="background-image:url('https://i.ytimg.com/vi/${escH(v.id)}/hqdefault.jpg')" aria-label="播放 ${escH(v.title)}"></button>
-      <div class="vinfo"><div class="vtitle">${isNew(v)?'<span class="vnew">新</span>':''}${escH(v.title)}</div>
-      <div class="vmeta">${[v.unit&&"單元："+escH(v.unit), v.q&&"題目："+escH(v.q)].filter(Boolean).join("　")}</div></div>
-    </div>`;
-  const sunny=list.filter(v=>v.type!=="ask"), ask=list.filter(v=>v.type==="ask");
-  const html=`<h3>📺 影片教室</h3><div class="vsub">${escH(CLASS_NAME)}專屬，看不懂可以一直重播喔！</div>`
-    +(sunny.length?`<div class="vgroup">🧑‍🏫 SUNNY 講解</div>`+sunny.map(card).join(""):"")
-    +(ask.length?`<div class="vgroup">🙋 同學問過的題目</div>`+ask.map(card).join(""):"");
+  VIDS=list;
+  const seen=seenSet(), fresh=list.filter(v=>isNew(v)&&!seen.has(v.id)).length;
+  const html=`<button class="vopen" type="button" data-vopen="1"><span class="ic">📺</span>
+    <span class="tx"><b>影片教室${fresh?`<span class="vdot">新 ${fresh} 部</span>`:""}</b>
+    <small>${escH(CLASS_NAME)}・共 ${list.length} 部，點我進去看</small></span><span class="go">▶</span></button>`;
   ["videos","videos2"].forEach(id=>{ $(id).innerHTML=html; });
 }
+
+// 一部影片：橫滑卡片／清單一行
+const card=v=>`<button class="vcard" type="button" data-play="${escH(v.id)}">
+  <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
+  <span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}</span></button>`;
+const line=v=>`<button class="vline" type="button" data-play="${escH(v.id)}">
+  <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
+  <span><span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}</span>
+  <span class="vm" style="display:block">${escH(qText(v.q)||v.unit)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}</span></span></button>`;
+
+let VIEW="home";
+function units(){
+  const m=new Map();
+  VIDS.forEach(v=>{const u=v.unit||"其他";if(!m.has(u))m.set(u,[]);m.get(u).push(v);});
+  return [...m.entries()];
+}
+function drawRoom(){
+  const w=$("vwrap"), seen=seenSet();
+  if(VIEW==="home"){
+    const ask=VIDS.filter(v=>v.type==="ask");
+    const dot=vs=>{const n=vs.filter(v=>isNew(v)&&!seen.has(v.id)).length;return n?`<span class="vdot">新 ${n}</span>`:"";};
+    w.innerHTML=`<div class="vsec">🔍 卡在講義哪一頁？</div>
+      <form class="vfind" id="vfind"><span>講義第</span><input id="vpage" type="number" inputmode="numeric" min="1" max="999" placeholder="?"><span>頁</span><button type="submit">找影片</button></form>
+      <div class="vfind-out" id="vfindOut"></div>
+      <div class="vsec">🆕 最新影片 ${VIDS.length>1?'<span style="font-size:13px">（左右滑 👉）</span>':""}</div>
+      <div class="vrow">${VIDS.slice(0,6).map(card).join("")}</div>
+      <div class="vsec">📚 選單元</div>
+      <div class="vtiles">${units().map(([u,vs],i)=>`<button class="vtile" type="button" data-unit="${escH(u)}" style="background:${TILE_BG[i%TILE_BG.length]}">
+          ${dot(vs)}<span class="e">${iconOf(u)}</span><b>${escH(u)}</b><small>${vs.length} 部</small></button>`).join("")}
+        ${ask.length?`<button class="vtile wide" type="button" data-unit="__ask" style="background:#E3F0FF">${dot(ask)}<span class="e">🙋</span>
+          <span><b>同學問過的題目</b><br><small>${ask.length} 部，別人問的你可能也想知道</small></span></button>`:""}
+      </div>`;
+    $("vfind").onsubmit=e=>{
+      e.preventDefault();
+      const p=parseInt($("vpage").value,10), out=$("vfindOut");
+      if(!p){ out.innerHTML=""; return; }
+      const hit=VIDS.filter(v=>pageOf(v)===p);
+      out.innerHTML=hit.length ? hit.map(line).join("")
+        : `<div class="vnone">講義第 ${p} 頁還沒有影片喔～<br>回樹洞點「🙋 有地方沒聽懂」告訴 SUNNY！</div>`;
+      $("vpage").blur();
+    };
+  }else{
+    const isAsk=VIEW==="__ask";
+    const vs=isAsk?VIDS.filter(v=>v.type==="ask"):VIDS.filter(v=>(v.unit||"其他")===VIEW);
+    vs.sort((a,b)=>(pageOf(a)-pageOf(b))||String(a.q).localeCompare(String(b.q)));
+    w.innerHTML=`<div class="vlist-head"><span style="font-size:30px">${isAsk?"🙋":iconOf(VIEW)}</span>
+      <b>${isAsk?"同學問過的題目":escH(VIEW)}</b><small style="color:var(--ink-soft);font-weight:700">（${vs.length} 部）</small></div>`
+      +vs.map(line).join("");
+  }
+  $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
+  $("vroomTitle").textContent="📺 "+(CLASS_NAME||"")+"影片教室";
+  $("vbody").scrollTop=0;
+}
+function play(id){
+  const v=VIDS.find(x=>x.id===id); if(!v) return;
+  $("vplayer").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1"
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">▶ 正在看：${escH(v.title)}</div>`;
+  $("vplayer").classList.add("show");
+  markSeen(id);
+  document.querySelectorAll("#vroom [data-play]").forEach(b=>b.classList.toggle("playing",b.dataset.play===id));
+}
+// 手機「返回」＝回上一層：單元清單 → 影片教室首頁 → 樹洞
+function openRoom(){ VIEW="home"; drawRoom(); $("vroom").classList.add("show"); history.pushState({v:"home"},""); }
+function closeRoom(){ $("vroom").classList.remove("show"); $("vplayer").innerHTML=""; $("vplayer").classList.remove("show"); renderVideos(VIDS); }
+window.addEventListener("popstate",e=>{
+  if(!$("vroom").classList.contains("show")) return;
+  if(e.state&&e.state.v==="home"){ VIEW="home"; drawRoom(); } else closeRoom();
+});
+$("vback").onclick=()=>history.back();
 document.addEventListener("click",e=>{
-  const b=e.target.closest&&e.target.closest(".vthumb"); if(!b) return;
-  const f=document.createElement("iframe");
-  f.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(b.dataset.id)+"?autoplay=1&rel=0&playsinline=1";
-  f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen=true;
-  b.replaceWith(f);
+  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play]"); if(!t) return;
+  if(t.dataset.vopen) openRoom();
+  else if(t.dataset.unit){ VIEW=t.dataset.unit; drawRoom(); history.pushState({v:"unit"},""); }
+  else if(t.dataset.play) play(t.dataset.play);
 });
 (async()=>{
   if(!CH||!ENDPOINT) return;
