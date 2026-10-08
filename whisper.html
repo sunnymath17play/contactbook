@@ -204,6 +204,12 @@
   .vfind input:focus{outline:none;border-color:var(--sun);}
   .vfind button{margin-left:auto;border:none;background:var(--sun);color:#fff;font-family:var(--font);font-weight:800;
     font-size:16px;border-radius:12px;padding:10px 14px;min-height:46px;cursor:pointer;}
+  .vsrc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .vsrcb,.vkey{border:2.5px solid #D6E5F5;background:#fff;color:var(--ink);border-radius:14px;min-height:48px;padding:8px 6px;
+    font-family:var(--font);font-weight:800;font-size:16.5px;cursor:pointer;}
+  .vsrcb.on,.vkey.on{background:var(--sky);border-color:var(--sky);color:#fff;box-shadow:0 3px 10px rgba(127,169,214,.35);}
+  .vkeys{display:flex;flex-wrap:wrap;gap:8px;}
+  .vkey{padding:8px 14px;}
   .vfind-out:empty{display:none;}
   .vfind-out{margin-top:10px;}
   .vnone{background:#FFF8EC;border:2px dashed var(--gold);border-radius:16px;padding:12px 14px;
@@ -641,8 +647,29 @@ let VIDS=[];
 const isNew=v=>{const t=Date.parse(v.date);return !!t && Date.now()-t<7*86400000;};
 const seenSet=()=>{try{return new Set(JSON.parse(lsGet("wh_watched")||"[]"));}catch(e){return new Set();}};
 const markSeen=id=>{const s=seenSet();s.add(id);lsSet("wh_watched",JSON.stringify([...s].slice(-300)));};
-const pageOf=v=>{const m=/p(\d+)/.exec(v.q||"");return m?+m[1]:0;};
-const qText=q=>String(q||"").replace(/^(講義|考卷)p(\d+)#(\d+)$/,"$1 第$2頁 第$3題");
+const CNUM="一二三四五六七八九十";
+const SRCS=[["講義A","📖 講義A"],["講義B","📖 講義B"],["評量","📝 評量"],["單元複習","🔁 單元複習"]];
+// 題目出處（講義A p124#6／講義B p30#2／期中評量一#5／期末評量二#3／單元複習01#4）
+// → {src 哪一類, key 哪一份, page 頁, order 排序, label 給孩子看的字}
+function srcOf(v){
+  const q=String(v.q||"").trim(); let m;
+  if((m=/^講義([AB])\s*p(\d+)(?:#(\d+))?$/.exec(q))){
+    const no=+m[3]||0;
+    return {src:"講義"+m[1],key:"講義"+m[1],page:+m[2],order:+m[2]*1000+no,label:`講義${m[1]} 第${m[2]}頁`+(no?` 第${no}題`:"")};
+  }
+  if((m=/^(期中|期末)評量([一二三四五六七八九十]+)(?:#(\d+))?$/.exec(q))){
+    const no=+m[3]||0, key=`${m[1]}評量（${m[2]}）`;
+    return {src:"評量",key,page:0,order:(m[1]==="期中"?0:100000)+(CNUM.indexOf(m[2])+1)*1000+no,label:key+(no?` 第${no}題`:"")};
+  }
+  if((m=/^單元複習(\d+)(?:#(\d+))?$/.exec(q))){
+    const no=+m[2]||0, key="單元複習"+m[1];
+    return {src:"單元複習",key,page:0,order:+m[1]*1000+no,label:key+(no?` 第${no}題`:"")};
+  }
+  return {src:"其他",key:"",page:0,order:1e9,label:q};
+}
+const srcRank=s=>{const i=SRCS.findIndex(x=>x[0]===s);return i<0?9:i;};
+const bySrc=(a,b)=>{const A=srcOf(a),B=srcOf(b);return srcRank(A.src)-srcRank(B.src)||A.order-B.order;};
+let FIND_SRC="講義A";
 const thumb=id=>`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
 const UNIT_ICON=[["三角","🔺"],["角","📐"],["分數","🍕"],["小數","🔢"],["時間","⏰"],["時刻","⏰"],["乘","✖️"],["除","➗"],
   ["面積","🟩"],["體積","🧊"],["長度","📏"],["公分","📏"],["重量","⚖️"],["公斤","⚖️"],["容量","🥛"],["公升","🥛"],
@@ -667,7 +694,7 @@ const card=v=>`<button class="vcard" type="button" data-play="${escH(v.id)}">
 const line=v=>`<button class="vline" type="button" data-play="${escH(v.id)}">
   <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
   <span><span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}</span>
-  <span class="vm" style="display:block">${escH(qText(v.q)||v.unit)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}</span></span></button>`;
+  <span class="vm" style="display:block">${escH(srcOf(v).label||v.unit)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}</span></span></button>`;
 
 let VIEW="home";
 function units(){
@@ -680,8 +707,9 @@ function drawRoom(){
   if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask");
     const dot=vs=>{const n=vs.filter(v=>isNew(v)&&!seen.has(v.id)).length;return n?`<span class="vdot">新 ${n}</span>`:"";};
-    w.innerHTML=`<div class="vsec">🔍 卡在講義哪一頁？</div>
-      <form class="vfind" id="vfind"><span>講義第</span><input id="vpage" type="number" inputmode="numeric" min="1" max="999" placeholder="?"><span>頁</span><button type="submit">找影片</button></form>
+    w.innerHTML=`<div class="vsec">🔍 卡在哪裡？先點一個</div>
+      <div class="vsrc" id="vsrc">${SRCS.map(([k,t])=>`<button type="button" class="vsrcb" data-src="${k}">${t}</button>`).join("")}</div>
+      <div id="vfindBox"></div>
       <div class="vfind-out" id="vfindOut"></div>
       <div class="vsec">🆕 最新影片 ${VIDS.length>1?'<span style="font-size:13px">（左右滑 👉）</span>':""}</div>
       <div class="vrow">${VIDS.slice(0,6).map(card).join("")}</div>
@@ -691,26 +719,46 @@ function drawRoom(){
         ${ask.length?`<button class="vtile wide" type="button" data-unit="__ask" style="background:#E3F0FF">${dot(ask)}<span class="e">🙋</span>
           <span><b>同學問過的題目</b><br><small>${ask.length} 部，別人問的你可能也想知道</small></span></button>`:""}
       </div>`;
-    $("vfind").onsubmit=e=>{
-      e.preventDefault();
-      const p=parseInt($("vpage").value,10), out=$("vfindOut");
-      if(!p){ out.innerHTML=""; return; }
-      const hit=VIDS.filter(v=>pageOf(v)===p);
-      out.innerHTML=hit.length ? hit.map(line).join("")
-        : `<div class="vnone">講義第 ${p} 頁還沒有影片喔～<br>回樹洞點「🙋 有地方沒聽懂」告訴 SUNNY！</div>`;
-      $("vpage").blur();
-    };
+    drawFind();
   }else{
     const isAsk=VIEW==="__ask";
     const vs=isAsk?VIDS.filter(v=>v.type==="ask"):VIDS.filter(v=>(v.unit||"其他")===VIEW);
-    vs.sort((a,b)=>(pageOf(a)-pageOf(b))||String(a.q).localeCompare(String(b.q)));
+    vs.sort(bySrc);
+    let last=null, body="";   // 依出處分段：講義A → 講義B → 評量 → 單元複習
+    vs.forEach(v=>{ const s=srcOf(v).src;
+      if(s!==last){ last=s; body+=`<div class="vsec">${(SRCS.find(x=>x[0]===s)||[,"📘 其他"])[1]}</div>`; }
+      body+=line(v); });
     w.innerHTML=`<div class="vlist-head"><span style="font-size:30px">${isAsk?"🙋":iconOf(VIEW)}</span>
-      <b>${isAsk?"同學問過的題目":escH(VIEW)}</b><small style="color:var(--ink-soft);font-weight:700">（${vs.length} 部）</small></div>`
-      +vs.map(line).join("");
+      <b>${isAsk?"同學問過的題目":escH(VIEW)}</b><small style="color:var(--ink-soft);font-weight:700">（${vs.length} 部）</small></div>`+body;
   }
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
   $("vroomTitle").textContent="📺 "+(CLASS_NAME||"")+"影片教室";
   $("vbody").scrollTop=0;
+}
+const NONE=t=>`<div class="vnone">${escH(t)}還沒有影片喔～<br>回樹洞點「🙋 有地方沒聽懂」告訴 SUNNY！</div>`;
+function drawFind(){
+  const box=$("vfindBox"), out=$("vfindOut"); out.innerHTML="";
+  document.querySelectorAll("#vsrc .vsrcb").forEach(b=>b.classList.toggle("on",b.dataset.src===FIND_SRC));
+  if(FIND_SRC.startsWith("講義")){
+    box.innerHTML=`<form class="vfind" id="vfind"><span>${FIND_SRC} 第</span><input id="vpage" type="number" inputmode="numeric" min="1" max="999" placeholder="?"><span>頁</span><button type="submit">找影片</button></form>`;
+    $("vfind").onsubmit=e=>{
+      e.preventDefault();
+      const p=parseInt($("vpage").value,10); if(!p){ out.innerHTML=""; return; }
+      const hit=VIDS.filter(v=>{const s=srcOf(v);return s.src===FIND_SRC&&s.page===p;}).sort(bySrc);
+      out.innerHTML=hit.length?hit.map(line).join(""):NONE(`${FIND_SRC} 第 ${p} 頁`);
+      $("vpage").blur();
+    };
+  }else{
+    // 評量／單元複習：直接列出有影片的那幾份，點一下就好，不用打字
+    const keys=[...new Set(VIDS.map(srcOf).filter(s=>s.src===FIND_SRC).sort((a,b)=>a.order-b.order).map(s=>s.key))];
+    box.innerHTML=keys.length
+      ?`<div class="vkeys">${keys.map(k=>`<button type="button" class="vkey" data-key="${escH(k)}">${escH(k)}</button>`).join("")}</div>`
+      :NONE(FIND_SRC);
+  }
+}
+function showKey(k){
+  document.querySelectorAll(".vkey").forEach(b=>b.classList.toggle("on",b.dataset.key===k));
+  $("vfindOut").innerHTML=VIDS.filter(v=>srcOf(v).key===k).sort(bySrc).map(line).join("");
 }
 function play(id){
   const v=VIDS.find(x=>x.id===id); if(!v) return;
@@ -729,7 +777,9 @@ window.addEventListener("popstate",e=>{
 });
 $("vback").onclick=()=>history.back();
 document.addEventListener("click",e=>{
-  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play]"); if(!t) return;
+  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key]"); if(!t) return;
+  if(t.dataset.src){ FIND_SRC=t.dataset.src; drawFind(); return; }
+  if(t.dataset.key){ showKey(t.dataset.key); return; }
   if(t.dataset.vopen) openRoom();
   else if(t.dataset.unit){ VIEW=t.dataset.unit; drawRoom(); history.pushState({v:"unit"},""); }
   else if(t.dataset.play) play(t.dataset.play);
