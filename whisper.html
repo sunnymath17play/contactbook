@@ -170,10 +170,15 @@
     background:linear-gradient(135deg,#8DB8E6,#6E9FD6);border:none;border-radius:20px;padding:14px 16px;margin-bottom:14px;
     color:#fff;font-family:var(--font);box-shadow:0 6px 0 #5683B8,0 10px 20px rgba(110,159,214,.3);transition:transform .1s,box-shadow .1s;}
   .vopen:active{transform:translateY(4px);box-shadow:0 2px 0 #5683B8;}
+  .vopen.hop{animation:vhop 1.1s ease .4s 2;}   /* 一出現輕輕跳兩下，吸引孩子看 */
+  @keyframes vhop{0%,100%{transform:none}25%{transform:translateY(-7px)}50%{transform:none}70%{transform:translateY(-3px)}}
   .vopen .ic{font-size:38px;line-height:1;}
-  .vopen .tx{flex:1;}
-  .vopen b{display:block;font-size:21px;font-weight:800;}
-  .vopen small{display:block;font-size:14.5px;font-weight:700;opacity:.95;margin-top:1px;}
+  .vopen .tx{flex:1;min-width:0;}
+  /* 高度固定：載入前後（多了「新」標籤、字變長）版面都不跳 */
+  .vopen b{display:block;font-size:21px;font-weight:800;height:30px;line-height:30px;white-space:nowrap;}
+  .vopen small{display:block;font-size:14.5px;font-weight:700;opacity:.95;margin-top:1px;height:21px;line-height:21px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .vopen .vdot{vertical-align:2px;}
   .vopen .go{font-size:22px;font-weight:800;}
   .vdot{display:inline-block;background:var(--warn);color:#fff;font-size:12.5px;font-weight:800;
     border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:3px;box-shadow:0 0 0 2px #fff;}
@@ -685,13 +690,22 @@ const iconOf=u=>(UNIT_ICON.find(([k])=>String(u).includes(k))||[,"📘"])[1];
 const TILE_BG=["#FFE9CC","#DFF1DA","#E6E0FA","#FFE0E6","#DDEEFF","#FFF3C4"];
 
 // 樹洞頁上：只放一顆入口按鈕（影片再多高度都一樣）
+// 按鈕不等 Google（要 2～4 秒），網頁一打開就畫；部數先用手機記住的清單，回來再更新
+let VSTATE="loading";   // loading 載入中／ok／fail 連不上
 function renderVideos(list){
-  VIDS=list;
-  const seen=seenSet(), fresh=list.filter(v=>isNew(v)&&!seen.has(v.id)).length;
-  const html=`<button class="vopen" type="button" data-vopen="1"><span class="ic">📺</span>
-    <span class="tx"><b>影片教室${fresh?`<span class="vdot">新 ${fresh} 部</span>`:""}</b>
-    <small>${escH(CLASS_NAME)}・共 ${list.length} 部，點我進去看</small></span><span class="go">▶</span></button>`;
-  ["videos","videos2"].forEach(id=>{ $(id).innerHTML=html; });
+  if(list) VIDS=list;
+  const seen=seenSet(), fresh=VIDS.filter(v=>isNew(v)&&!seen.has(v.id)).length;
+  const sub = VIDS.length ? `${escH(CLASS_NAME)}・共 ${VIDS.length} 部，點我進去看`
+    : VSTATE==="loading" ? `${escH(CLASS_NAME)}・影片載入中…`
+    : `陸續上架中・卡住可以問 SUNNY`;
+  const html=`<span class="ic">📺</span>
+    <span class="tx"><b>影片教室${fresh?`<span class="vdot">新 ${fresh} 部</span>`:""}</b><small>${sub}</small></span><span class="go">▶</span>`;
+  ["videos","videos2"].forEach(id=>{
+    const b=$(id).querySelector(".vopen");
+    if(b) b.innerHTML=html;   // 只換字，按鈕不重畫，版面不跳
+    else $(id).innerHTML=`<button class="vopen hop" type="button" data-vopen="1">${html}</button>`;
+  });
+  if($("vroom").classList.contains("show") && VIEW==="home") drawRoom();
 }
 
 // 一部影片：橫滑卡片／清單一行
@@ -711,7 +725,18 @@ function units(){
 }
 function drawRoom(){
   const w=$("vwrap"), seen=seenSet();
-  if(VIEW==="home"){
+  if(VIEW==="home" && !VIDS.length){
+    // 還沒有影片（或還在載入／連不上）
+    const sentToday=$("done").classList.contains("show");
+    w.innerHTML = VSTATE==="loading"
+      ? `<div class="vnone" style="margin-top:20px">📺 影片載入中，等一下下喔…</div>`
+      : VSTATE==="fail"
+      ? `<div class="vnone" style="margin-top:20px">影片教室現在連不上 😢<br>等一下再試試看喔！</div>`
+      : `<div class="vnone" style="margin-top:20px">${escH(CLASS_NAME)}的影片陸續上架中 🎬<br>
+          還沒有影片，代表<b>還沒有人問過</b>！<br>卡住的題目，你要不要當第一個問 SUNNY 的人？ 🙋
+          ${sentToday?`<br><small>（今天的悄悄話送過了，明天再來樹洞問喔 🌙）</small>`
+            :`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY</button>`}</div>`;
+  }else if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask");
     const dot=vs=>{const n=vs.filter(v=>isNew(v)&&!seen.has(v.id)).length;return n?`<span class="vdot">新 ${n}</span>`:"";};
     w.innerHTML=`<div class="vsec">🔍 卡在哪裡？先點一個</div>
@@ -815,12 +840,16 @@ document.addEventListener("click",e=>{
   else if(t.dataset.play) play(t.dataset.play);
 });
 (async()=>{
-  if(!CH||!ENDPOINT) return;
+  if(!CH||!ENDPOINT||!/年級/.test(CLASS_NAME)) return;
+  const KEY="wh_vids_"+CH.id;
+  try{ const c=JSON.parse(lsGet(KEY)||"null"); if(Array.isArray(c)) VIDS=c; }catch(e){}
+  renderVideos();   // 馬上出現
   try{
     const r=await fetch(ENDPOINT+"?mode=videos&class="+encodeURIComponent(CH.id));
     const j=await r.json();
-    if(j&&j.ok&&Array.isArray(j.videos)&&j.videos.length) renderVideos(j.videos);
-  }catch(e){}   // 讀不到就不顯示，不影響送悄悄話
+    if(!(j&&j.ok&&Array.isArray(j.videos))) throw 0;
+    VSTATE="ok"; lsSet(KEY,JSON.stringify(j.videos)); renderVideos(j.videos);
+  }catch(e){ VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
 })();
 
 /* ---------- 每天只能說一次 ---------- */
