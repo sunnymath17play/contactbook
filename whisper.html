@@ -523,7 +523,8 @@ const helpToggle=$("helpToggle"),helpPanel=$("helpPanel"),itemsBox=$("items"),ad
 helpToggle.textContent=CONFIG.help.toggle;
 $("helpTip").innerHTML=CONFIG.help.tip;
 $("reexplainChip").textContent=CONFIG.help.reexplain;
-const TYPES=[["講義","📖 講義"],["考卷","📝 考卷"],["上課內容","🧑‍🏫 上課內容"]];
+// 講義分 A、B 本；這支手機上次點哪一本就先幫他選好（點一次之後就不用再點）
+const TYPES=[["講義A","📖 講義A"],["講義B","📖 講義B"],["考卷","📝 考卷"],["上課內容","🧑‍🏫 上課內容"]];
 let items=[];   // {type, page, q, text}
 
 function renderItems(){
@@ -535,7 +536,7 @@ function renderItems(){
     const seg=document.createElement("div");seg.className="seg";
     TYPES.forEach(([v,label])=>{
       const c=document.createElement("button");c.className="chip"+(it.type===v?" on":"");c.textContent=label;
-      c.onclick=()=>{it.type=v;renderItems();};
+      c.onclick=()=>{it.type=v; if(v.startsWith("講義")) lsSet("wh_book",v); box.classList.remove("bad"); renderItems();};
       seg.appendChild(c);
     });
     const x=document.createElement("button");x.className="x";x.textContent="✕";x.setAttribute("aria-label","刪掉這題");
@@ -555,14 +556,15 @@ function renderItems(){
         n.oninput=()=>{n.value=n.value.replace(/\D/g,"");it[key]=n.value;box.classList.remove("bad");};return n;};
       pq.append("第",mk("page","頁"),"頁　第",mk("q","題"),"題");
       box.appendChild(pq);
-      box.insertAdjacentHTML("beforeend",`<div class="eg">例如：${it.type} 第 12 頁 第 3 題</div>`);
+      box.insertAdjacentHTML("beforeend",`<div class="eg">例如：${it.type||"講義A"} 第 12 頁 第 3 題</div>`);
     }
     itemsBox.appendChild(box);
   });
   addBtn.disabled=items.length>=CONFIG.help.maxItems;
   addBtn.textContent=items.length>=CONFIG.help.maxItems ? `最多 ${CONFIG.help.maxItems} 題喔` : "＋ 再加一題";
 }
-const newItem=()=>({type:"講義",page:"",q:"",text:""});
+const lastBook=()=>{const b=lsGet("wh_book");return b==="講義A"||b==="講義B"?b:"";};
+const newItem=()=>({type:lastBook(),page:"",q:"",text:""});
 addBtn.onclick=()=>{ if(items.length<CONFIG.help.maxItems){ items.push(newItem()); renderItems(); } };
 
 $("gotIt").textContent=CONFIG.help.got;
@@ -590,6 +592,7 @@ const VAGUE=/都不會|全部|全都|都聽不懂|都不懂|每一題|每題|整
 function checkItems(){
   for(let i=0;i<items.length;i++){
     const it=items[i], n=`第${i+1}題`;
+    if(!it.type) return [i,`${n}是講義A還是講義B呢？點一下上面的按鈕喔`];
     if(it.type==="上課內容"){
       const t=(it.text||"").replace(/[\s，。！？、,.!?~～]/g,"");
       if(t.length<5) return [i,`${n}再寫清楚一點喔，是哪個地方聽不懂呢？`];
@@ -601,7 +604,7 @@ function checkItems(){
   }
   return null;
 }
-const itemText=it=>it.type==="上課內容" ? `上課：${it.text.trim()}` : `${it.type}p${+it.page}#${+it.q}`;
+const itemText=it=>it.type==="上課內容" ? `上課：${it.text.trim()}` : `${it.type} p${+it.page}#${+it.q}`;
 
 /* ---------- SUNNY 的回信 ---------- */
 // 每支手機一組亂數代號，送出時一起帶上；SUNNY 回信後，這支手機打開就看得到
@@ -754,7 +757,9 @@ function goAsk(){
   history.back();
   setTimeout(()=>{
     if(!state.help.active) helpToggle.onclick();
-    if(page && items.length && !items[0].page){ items[0].type="講義"; items[0].page=String(page); renderItems(); }
+    if(page && items.length && !items[0].page){
+      items[0].type=FIND_SRC; items[0].page=String(page); lsSet("wh_book",FIND_SRC); renderItems();
+    }
     if(!state.help.reexplain) $("reexplainChip").onclick();
     helpPanel.scrollIntoView({behavior:"smooth",block:"center"});
   },150);
