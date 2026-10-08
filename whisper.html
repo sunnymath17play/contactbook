@@ -210,6 +210,10 @@
   .vsrcb.on,.vkey.on{background:var(--sky);border-color:var(--sky);color:#fff;box-shadow:0 3px 10px rgba(127,169,214,.35);}
   .vkeys{display:flex;flex-wrap:wrap;gap:8px;}
   .vkey{padding:8px 14px;}
+  .vask{display:block;width:100%;margin-top:10px;border:none;border-radius:14px;min-height:50px;cursor:pointer;
+    background:linear-gradient(180deg,var(--gold),var(--sun));color:#fff;font-family:var(--font);font-weight:800;font-size:17px;
+    box-shadow:0 4px 0 var(--sun-deep);}
+  .vask:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sun-deep);}
   .vfind-out:empty{display:none;}
   .vfind-out{margin-top:10px;}
   .vnone{background:#FFF8EC;border:2px dashed var(--gold);border-radius:16px;padding:12px 14px;
@@ -735,15 +739,35 @@ function drawRoom(){
   $("vroomTitle").textContent="📺 "+(CLASS_NAME||"")+"影片教室";
   $("vbody").scrollTop=0;
 }
-const NONE=t=>`<div class="vnone">${escH(t)}還沒有影片喔～<br>回樹洞點「🙋 有地方沒聽懂」告訴 SUNNY！</div>`;
+// 找不到影片＝還沒有人問過這題 → 邀請孩子自己問（今天送過的，請他明天再來）
+let ASK_PAGE=0;
+const NONE=t=>{
+  const sentToday=$("done").classList.contains("show");
+  return `<div class="vnone">${escH(t)}還沒有影片喔～<br>
+    找不到影片，代表<b>還沒有人問過這題</b>！<br>你要不要當第一個問 SUNNY 的人？ 🙋
+    ${sentToday?`<br><small>（今天的悄悄話送過了，明天再來樹洞問喔 🌙）</small>`
+      :`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY 這題</button>`}</div>`;
+};
+// 回樹洞，直接打開「有地方沒聽懂」，講義的頁數先幫他填好
+function goAsk(){
+  const page=ASK_PAGE;
+  history.back();
+  setTimeout(()=>{
+    if(!state.help.active) helpToggle.onclick();
+    if(page && items.length && !items[0].page){ items[0].type="講義"; items[0].page=String(page); renderItems(); }
+    if(!state.help.reexplain) $("reexplainChip").onclick();
+    helpPanel.scrollIntoView({behavior:"smooth",block:"center"});
+  },150);
+}
 function drawFind(){
-  const box=$("vfindBox"), out=$("vfindOut"); out.innerHTML="";
+  const box=$("vfindBox"), out=$("vfindOut"); out.innerHTML=""; ASK_PAGE=0;
   document.querySelectorAll("#vsrc .vsrcb").forEach(b=>b.classList.toggle("on",b.dataset.src===FIND_SRC));
   if(FIND_SRC.startsWith("講義")){
     box.innerHTML=`<form class="vfind" id="vfind"><span>${FIND_SRC} 第</span><input id="vpage" type="number" inputmode="numeric" min="1" max="999" placeholder="?"><span>頁</span><button type="submit">找影片</button></form>`;
     $("vfind").onsubmit=e=>{
       e.preventDefault();
       const p=parseInt($("vpage").value,10); if(!p){ out.innerHTML=""; return; }
+      ASK_PAGE=p;
       const hit=VIDS.filter(v=>{const s=srcOf(v);return s.src===FIND_SRC&&s.page===p;}).sort(bySrc);
       out.innerHTML=hit.length?hit.map(line).join(""):NONE(`${FIND_SRC} 第 ${p} 頁`);
       $("vpage").blur();
@@ -777,7 +801,8 @@ window.addEventListener("popstate",e=>{
 });
 $("vback").onclick=()=>history.back();
 document.addEventListener("click",e=>{
-  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key]"); if(!t) return;
+  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key],[data-ask]"); if(!t) return;
+  if(t.dataset.ask){ goAsk(); return; }
   if(t.dataset.src){ FIND_SRC=t.dataset.src; drawFind(); return; }
   if(t.dataset.key){ showKey(t.dataset.key); return; }
   if(t.dataset.vopen) openRoom();
