@@ -113,6 +113,17 @@ nav button span{display:block;font-size:26px}
 @keyframes wobhot{0%,60%,100%{transform:rotate(0)}66%{transform:rotate(-9deg)}72%{transform:rotate(9deg)}78%{transform:rotate(-7deg)}84%{transform:rotate(6deg)}90%{transform:rotate(-2deg)}}
 .pet.tap .egg{animation:wobhot .6s ease-in-out 1}
 @media (prefers-reduced-motion: reduce){.mv,.shell,.egg,.egg.hot{animation:none !important}}
+/* 收藏簿、守護神獸 */
+.album{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.album>div{background:#fff3df;border-radius:14px;padding:6px 2px;text-align:center;font-size:13px;font-weight:bold;min-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.album .empty{background:#f6efe4;border:2px dashed #e5d3b8}
+.album .slot{width:56px;height:56px;border-radius:50%;background:#efe3d0;color:#b39a78;display:flex;align-items:center;justify-content:center;font-size:22px}
+.album .gift{grid-column:span 2;background:linear-gradient(135deg,#fff3c4,#ffe0f0)}
+.guard{border-radius:50%;background:radial-gradient(circle,#fff 15%,#fff3c4 40%,#ffd6f0 58%,transparent 72%)}
+.guard .scroll{position:absolute;transform:translate(-50%,-50%) rotate(-3deg);background:#fffdf3;border:2px solid #d9a84a;border-radius:6px;padding:.3em .6em;font-weight:900;color:#c0392b;text-align:center;line-height:1.2;box-shadow:0 2px 6px rgba(120,80,0,.25);z-index:2}
+.garden>div{position:relative}
+.garden>div.legend{background:linear-gradient(135deg,#fff3c4,#ffe0f0);outline:3px solid #ffb400}
+.nbadge{position:absolute;top:4px;right:6px;font-size:12px;background:#fff;border-radius:10px;padding:1px 6px;color:#8a6d4b}
 </style>
 </head>
 <body>
@@ -152,11 +163,38 @@ const EGGS = [
   {nm:"花朵蛋",   bg:"#fff1c9", mark:"🌸", top:"🌼"},
   {nm:"月亮蛋",   bg:"#2f3f8f", mark:"🌙", dots:"✦", dc:"#fff6a8", top:"🌙"}
 ];
-const STAGE_NM = ["蛋","寶寶","少年","勇者","傳說"];
-const DECO = ["","","✨","🌟","👑"];
-const EVOLVE = [{lv:1,s:1},{lv:10,s:2},{lv:26,s:3},{lv:40,s:4}];
+const STAGE_NM = ["蛋","寶寶","少年","勇者","傳說","守護神獸"];
+const DECO = ["","","✨","🌟","👑",""];
+const NEXT_TXT = {hatch:"就孵出來！", teen:"變成「少年」！", hero:"變成「勇者」！", legend:"變成「傳說」！", full:"就收進收藏簿、拿到新的蛋！", mhatch:"神秘蛋就要孵化了！"};
+const DEF_CFG = {per:2,hatch:10,teen:25,hero:45,legend:70,full:80,lvl:5,count:10,mHatch:20,gift:"立可帶"};
 
-const stageOf = pts => { const lv=Math.floor(Math.max(0,pts)/10); return {level:lv, stage: lv<1?0: lv<10?1: lv<26?2: lv<40?3:4}; };
+// ★ 進度計算：跟 Apps Script 的 stateOf_ 一模一樣（改一邊要一起改）
+function stateOf(total, eggs, pets, C){
+  total = Math.max(0, total);
+  const done = Math.min(Math.floor(total / C.full), C.count);
+  const collection = [];
+  for (let i = 0; i < done; i++) collection.push({ egg: eggs[i] === undefined ? '' : eggs[i], pet: pets[i] || '' });
+  if (done >= C.count) {
+    const pts = total - C.count * C.full, hatched = pts >= C.mHatch;
+    return { done, collection, mystery: true, pts, hatched, stage: hatched ? 5 : 0, level: 0, needPick: false,
+      next: hatched ? null : { at: C.mHatch, what: 'mhatch' } };
+  }
+  const pts = total - done * C.full;
+  const needPick = eggs.length <= done;
+  const stage = pts < C.hatch ? 0 : pts < C.teen ? 1 : pts < C.hero ? 2 : pts < C.legend ? 3 : 4;
+  const level = stage ? Math.floor((pts - C.hatch) / C.lvl) + 1 : 0;
+  const steps = [[C.hatch, 'hatch'], [C.teen, 'teen'], [C.hero, 'hero'], [C.legend, 'legend'], [C.full, 'full']];
+  const nx = steps.find(s => pts < s[0]);
+  return { done, collection, mystery: false, pts, stage, level, needPick,
+    egg: needPick ? '' : eggs[done], pet: needPick ? '' : pets[done], next: nx ? { at: nx[0], what: nx[1] } : null };
+}
+function publicState(st, C, withGift){
+  const o = { done: st.done, collection: st.collection, mystery: st.mystery, pts: st.pts, stage: st.stage, level: st.level,
+    needPick: st.needPick, next: st.next, egg: st.egg, pet: st.stage ? st.pet : '' };
+  if (st.mystery && st.hatched && withGift) o.gift = C.gift;
+  return o;
+}
+
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const LS = { get:k=>{try{return JSON.parse(localStorage.getItem("pets_"+k))}catch(e){return null}}, set:(k,v)=>localStorage.setItem("pets_"+k, JSON.stringify(v)), del:k=>localStorage.removeItem("pets_"+k) };
@@ -170,33 +208,41 @@ async function apiPost(body){
   if(!ENDPOINT) return mock.post(body);
   const r = await fetch(ENDPOINT, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)}); return r.json();
 }
-// 本機測試用的假後端（規則跟 Apps Script 一樣）
+// 本機測試用的假後端（規則跟 Apps Script 一樣；ENDPOINT 清空就會用這個）
 const mock = (()=>{
   const ROSTER=['陳映榤','王寶儀','黃宥甄','陳宥蓉','鄭丞佑','盧柏丞','崔守勝','許恩碩','曹睿軒','高子宸','張宇希','張晴媗','陳韋衡','黃丞毅','芮可可','鄭又榤','鄭宇勝','楊羽菁','鄭凱元'];
-  const db = () => LS.get("mockdb") || {kids:ROSTER.map(f=>({full:f,name:f.slice(1),egg:"",pet:""})), log:[], per:2};
+  const db = () => LS.get("mockdb") || {kids:ROSTER.map(f=>({full:f,name:f.slice(1),eggs:[],pets:[]})), log:[], cfg:{...DEF_CFG}};
   const save = d => LS.set("mockdb", d);
   const pts = d => { const p={}; d.log.forEach(l=>p[l.full]=(p[l.full]||0)+l.pts); return p; };
   const find = (d,n) => d.kids.find(k=>k.full===n||k.name===n);
   const md = t => { const x=new Date(t); return (x.getMonth()+1)+"/"+x.getDate(); };
+  const C = d => ({...DEF_CFG, ...(d.cfg||{})});
   return {
-    get(q){ const d=db(), p=pts(d);
-      if(q.mode==="garden") return {ok:true, kids:d.kids.map(k=>{const st=stageOf(p[k.full]||0).stage; return {name:k.name,egg:k.egg,pet:st?k.pet:"",stage:st};})};
+    get(q){ const d=db(), p=pts(d), c=C(d);
+      if(q.mode==="garden") return {ok:true, cfg:c, kids:d.kids.map(k=>{const s=publicState(stateOf(p[k.full]||0,k.eggs,k.pets,c),c,false);
+        return {name:k.name,egg:s.egg,pet:s.pet,stage:s.stage,mystery:s.mystery,n:s.done,needPick:s.needPick};})};
       if(q.mode==="me"){ const k=find(d,q.name); if(!k) return {ok:false,err:"no_kid"};
-        const mine=d.log.filter(l=>l.full===k.full);
-        const tot=p[k.full]||0; return {ok:true,name:k.name,egg:k.egg,picked:k.egg!=="",pet:tot>=10?k.pet:"",points:tot,per:d.per,recent:mine.slice(-6).reverse().map(l=>({d:md(l.at),why:l.why,pts:l.pts}))}; }
+        const mine=d.log.filter(l=>l.full===k.full), tot=p[k.full]||0;
+        return {ok:true,name:k.name,points:tot,cfg:c,recent:mine.slice(-6).reverse().map(l=>({d:md(l.at),why:l.why,pts:l.pts})),
+          ...publicState(stateOf(tot,k.eggs,k.pets,c),c,true)}; }
     },
-    post(b){ const d=db();
-      if(b.mode==="pick"){ const k=find(d,b.name); if(!k) return {ok:false,err:"no_kid"}; if(k.egg!=="") return {ok:false,err:"picked"};
-        const P=Object.keys(PETS), c={}; P.forEach(x=>c[x]=0); d.kids.forEach(x=>{ if(c[x.pet]!=null) c[x.pet]++; });
-        const mn=Math.min(...P.map(x=>c[x])), pool=P.filter(x=>c[x]===mn); k.egg=+b.egg; k.pet=pool[Math.floor(Math.random()*pool.length)]; save(d); return {ok:true}; }
+    post(b){ const d=db(), c=C(d), p=pts(d);
+      if(b.mode==="pick"){ const k=find(d,b.name); if(!k) return {ok:false,err:"no_kid"};
+        if(!stateOf(p[k.full]||0,k.eggs,k.pets,c).needPick) return {ok:false,err:"picked"};
+        const ALL=Object.keys(PETS); let pool=ALL.filter(x=>!k.pets.includes(x)); if(!pool.length) pool=ALL.slice();
+        const n={}; pool.forEach(x=>n[x]=0); d.kids.forEach(x=>x.pets.forEach(q=>{ if(n[q]!=null) n[q]++; }));
+        const mn=Math.min(...pool.map(x=>n[x])); pool=pool.filter(x=>n[x]===mn);
+        k.eggs.push(+b.egg); k.pets.push(pool[Math.floor(Math.random()*pool.length)]); save(d); return {ok:true}; }
       if(String(b.key)!=="test") return {ok:false,err:"bad_key"};
-      if(b.mode==="admin"){ const p=pts(d), lb=d.log.length?d.log.filter(l=>l.batch===d.log[d.log.length-1].batch):[];
-        return {ok:true,per:d.per,kids:d.kids.map(k=>({...k,points:p[k.full]||0})),last:lb.length?{d:md(lb[0].at),why:lb[0].why,names:lb.map(l=>l.full.slice(1)),pts:lb[0].pts}:null}; }
-      if(b.mode==="add"){ const v=b.reason==="訂正半"?d.per/2:(b.reason==="作業"||b.reason==="訂正")?d.per:+b.pts; const now=Date.now();
+      if(b.mode==="admin"){ const lb=d.log.length?d.log.filter(l=>l.batch===d.log[d.log.length-1].batch):[];
+        return {ok:true,per:c.per,cfg:c,kids:d.kids.map(k=>{const s=stateOf(p[k.full]||0,k.eggs,k.pets,c);
+          return {full:k.full,name:k.name,points:p[k.full]||0,egg:s.egg,pet:s.pet,stage:s.stage,level:s.level,mystery:s.mystery,n:s.done,needPick:s.needPick};}),
+          last:lb.length?{d:md(lb[0].at),why:lb[0].why,names:lb.map(l=>l.full.slice(1)),pts:lb[0].pts}:null}; }
+      if(b.mode==="add"){ const v=b.reason==="訂正半"?c.per/2:(b.reason==="作業"||b.reason==="訂正")?c.per:+b.pts; const now=Date.now();
         b.names.forEach(n=>{const k=find(d,n); if(k) d.log.push({at:now,full:k.full,pts:v,why:b.reason,batch:now});}); save(d); return {ok:true,pts:v}; }
       if(b.mode==="undo"){ if(!d.log.length) return {ok:false,err:"empty"}; const bt=d.log[d.log.length-1].batch; const rm=d.log.filter(l=>l.batch===bt);
         d.log=d.log.filter(l=>l.batch!==bt); save(d); return {ok:true,removed:rm.map(l=>l.full),why:rm[0].why,pts:rm[0].pts}; }
-      if(b.mode==="resetPet"){ const k=find(d,b.name); if(k){k.pet="";k.egg="";save(d);} return {ok:!!k}; }
+      if(b.mode==="resetPet"){ const k=find(d,b.name); if(k){const s=stateOf(p[k.full]||0,k.eggs,k.pets,c); k.eggs=k.eggs.slice(0,s.done); k.pets=k.pets.slice(0,s.done); save(d);} return {ok:!!k}; }
     }
   };
 })();
@@ -248,7 +294,27 @@ function petHTML(pet, stage, size, egg){
   const fs = size*[0,.58,.66,.72,.78][stage];
   return `<div class="pet s${stage}" style="width:${size}px;height:${size}px;font-size:${size}px"><div class="mv mv-${pet}" style="${dl()}"><span class="emo" style="font-size:${fs}px">${P.emo}</span></div><span class="deco">${DECO[stage]}</span></div>`;
 }
-const creature = (k, size) => k.stage ? petHTML(k.pet, k.stage, size, k.egg) : eggHTML(k.egg, size, k.hot);
+// 神秘蛋（收集滿才出現）＋守護神獸（手上紙條寫 SUNNY 的禮物）
+function mysteryEggHTML(size, hot){
+  const box = `width:${size}px;height:${size}px`;
+  if(ART.has("egg_mystery")) return `<div class="pet s4" style="${box}"><div class="egg eggimg${hot?" hot":""}" style="${dl()}"><img src="img/egg_mystery.png" alt=""></div></div>`;
+  return `<div class="pet s4" style="${box}"><div class="egg${hot?" hot":""}" style="background:linear-gradient(135deg,#ffe27a,#ffb347 45%,#ff7ac8 75%,#8ecbff);${dl()}">
+    <span style="position:absolute;left:0;right:0;top:30%;text-align:center;font-size:${size*.3}px;font-weight:900;color:#fff;text-shadow:0 2px 6px rgba(120,60,0,.5)">?</span>
+    <i style="width:18%;height:12%;left:22%;top:16%"></i></div></div>`;
+}
+// 守護神獸：gift＝紙條上的字（null＝不畫紙條、""＝紙條只畫🎁）
+// 紙條位置 GUARD_SCROLL：阿居的圖上手拿紙條的地方（佔圖比例），換圖要重量
+const GUARD_SCROLL = {x:.5, y:.62, w:.34};
+function guardianHTML(size, gift){
+  const box = `width:${size}px;height:${size}px`;
+  const body = ART.has("guardian") ? `<img src="img/guardian.png" alt="" style="inset:0;width:100%;height:100%">`
+    : `<span class="emo" style="font-size:${size*.72}px">🐉</span>`;
+  const S = GUARD_SCROLL;
+  const scroll = gift==null ? "" : `<div class="scroll" style="left:${S.x*100}%;top:${S.y*100}%;max-width:${S.w*size}px;font-size:${Math.max(10,size*.07)}px">${gift?esc(gift):"🎁"}</div>`;
+  return `<div class="pet s4 guard" style="${box}"><div class="mv mv-unicorn" style="${dl()}">${body}${scroll}</div></div>`;
+}
+const creature = (k, size) => k.mystery ? (k.stage ? guardianHTML(size, k.gift) : mysteryEggHTML(size, k.hot))
+  : (k.stage ? petHTML(k.pet, k.stage, size, k.egg) : eggHTML(k.egg, size, k.hot));
 // 點寵物／蛋：跳一下＋冒愛心＋叮一聲
 document.addEventListener("click", e => {
   const el = e.target.closest("#app .pet, .dlg .pet"); if(!el || el.closest(".pickgrid") || el.closest(".krow")) return;
@@ -293,9 +359,12 @@ async function whoAmI(){
     if(await dialog(`<div style="font-size:22px">你是 <b>${esc(b.dataset.n)}</b> 嗎？</div>`,"是我！","不是")){ ME=b.dataset.n; LS.set("name",ME); LS.del("seen"); showMe(); }
   });
 }
-async function pickPet(){
+async function pickPet(d){
   $("#nav").style.display="none";
-  $("#app").innerHTML=`<div class="card center"><h2>🥚 ${esc(ME)}，挑一顆蛋！</h2><div class="muted">裡面住著誰？<b>孵出來才知道！</b><br>挑了就不能換喔</div></div>
+  const first = !d || d.done===0;
+  $("#app").innerHTML=`<div class="card center"><h2>🥚 ${esc(ME)}，${first?"挑一顆蛋！":`挑第 ${d.done+1} 顆蛋！`}</h2>
+    ${first?"":`<div style="margin:4px 0 8px">📖 收藏簿已經有 <b>${d.done}</b> 隻了，好厲害！</div>`}
+    <div class="muted">裡面住著誰？<b>孵出來才知道！</b><br>挑了就不能換喔</div></div>
     <div class="pickgrid">${EGGS.map((e,i)=>`<button data-e="${i}">${eggHTML(i,96)}${e.nm}</button>`).join("")}</div>`;
   document.querySelectorAll(".pickgrid button").forEach(b=>b.onclick=async()=>{
     const i=+b.dataset.e;
@@ -305,28 +374,55 @@ async function pickPet(){
     showMe();
   });
 }
+function albumHTML(d, C){
+  const cells = [];
+  for(let i=0;i<C.count;i++){
+    const c = d.collection[i];
+    cells.push(c ? `<div class="got">${petHTML(c.pet,4,64,c.egg)}<div>${esc((PETS[c.pet]||{}).nm||"")}</div></div>`
+                 : `<div class="empty"><div class="slot">${i+1}</div></div>`);
+  }
+  const m = d.mystery ? (d.stage ? guardianHTML(64, null) : mysteryEggHTML(64)) : `<div class="slot">🎁</div>`;
+  cells.push(`<div class="${d.mystery?"got":"empty"} gift"><div>${m}</div><div>神秘蛋</div></div>`);
+  return `<div class="card"><h2>📖 收藏簿 ${d.done} / ${C.count}</h2>
+    <div class="muted" style="margin-bottom:8px">每隻養到 ${C.full} 點就收進來，再挑下一顆蛋；收集滿 ${C.count} 隻會出現一顆<b>神秘蛋</b>，裡面是最大隻的守護神獸，還帶著 SUNNY 送你的禮物！</div>
+    <div class="album">${cells.join("")}</div></div>`;
+}
 async function showMe(){
   if(!ME) return whoAmI();
   $("#nav").style.display="flex"; setTab("me");
   $("#app").innerHTML='<div class="loading">載入中…</div>';
   let d; try{ d=await apiGet({mode:"me",name:ME}); }catch(e){ return fail(); }
   if(!d.ok){ LS.del("name"); ME=null; return whoAmI(); }
-  if(!d.picked) return pickPet();
-  const {level,stage}=stageOf(d.points), per=d.per||2, P=PETS[d.pet]||{}, E=EGGS[d.egg]||{nm:"蛋"};
-  let line, pct;
-  if(stage===0){ pct=d.points/10*100; line=`再 <b>${10-d.points}</b> 點就孵出來！`; }
-  else { pct=(d.points%10)/10*100; line=`再 <b>${10-d.points%10}</b> 點升到 ${level+1} 級`; }
-  const nx=EVOLVE.find(e=>e.lv>level);
-  const evo = stage===0 ? "" : nx ? `<div class="muted" style="margin-top:6px">🌈 到 <b>${nx.lv} 級</b> 會變成「${STAGE_NM[nx.s]}」！</div>` : `<div class="muted" style="margin-top:6px">👑 已經是傳說寵物了！</div>`;
+  if(d.needPick) return pickPet(d);
+  const C={...DEF_CFG,...(d.cfg||{})}, per=C.per, P=PETS[d.pet]||{}, E=EGGS[d.egg]||{nm:"蛋"};
+  const stage=d.stage, level=d.level;
+  let title, badge, line="", pct=100;
+  if(d.mystery){
+    title = stage ? `${esc(d.name)} 的守護神獸` : `${esc(d.name)} 的神秘蛋`;
+    badge = `<span class="lv" style="background:#e8267f">${stage?"守護神獸":"✨ 神秘蛋"}</span>`;
+  } else {
+    title = `${esc(d.name)} 的${stage?P.nm:"神秘"+E.nm}`;
+    badge = stage ? `<span class="lv">Lv ${level}・${STAGE_NM[stage]}</span>` : `<span class="lv">裡面住著誰呢？</span>`;
+  }
+  if(d.next){
+    const prev = d.mystery ? 0 : [0,C.hatch,C.teen,C.hero,C.legend][stage];
+    pct = Math.max(0,Math.min(100,(d.pts-prev)/(d.next.at-prev)*100));
+    line = `再 <b>${d.next.at-d.pts}</b> 點${NEXT_TXT[d.next.what]}`;
+  }
+  const giftCard = d.mystery && stage ? `<div class="card center" style="background:#fff7d6;border:3px dashed #ffb400">
+      <div style="font-size:22px;font-weight:bold">🎁 守護神獸帶來的禮物</div>
+      <div style="font-size:30px;font-weight:900;color:#e8267f;margin:10px 0">${esc(d.gift||"")}</div>
+      <div>把這個畫面給 SUNNY 看，就可以領取喔！</div></div>` : "";
   $("#app").innerHTML=`
   <div class="card center">
-    <div style="font-size:20px;font-weight:bold">${esc(d.name)} 的${stage?P.nm:"神秘"+E.nm}</div>
-    <div style="margin:8px 0">${creature({stage,pet:d.pet,egg:d.egg,hot:d.points>=6},190)}</div>
-    <div>${stage===0?'<span class="lv">裡面住著誰呢？</span>':`<span class="lv">${level} 級・${STAGE_NM[stage]}</span>`}</div>
-    <div class="bar"><div style="width:${pct}%"></div></div>
-    <div>${line}</div>${evo}
+    <div style="font-size:20px;font-weight:bold">${title}</div>
+    <div style="margin:8px 0">${creature({stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:d.gift,hot:!!(d.next&&d.next.at-d.pts<=4&&!stage)},d.mystery?230:190)}</div>
+    <div>${badge}</div>
+    ${d.next?`<div class="bar"><div style="width:${pct}%"></div></div><div>${line}</div>`:""}
     <div class="muted" style="margin-top:6px">目前 ${d.points} 點</div>
   </div>
+  ${giftCard}
+  ${albumHTML(d,C)}
   <div class="card rules"><h2>⭐ 怎麼加點？（每次 +${per}）</h2>
     <div><b>作業</b></div><ul style="margin:4px 0 10px;padding-left:22px"><li>下課前完成交出</li><li>批改後錯很少</li></ul>
     <div><b>訂正</b></div><ul style="margin:4px 0 0;padding-left:22px"><li>在指定時間前訂正「完」</li><li>訂正後還錯一題，可能拿一半（+${per/2}）</li></ul>
@@ -336,18 +432,23 @@ async function showMe(){
   $("#notme").onclick=()=>{ LS.del("name"); LS.del("seen"); ME=null; whoAmI(); };
   // 慶祝：跟這支手機上次看到的比
   const seen=LS.get("seen");
-  LS.set("seen",{pts:d.points,level,stage});
-  if(seen && level>seen.level){
-    const msg = stage>seen.stage ? (seen.stage===0 ? `🐣 孵出來了！<br>是${P.nm}！` : `🌈 變身了！<br>變成「${STAGE_NM[stage]}」${P.nm}！`) : `⬆️ 升到 ${level} 級了！`;
-    setTimeout(()=>{ chime(); confetti(); dialog(`${creature({stage,pet:d.pet,egg:d.egg},150)}<div class="party">${msg}</div><div class="muted">繼續加油，SUNNY 看到了！</div>`,"耶！"); }, 300);
+  LS.set("seen",{done:d.done,stage,level,mystery:d.mystery});
+  if(!seen) return;
+  let msg="";
+  if(d.mystery && stage && !(seen.mystery && seen.stage)) msg=`🎉 守護神獸出現了！<br>牠帶來了禮物：<br><span style="color:#3a2a18">${esc(d.gift||"")}</span>`;
+  else if(d.mystery && !seen.mystery) msg=`🌟 收藏簿集滿了！<br>出現一顆神秘蛋！`;
+  else if(!d.mystery && seen.done===d.done){
+    if(stage>seen.stage) msg = seen.stage===0 ? `🐣 孵出來了！<br>是${P.nm}！` : `🌈 變身了！<br>變成「${STAGE_NM[stage]}」${P.nm}！`;
+    else if(level>seen.level) msg=`⬆️ 升到 Lv ${level} 了！`;
   }
+  if(msg) setTimeout(()=>{ chime(); confetti(); dialog(`${creature({stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:d.gift},150)}<div class="party">${msg}</div><div class="muted">繼續加油，SUNNY 看到了！</div>`,"耶！"); }, 300);
 }
 async function showGarden(){
   setTab("garden");
   $("#app").innerHTML='<div class="loading">載入中…</div>';
   let g; try{ g=await apiGet({mode:"garden"}); }catch(e){ return fail(); }
   $("#app").innerHTML=`<div class="card center" style="padding:12px"><h2 style="margin:0">🏡 三年級寵物園</h2></div>
-    <div class="garden">${g.kids.map(k=>`<div class="${k.name===ME?"me":""}">${creature(k,84)}<div>${esc(k.name)}</div></div>`).join("")}</div>`;
+    <div class="garden">${g.kids.map(k=>`<div class="${k.name===ME?"me":""}${k.mystery&&k.stage?" legend":""}">${creature({...k,gift:k.mystery&&k.stage?"":null},84)}<div>${esc(k.name)}</div>${k.n?`<div class="nbadge">📖 ${k.n}</div>`:""}</div>`).join("")}</div>`;
 }
 function setTab(t){ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t)); }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=> b.dataset.t==="me"?showMe():showGarden());
@@ -369,9 +470,9 @@ function renderAdmin(){
   $("#app").innerHTML=`
     ${d.last?`<div class="lastbox"><span>上一筆：${esc(d.last.d)} ${esc(d.last.why)} ${d.last.pts>0?"+":""}${d.last.pts}　${d.last.names.map(esc).join("、")}</span><button id="undo">復原</button></div>`:""}
     <div class="toolbar"><button id="all">全選</button><button id="none">清除</button><span class="muted" id="cnt"></span></div>
-    ${d.kids.map(k=>{const s=stageOf(k.points); return `<div class="krow${SEL.has(k.name)?" on":""}" data-n="${esc(k.name)}"><div class="ck">✓</div>
-      <div style="width:44px">${creature({stage:s.stage,pet:k.pet,egg:k.egg},44)}</div><div class="nm">${esc(k.name)}</div>
-      <div class="pt">${k.points} 點<br>${s.stage?s.level+" 級":"蛋"}</div></div>`}).join("")}
+    ${d.kids.map(k=>`<div class="krow${SEL.has(k.name)?" on":""}" data-n="${esc(k.name)}"><div class="ck">✓</div>
+      <div style="width:44px">${creature({stage:k.stage,pet:k.pet,egg:k.egg,mystery:k.mystery,gift:null},44)}</div><div class="nm">${esc(k.name)}</div>
+      <div class="pt">${k.points} 點<br>${k.mystery?(k.stage?"守護神獸":"神秘蛋"):(k.needPick?"待挑蛋":k.stage?"Lv "+k.level+" "+STAGE_NM[k.stage]:"蛋")}${k.n?"・📖"+k.n:""}</div></div>`).join("")}
     <div class="actbar"><button class="b-hw" data-r="作業">作業 +${per}</button><button class="b-fix" data-r="訂正">訂正 +${per}</button><button class="b-half" data-r="訂正半">訂正半 +${per/2}</button></div>`;
   const cnt=()=>{ $("#cnt").textContent=SEL.size?`已選 ${SEL.size} 人`:"點名字選人"; document.querySelectorAll(".actbar button").forEach(b=>b.disabled=!SEL.size); };
   document.querySelectorAll(".krow").forEach(r=>r.onclick=()=>{ const n=r.dataset.n; SEL.has(n)?SEL.delete(n):SEL.add(n); r.classList.toggle("on"); cnt(); });
