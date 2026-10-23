@@ -23,6 +23,10 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .namebtn{padding:16px 4px;font-size:21px;font-weight:bold;background:#fff3df;color:var(--ink);border:2px solid var(--line)}
 .namebtn.on{border-color:var(--orange);background:#ffe1b8}
+.pnin{font-size:24px;padding:10px 12px;border:3px solid var(--line);border-radius:14px;width:80%;max-width:320px;text-align:center;font-weight:bold}
+.warn{color:#c0392b;margin-top:10px;font-size:17px}
+.pnl{font-size:13px;color:#9a6a2a;font-weight:normal}.pnl .need{color:#c0392b}
+.regbtn{padding:6px 10px;font-size:14px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-left:4px;flex:none}
 /* 寵物 */
 .pet{position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto}
 .pet .emo{line-height:1}
@@ -227,14 +231,14 @@ const routeTitle = (r, stage) => r ? r[1+stage] : "";
 const STAGE_NM = ["蛋","寶寶","少年","勇者","傳說","守護神獸"];
 const DECO = ["","","✨","🌟","👑",""];
 const NEXT_TXT = {hatch:"就孵出來！", teen:"變成「少年」！", hero:"變成「勇者」！", legend:"變成「傳說」！", full:"就收進收藏簿、拿到新的蛋！", mhatch:"神秘蛋就要孵化了！"};
-const DEF_CFG = {per:2,hatch:10,teen:25,hero:45,legend:70,full:80,lvl:5,count:10,mHatch:20,gift:"立可帶"};
+const DEF_CFG = {per:2,cls:1,e100:20,e95:10,hatch:10,teen:20,hero:32,legend:42,full:50,lvl:5,count:4,mHatch:20,gift:"立可帶"};
 
 // ★ 進度計算：跟 Apps Script 的 stateOf_ 一模一樣（改一邊要一起改）
-function stateOf(total, eggs, pets, C){
-  total = Math.max(0, total);
+function stateOf(total, eggs, pets, C, routes){
+  total = Math.max(0, total); routes = routes || [];
   const done = Math.min(Math.floor(total / C.full), C.count);
   const collection = [];
-  for (let i = 0; i < done; i++) collection.push({ egg: eggs[i] === undefined ? '' : eggs[i], pet: pets[i] || '' });
+  for (let i = 0; i < done; i++) collection.push({ egg: eggs[i] === undefined ? '' : eggs[i], pet: pets[i] || '', route: routes[i] === undefined ? '' : routes[i] });
   if (done >= C.count) {
     const pts = total - C.count * C.full, hatched = pts >= C.mHatch;
     return { done, collection, mystery: true, pts, hatched, stage: hatched ? 5 : 0, level: 0, needPick: false,
@@ -247,11 +251,12 @@ function stateOf(total, eggs, pets, C){
   const steps = [[C.hatch, 'hatch'], [C.teen, 'teen'], [C.hero, 'hero'], [C.legend, 'legend'], [C.full, 'full']];
   const nx = steps.find(s => pts < s[0]);
   return { done, collection, mystery: false, pts, stage, level, needPick,
-    egg: needPick ? '' : eggs[done], pet: needPick ? '' : pets[done], next: nx ? { at: nx[0], what: nx[1] } : null };
+    egg: needPick ? '' : eggs[done], pet: needPick ? '' : pets[done], route: needPick || routes[done] === undefined ? '' : routes[done],
+    next: nx ? { at: nx[0], what: nx[1] } : null };
 }
 function publicState(st, C, withGift){
   const o = { done: st.done, collection: st.collection, mystery: st.mystery, pts: st.pts, stage: st.stage, level: st.level,
-    needPick: st.needPick, next: st.next, egg: st.egg, pet: st.stage ? st.pet : '' };
+    needPick: st.needPick, next: st.next, egg: st.egg, pet: st.stage ? st.pet : '', route: st.stage ? st.route : '' };
   if (st.mystery && st.hatched && withGift) o.gift = C.gift;
   return o;
 }
@@ -269,41 +274,51 @@ async function apiPost(body){
   if(!ENDPOINT) return mock.post(body);
   const r = await fetch(ENDPOINT, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)}); return r.json();
 }
-// 本機測試用的假後端（規則跟 Apps Script 一樣；ENDPOINT 清空就會用這個）
+// 本機測試用的假後端（規則跟 Apps Script 一樣；ENDPOINT 清空就會用這個；管理密碼 test）
 const mock = (()=>{
   const ROSTER=['陳映榤','王寶儀','黃宥甄','陳宥蓉','鄭丞佑','盧柏丞','崔守勝','許恩碩','曹睿軒','高子宸','張宇希','張晴媗','陳韋衡','黃丞毅','芮可可','鄭又榤','鄭宇勝','楊羽菁','鄭凱元'];
-  const db = () => LS.get("mockdb") || {kids:ROSTER.map(f=>({full:f,name:f.slice(1),eggs:[],pets:[]})), log:[], cfg:{...DEF_CFG}};
-  const save = d => LS.set("mockdb", d);
+  const RN={dragon:5,cat:5,dog:4,bunny:4,penguin:4,bear:4,owl:4,unicorn:4};
+  const db = () => LS.get("mockdb2") || {kids:ROSTER.map(f=>({full:f,name:f.slice(1),eggs:[],pets:[],routes:[],pn:""})), log:[], cfg:{...DEF_CFG}};
+  const save = d => LS.set("mockdb2", d);
   const pts = d => { const p={}; d.log.forEach(l=>p[l.full]=(p[l.full]||0)+l.pts); return p; };
   const find = (d,n) => d.kids.find(k=>k.full===n||k.name===n);
+  const key = s => String(s||"").replace(/\s+/g,"").toLowerCase();
+  const findPet = (d,s) => key(s) ? d.kids.find(k=>k.pn&&key(k.pn)===key(s)) : null;
   const md = t => { const x=new Date(t); return (x.getMonth()+1)+"/"+x.getDate(); };
   const C = d => ({...DEF_CFG, ...(d.cfg||{})});
+  const st = (k,p,c) => stateOf(p[k.full]||0,k.eggs,k.pets,c,k.routes);
+  const minPick = (pool,cnt) => { const mn=Math.min(...pool.map(x=>cnt[x]||0)); const c=pool.filter(x=>(cnt[x]||0)===mn); return c[Math.floor(Math.random()*c.length)]; };
+  const addEgg = (d,k,egg) => { const ALL=Object.keys(PETS); let pool=ALL.filter(x=>!k.pets.includes(x)); if(!pool.length) pool=ALL.slice();
+    const n={}; d.kids.forEach(x=>x.pets.forEach(q=>n[q]=(n[q]||0)+1)); const pet=minPick(pool,n);
+    const rc={}; d.kids.forEach(x=>x.pets.forEach((q,i)=>{ if(q===pet&&x.routes[i]!=null) rc[x.routes[i]]=(rc[x.routes[i]]||0)+1; }));
+    k.eggs.push(+egg); k.pets.push(pet); k.routes.push(minPick([...Array(RN[pet]).keys()],rc)); };
+  const R = {"作業":c=>c.per,"課堂":c=>c.cls,"考試100":c=>c.e100,"考試95":c=>c.e95};
   return {
     get(q){ const d=db(), p=pts(d), c=C(d);
-      if(q.mode==="garden") return {ok:true, cfg:c, kids:d.kids.map(k=>{const s=publicState(stateOf(p[k.full]||0,k.eggs,k.pets,c),c,false);
-        return {name:k.name,egg:s.egg,pet:s.pet,stage:s.stage,mystery:s.mystery,n:s.done,needPick:s.needPick};})};
-      if(q.mode==="me"){ const k=find(d,q.name); if(!k) return {ok:false,err:"no_kid"};
+      if(q.mode==="garden") return {ok:true, cfg:c, kids:d.kids.filter(k=>k.pn).map(k=>{const s=publicState(st(k,p,c),c,false);
+        return {pn:k.pn,egg:s.egg,pet:s.pet,route:s.route,stage:s.stage,mystery:s.mystery,n:s.done,needPick:s.needPick};}).sort((a,b)=>a.pn<b.pn?-1:1)};
+      if(q.mode==="me"){ const k=findPet(d,q.pet); if(!k) return {ok:false,err:"no_pet"};
         const mine=d.log.filter(l=>l.full===k.full), tot=p[k.full]||0;
-        return {ok:true,name:k.name,points:tot,cfg:c,recent:mine.slice(-6).reverse().map(l=>({d:md(l.at),why:l.why,pts:l.pts})),
-          ...publicState(stateOf(tot,k.eggs,k.pets,c),c,true)}; }
+        return {ok:true,pn:k.pn,points:tot,cfg:c,recent:mine.slice(-6).reverse().map(l=>({d:md(l.at),why:l.why,pts:l.pts})),
+          ...publicState(stateOf(tot,k.eggs,k.pets,c,k.routes),c,true)}; }
     },
     post(b){ const d=db(), c=C(d), p=pts(d);
-      if(b.mode==="pick"){ const k=find(d,b.name); if(!k) return {ok:false,err:"no_kid"};
-        if(!stateOf(p[k.full]||0,k.eggs,k.pets,c).needPick) return {ok:false,err:"picked"};
-        const ALL=Object.keys(PETS); let pool=ALL.filter(x=>!k.pets.includes(x)); if(!pool.length) pool=ALL.slice();
-        const n={}; pool.forEach(x=>n[x]=0); d.kids.forEach(x=>x.pets.forEach(q=>{ if(n[q]!=null) n[q]++; }));
-        const mn=Math.min(...pool.map(x=>n[x])); pool=pool.filter(x=>n[x]===mn);
-        k.eggs.push(+b.egg); k.pets.push(pool[Math.floor(Math.random()*pool.length)]); save(d); return {ok:true}; }
+      if(b.mode==="pick"){ const k=findPet(d,b.pet); if(!k) return {ok:false,err:"no_pet"};
+        if(!st(k,p,c).needPick) return {ok:false,err:"picked"}; addEgg(d,k,b.egg); save(d); return {ok:true}; }
       if(String(b.key)!=="test") return {ok:false,err:"bad_key"};
       if(b.mode==="admin"){ const lb=d.log.length?d.log.filter(l=>l.batch===d.log[d.log.length-1].batch):[];
-        return {ok:true,per:c.per,cfg:c,kids:d.kids.map(k=>{const s=stateOf(p[k.full]||0,k.eggs,k.pets,c);
-          return {full:k.full,name:k.name,points:p[k.full]||0,egg:s.egg,pet:s.pet,stage:s.stage,level:s.level,mystery:s.mystery,n:s.done,needPick:s.needPick};}),
+        return {ok:true,per:c.per,cfg:c,kids:d.kids.map(k=>{const s=st(k,p,c);
+          return {full:k.full,name:k.name,pn:k.pn,points:p[k.full]||0,egg:s.egg,pet:s.pet,route:s.route,stage:s.stage,level:s.level,mystery:s.mystery,n:s.done,needPick:s.needPick};}),
           last:lb.length?{d:md(lb[0].at),why:lb[0].why,names:lb.map(l=>l.full.slice(1)),pts:lb[0].pts}:null}; }
-      if(b.mode==="add"){ const v=b.reason==="訂正半"?c.per/2:(b.reason==="作業"||b.reason==="訂正")?c.per:+b.pts; const now=Date.now();
+      if(b.mode==="register"){ const k=find(d,b.name); if(!k) return {ok:false,err:"no_kid"}; const pn=String(b.petName||"").replace(/\s+/g,"").slice(0,12);
+        if(!pn) return {ok:false,err:"no_name"}; const dup=d.kids.find(x=>x!==k&&x.pn&&key(x.pn)===key(pn)); if(dup) return {ok:false,err:"dup",who:dup.full};
+        const s=st(k,p,c); if(s.needPick&&!(+b.egg>=0&&+b.egg<10&&b.egg!==""&&b.egg!=null)) return {ok:false,err:"bad_egg"};
+        k.pn=pn; if(s.needPick) addEgg(d,k,b.egg); save(d); return {ok:true,pn}; }
+      if(b.mode==="add"){ const v=R[b.reason]?R[b.reason](c):+b.pts; const now=Date.now();
         b.names.forEach(n=>{const k=find(d,n); if(k) d.log.push({at:now,full:k.full,pts:v,why:b.reason,batch:now});}); save(d); return {ok:true,pts:v}; }
       if(b.mode==="undo"){ if(!d.log.length) return {ok:false,err:"empty"}; const bt=d.log[d.log.length-1].batch; const rm=d.log.filter(l=>l.batch===bt);
         d.log=d.log.filter(l=>l.batch!==bt); save(d); return {ok:true,removed:rm.map(l=>l.full),why:rm[0].why,pts:rm[0].pts}; }
-      if(b.mode==="resetPet"){ const k=find(d,b.name); if(k){const s=stateOf(p[k.full]||0,k.eggs,k.pets,c); k.eggs=k.eggs.slice(0,s.done); k.pets=k.pets.slice(0,s.done); save(d);} return {ok:!!k}; }
+      if(b.mode==="resetPet"){ const k=find(d,b.name); if(k){const s=st(k,p,c); k.eggs=k.eggs.slice(0,s.done); k.pets=k.pets.slice(0,s.done); k.routes=k.routes.slice(0,s.done); save(d);} return {ok:!!k}; }
     }
   };
 })();
@@ -417,16 +432,23 @@ function confetti(){ const E=["🎉","⭐","✨","🎊","💛"]; for(let i=0;i<2
 const fail = () => { $("#app").innerHTML=`<div class="card center">連不上網路 😢<br><br><button class="big" onclick="location.reload()">再試一次</button></div>`; };
 
 // ===== 孩子端 =====
-let ME = LS.get("name");
-async function whoAmI(){
-  $("#nav").style.display="none";
-  $("#app").innerHTML='<div class="loading">載入中…</div>';
-  let g; try{ g=await apiGet({mode:"garden"}); }catch(e){ return fail(); }
-  $("#app").innerHTML=`<div class="card"><h2>👋 你是誰？</h2><div class="muted" style="margin-bottom:12px">點你的名字（只要點一次，下次會記住）</div>
-    <div class="grid">${g.kids.map(k=>`<button class="namebtn" data-n="${esc(k.name)}">${esc(k.name)}</button>`).join("")}</div></div>`;
-  document.querySelectorAll(".namebtn").forEach(b=>b.onclick=async()=>{
-    if(await dialog(`<div style="font-size:22px">你是 <b>${esc(b.dataset.n)}</b> 嗎？</div>`,"是我！","不是")){ ME=b.dataset.n; LS.set("name",ME); LS.del("seen"); showMe(); }
-  });
+// 孩子用「寵物名字」登入（SUNNY 在平板幫孩子登記好）；這台裝置記住，之後不用再打
+let ME = LS.get("pn");
+LS.del("name");                                     // 舊版（點名字）留下的紀錄不用了
+function whoAmI(msg){
+  $("#nav").style.display="flex"; setTab("me");
+  $("#app").innerHTML=`<div class="card center"><h2>🐾 你的寵物叫什麼名字？</h2>
+    <div class="muted" style="margin-bottom:12px">輸入 SUNNY 幫你登記的寵物名字<br>（只要打一次，這台會記住）</div>
+    <input id="pnin" class="pnin" maxlength="12" autocomplete="off" placeholder="寵物名字">
+    ${msg?`<div class="warn">${msg}</div>`:""}
+    <div style="margin-top:12px"><button class="big" id="pngo">進去看我的寵物</button></div></div>`;
+  const go=async()=>{ const v=$("#pnin").value.replace(/\s+/g,""); if(!v) return;
+    $("#pngo").disabled=true;
+    let d; try{ d=await apiGet({mode:"me",pet:v}); }catch(e){ return fail(); }
+    if(!d.ok) return whoAmI(`找不到「${esc(v)}」🤔<br>檢查一下有沒有打錯字，或問 SUNNY`);
+    ME=d.pn; LS.set("pn",ME); LS.del("seen"); showMe(d);
+  };
+  $("#pngo").onclick=go; $("#pnin").onkeydown=e=>{ if(e.key==="Enter") go(); };
 }
 async function pickPet(d){
   $("#nav").style.display="none";
@@ -438,7 +460,7 @@ async function pickPet(d){
   document.querySelectorAll(".pickgrid button").forEach(b=>b.onclick=async()=>{
     const i=+b.dataset.e;
     if(!await dialog(`${eggHTML(i,130)}<div style="font-size:21px">要 <b>${EGGS[i].nm}</b> 嗎？<br><span class="muted">挑了就不能換喔</span></div>`,"就是它！","再想想")) return;
-    let r; try{ r=await apiPost({mode:"pick",name:ME,egg:i}); }catch(e){ return fail(); }
+    let r; try{ r=await apiPost({mode:"pick",pet:ME,egg:i}); }catch(e){ return fail(); }
     if(!r.ok && r.err!=="picked") return toast("沒成功，再試一次");
     showMe();
   });
@@ -447,7 +469,7 @@ function albumHTML(d, C){
   const cells = [];
   for(let i=0;i<C.count;i++){
     const c = d.collection[i];
-    const r = c ? routeOf(c.pet, d.name, i, c.route) : null;
+    const r = c ? routeOf(c.pet, "", i, c.route) : null;
     cells.push(c ? `<div class="got">${petHTML(c.pet,4,64,c.egg,r)}<div>${esc(r?r[5]:(PETS[c.pet]||{}).nm||"")}</div></div>`
                  : `<div class="empty"><div class="slot">${i+1}</div></div>`);
   }
@@ -457,23 +479,25 @@ function albumHTML(d, C){
     <div class="muted" style="margin-bottom:8px">每隻養到 ${C.full} 點就收進來，再挑下一顆蛋；收集滿 ${C.count} 隻會出現一顆<b>神秘蛋</b>，裡面是最大隻的守護神獸，還帶著 SUNNY 送你的禮物！</div>
     <div class="album">${cells.join("")}</div></div>`;
 }
-async function showMe(){
+async function showMe(pre){
   if(!ME) return whoAmI();
   $("#nav").style.display="flex"; setTab("me");
-  $("#app").innerHTML='<div class="loading">載入中…</div>';
-  let d; try{ d=await apiGet({mode:"me",name:ME}); }catch(e){ return fail(); }
-  if(!d.ok){ LS.del("name"); ME=null; return whoAmI(); }
+  let d = pre;
+  if(!d){ $("#app").innerHTML='<div class="loading">載入中…</div>';
+    try{ d=await apiGet({mode:"me",pet:ME}); }catch(e){ return fail(); } }
+  if(!d.ok){ LS.del("pn"); ME=null; return whoAmI("這個寵物名字找不到了，請再輸入一次"); }
+  d.name = d.pn; ME = d.pn; LS.set("pn", ME);
   if(d.needPick) return pickPet(d);
   const C={...DEF_CFG,...(d.cfg||{})}, per=C.per, P=PETS[d.pet]||{}, E=EGGS[d.egg]||{nm:"蛋"};
   const stage=d.stage, level=d.level;
-  const R = !d.mystery && stage ? routeOf(d.pet, d.name, d.done, d.route) : null;
+  const R = !d.mystery && stage ? routeOf(d.pet, "", d.done, d.route) : null;
   const who = {stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:d.gift,name:d.name,n:d.done,route:d.route};
   let title, badge, line="", pct=100;
   if(d.mystery){
     title = stage ? `${esc(d.name)} 的守護神獸` : `${esc(d.name)} 的神秘蛋`;
     badge = `<span class="lv" style="background:#e8267f">${stage?"守護神獸":"✨ 神秘蛋"}</span>`;
   } else {
-    title = `${esc(d.name)} 的${stage?P.nm:"神秘"+E.nm}`;
+    title = stage ? `${esc(d.name)}（${P.nm}）` : `${esc(d.name)} 的${E.nm}`;
     badge = stage ? `<span class="lv">Lv ${level}・${STAGE_NM[stage]}</span>` : `<span class="lv">裡面住著誰呢？</span>`;
   }
   if(d.next){
@@ -497,13 +521,16 @@ async function showMe(){
   </div>
   ${giftCard}
   ${albumHTML(d,C)}
-  <div class="card rules"><h2>⭐ 怎麼加點？（每次 +${per}）</h2>
-    <div><b>作業</b></div><ul style="margin:4px 0 10px;padding-left:22px"><li>下課前完成交出</li><li>批改後錯很少</li></ul>
-    <div><b>訂正</b></div><ul style="margin:4px 0 0;padding-left:22px"><li>在指定時間前訂正「完」</li><li>訂正後還錯一題，可能拿一半（+${per/2}）</li></ul>
+  <div class="card rules"><h2>⭐ 怎麼加點？</h2>
+    <ul style="margin:4px 0 0;padding-left:22px">
+      <li><b>作業完成</b>　+${C.per}</li>
+      <li><b>課堂上寫完作業交出、正確率不錯</b>　再 +${C.cls}</li>
+      <li><b>期中／期末考 100 分</b>　+${C.e100}</li>
+      <li><b>期中／期末考 95 分以上</b>　+${C.e95}</li></ul>
   </div>
   ${d.recent.length?`<div class="card"><h2>📒 最近加的點</h2><div class="recent">${d.recent.map(r=>`<div><span>${esc(r.d)}　${esc(r.why)}</span><b>${r.pts>0?"+":""}${r.pts}</b></div>`).join("")}</div></div>`:""}
-  <div class="center"><button class="ghost" id="notme">我不是 ${esc(d.name)}</button></div>`;
-  $("#notme").onclick=()=>{ LS.del("name"); LS.del("seen"); ME=null; whoAmI(); };
+  <div class="center"><button class="ghost" id="notme">換別的寵物名字</button></div>`;
+  $("#notme").onclick=()=>{ LS.del("pn"); LS.del("seen"); ME=null; whoAmI(); };
   // 慶祝：跟這支手機上次看到的比
   const seen=LS.get("seen");
   LS.set("seen",{done:d.done,stage,level,mystery:d.mystery});
@@ -523,7 +550,7 @@ async function showGarden(){
   $("#app").innerHTML='<div class="loading">載入中…</div>';
   let g; try{ g=await apiGet({mode:"garden"}); }catch(e){ return fail(); }
   $("#app").innerHTML=`<div class="card center" style="padding:12px"><h2 style="margin:0">🏡 三年級寵物園</h2></div>
-    <div class="garden">${g.kids.map(k=>`<div class="${k.name===ME?"me":""}${k.mystery&&k.stage?" legend":""}">${creature({...k,gift:k.mystery&&k.stage?"":null},84)}<div>${esc(k.name)}</div>${k.n?`<div class="nbadge">📖 ${k.n}</div>`:""}</div>`).join("")}</div>`;
+    <div class="garden">${g.kids.map(k=>`<div class="${k.pn===ME?"me":""}${k.mystery&&k.stage?" legend":""}">${creature({...k,name:"",gift:k.mystery&&k.stage?"":null},84)}<div>${esc(k.pn)}</div>${k.n?`<div class="nbadge">📖 ${k.n}</div>`:""}</div>`).join("")}</div>`;
 }
 function setTab(t){ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t)); }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=> b.dataset.t==="me"?showMe():showGarden());
@@ -546,11 +573,14 @@ function renderAdmin(){
     ${d.last?`<div class="lastbox"><span>上一筆：${esc(d.last.d)} ${esc(d.last.why)} ${d.last.pts>0?"+":""}${d.last.pts}　${d.last.names.map(esc).join("、")}</span><button id="undo">復原</button></div>`:""}
     <div class="toolbar"><button id="all">全選</button><button id="none">清除</button><span class="muted" id="cnt"></span></div>
     ${d.kids.map(k=>`<div class="krow${SEL.has(k.name)?" on":""}" data-n="${esc(k.name)}"><div class="ck">✓</div>
-      <div style="width:44px">${creature({stage:k.stage,pet:k.pet,egg:k.egg,mystery:k.mystery,gift:null,name:k.name,n:k.n,route:k.route},44)}</div><div class="nm">${esc(k.name)}</div>
-      <div class="pt">${k.points} 點<br>${k.mystery?(k.stage?"守護神獸":"神秘蛋"):(k.needPick?"待挑蛋":k.stage?"Lv "+k.level+" "+esc(routeTitle(routeOf(k.pet,k.name,k.n,k.route),k.stage)||STAGE_NM[k.stage]):"蛋")}${k.n?"・📖"+k.n:""}</div></div>`).join("")}
-    <div class="actbar"><button class="b-hw" data-r="作業">作業 +${per}</button><button class="b-fix" data-r="訂正">訂正 +${per}</button><button class="b-half" data-r="訂正半">訂正半 +${per/2}</button></div>`;
+      <div style="width:44px">${creature({stage:k.stage,pet:k.pet,egg:k.egg,mystery:k.mystery,gift:null,name:"",n:k.n,route:k.route},44)}</div>
+      <div class="nm">${esc(k.name)}<div class="pnl">${k.pn?"🐾 "+esc(k.pn):"<span class=need>還沒登記</span>"}</div></div>
+      <button class="regbtn" data-n="${esc(k.name)}">${k.pn?"✏️":"登記"}</button>
+      <div class="pt">${k.points} 點<br>${k.mystery?(k.stage?"守護神獸":"神秘蛋"):(k.needPick?"待挑蛋":k.stage?"Lv "+k.level+" "+esc(routeTitle(routeOf(k.pet,"",k.n,k.route),k.stage)||STAGE_NM[k.stage]):"蛋")}${k.n?"・📖"+k.n:""}</div></div>`).join("")}
+    <div class="actbar"><button class="b-hw" data-r="作業">作業 +${per}</button><button class="b-fix" data-r="課堂">課堂 +${d.cfg.cls}</button><button class="b-half" data-r="考試100">考 100 +${d.cfg.e100}</button><button class="b-half" data-r="考試95">考 95↑ +${d.cfg.e95}</button></div>`;
   const cnt=()=>{ $("#cnt").textContent=SEL.size?`已選 ${SEL.size} 人`:"點名字選人"; document.querySelectorAll(".actbar button").forEach(b=>b.disabled=!SEL.size); };
-  document.querySelectorAll(".krow").forEach(r=>r.onclick=()=>{ const n=r.dataset.n; SEL.has(n)?SEL.delete(n):SEL.add(n); r.classList.toggle("on"); cnt(); });
+  document.querySelectorAll(".krow").forEach(r=>r.onclick=e=>{ if(e.target.closest(".regbtn")) return; const n=r.dataset.n; SEL.has(n)?SEL.delete(n):SEL.add(n); r.classList.toggle("on"); cnt(); });
+  document.querySelectorAll(".regbtn").forEach(b=>b.onclick=()=>register(d.kids.find(k=>k.name===b.dataset.n)));
   $("#all").onclick=()=>{ d.kids.forEach(k=>SEL.add(k.name)); renderAdmin(); };
   $("#none").onclick=()=>{ SEL.clear(); renderAdmin(); };
   if($("#undo")) $("#undo").onclick=async()=>{
@@ -558,12 +588,54 @@ function renderAdmin(){
     const r=await apiPost({mode:"undo",key:KEY}); toast(r.ok?`已復原：${r.removed.map(n=>n.slice(1)).join("、")}`:"沒有可以復原的"); admin();
   };
   document.querySelectorAll(".actbar button").forEach(b=>b.onclick=async()=>{
-    const names=[...SEL]; b.disabled=true;
+    const names=[...SEL];
+    if(/考試/.test(b.dataset.r) && !confirm(`${b.textContent}：${names.join("、")}，確定？`)) return;
+    b.disabled=true;
     let r; try{ r=await apiPost({mode:"add",key:KEY,names,reason:b.dataset.r}); }catch(e){ toast("網路有問題，沒加到"); b.disabled=false; return; }
     if(!r.ok){ toast("沒加到："+(r.err||"")); b.disabled=false; return; }
     toast(`✅ ${b.dataset.r} +${r.pts}：${names.join("、")}`, 3000); SEL.clear(); admin();
   });
   cnt();
+}
+
+// 登記：還沒挑蛋→先挑蛋，再取寵物名字；已登記→只改名字
+async function register(k){
+  if(!k) return;
+  let egg = "";
+  if(k.needPick && !k.n){
+    egg = await new Promise(res=>{
+      $("#app").className="";
+      $("#app").innerHTML=`<div class="card center"><h2>🥚 ${esc(k.name)}，挑一顆蛋！</h2>
+        <div class="muted">裡面住著誰？<b>孵出來才知道！</b><br>挑了就不能換喔</div></div>
+        <div class="pickgrid">${EGGS.map((e,i)=>`<button data-e="${i}">${eggHTML(i,96)}${e.nm}</button>`).join("")}</div>
+        <div class="center"><button class="ghost" id="regback">← 回加點頁</button></div>`;
+      $("#regback").onclick=()=>res(null);
+      document.querySelectorAll(".pickgrid button").forEach(b=>b.onclick=async()=>{
+        const i=+b.dataset.e;
+        if(await dialog(`${eggHTML(i,130)}<div style="font-size:21px">要 <b>${EGGS[i].nm}</b> 嗎？</div>`,"就是它！","再想想")) res(i);
+      });
+    });
+    if(egg===null) return renderAdmin();
+  }
+  const ask = async (msg) => {
+    $("#app").className="";
+    $("#app").innerHTML=`<div class="card center"><h2>🐾 ${esc(k.name)} 的寵物叫什麼名字？</h2>
+      <div class="muted">之後在家打這個名字就能看寵物（最多 12 個字，不能跟別人一樣）</div>
+      ${egg!==""?`<div style="margin:8px 0">${eggHTML(egg,90)}</div>`:""}
+      <input id="pnin" class="pnin" maxlength="12" autocomplete="off" value="${esc(k.pn||"")}" placeholder="寵物名字">
+      ${msg?`<div class="warn">${msg}</div>`:""}
+      <div style="margin-top:12px"><button class="ghost" id="regno">取消</button> <button class="big" id="regok">確定</button></div></div>`;
+    $("#pnin").focus();
+    $("#regno").onclick=()=>{ egg!=="" ? ask("蛋還沒存，請取好名字按確定") : renderAdmin(); };
+    $("#regok").onclick=async()=>{
+      const v=$("#pnin").value.replace(/\s+/g,""); if(!v) return ask("要先取名字喔");
+      $("#regok").disabled=true;
+      let r; try{ r=await apiPost({mode:"register",key:KEY,name:k.full||k.name,petName:v,egg}); }catch(e){ return ask("網路有問題，再按一次確定"); }
+      if(!r.ok) return ask(r.err==="dup"?`「${esc(v)}」已經有人用了，換一個`:"沒成功："+esc(r.err||""));
+      toast(`✅ ${k.name} 的寵物：${r.pn}`, 3000); admin();
+    };
+  };
+  ask("");
 }
 
 // ===== 開始 =====
