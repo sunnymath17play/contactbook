@@ -123,6 +123,13 @@ nav button span{display:block;font-size:26px}
 .guard .scroll{position:absolute;transform:translate(-50%,-50%) rotate(-3deg);background:#fffdf3;border:2px solid #d9a84a;border-radius:6px;padding:.3em .6em;font-weight:900;color:#c0392b;text-align:center;line-height:1.2;box-shadow:0 2px 6px rgba(120,80,0,.25);z-index:2}
 .garden>div{position:relative}
 .garden>div.legend{background:linear-gradient(135deg,#fff3c4,#ffe0f0);outline:3px solid #ffb400}
+.pet .prop{position:absolute;left:0;top:2%;width:1.7em;height:1.7em;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(150,100,40,.25);line-height:1;z-index:2;animation:propbob 2.2s ease-in-out infinite}
+@keyframes propbob{50%{transform:translateY(-12%) rotate(-6deg)}}
+@media (prefers-reduced-motion: reduce){.pet .prop{animation:none}}
+.route{display:inline-block;margin-top:8px;background:#fff1dc;color:#9a5a1c;border-radius:12px;padding:3px 12px;font-weight:bold;font-size:16px}
+.ladder{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;margin-top:8px;font-size:14px;color:var(--sub)}
+.ladder span{background:#f6efe4;border-radius:10px;padding:2px 8px}
+.ladder span.now{background:var(--orange);color:#fff;font-weight:bold}
 .nbadge{position:absolute;top:4px;right:6px;font-size:12px;background:#fff;border-radius:10px;padding:1px 6px;color:#8a6d4b}
 </style>
 </head>
@@ -163,6 +170,58 @@ const EGGS = [
   {nm:"花朵蛋",   bg:"#fff1c9", mark:"🌸", top:"🌼"},
   {nm:"月亮蛋",   bg:"#2f3f8f", mark:"🌙", dots:"✦", dc:"#fff6a8", top:"🌙"}
 ];
+// ===== 人生路線（SUNNY 2026-10-23：每隻長大會有不同專長，不要只有一種）=====
+// 每種寵物 4～5 條路線；[代號, 小道具, 寶寶, 少年, 勇者, 傳說]
+// 圖：寶寶共用 <寵物>_1.png（頭上冒小道具）；少年／勇者／傳說＝img/<寵物>_<路線代號>_<2|3|4>.png，放好後加進 ART
+// king＝最早畫的披風／國王圖（<寵物>_2~4.png），SUNNY 決定留著當小火龍、喵喵的第 5 條
+const ROUTES = {
+  dragon: [["math","🔢","愛數數字","數學小天才","數學競賽冠軍","數學博士"],
+           ["actuary","🐷","愛玩存錢筒","算帳小高手","理財達人","精算師"],
+           ["chef","🔥","愛烤棉花糖","小廚師","料理大賽冠軍","米其林主廚"],
+           ["astro","🚀","愛飛高高","飛行小隊","飛行員","太空人"],
+           ["king","👑","愛當小隊長","小隊長","火龍勇者","火龍王"]],
+  cat:    [["boxing","🥊","愛追球跑跳","拳擊練習生","拳擊冠軍","奧運拳擊金牌"],
+           ["detective","🔍","愛到處找東西","推理小偵探","名偵探","鑑識科學家"],
+           ["piano","🎹","愛踩鋼琴鍵","鋼琴小樂手","音樂會獨奏","鋼琴家"],
+           ["fashion","🧶","愛玩毛線球","編織小達人","服裝設計師","時尚設計大師"],
+           ["king","👑","愛當小隊長","小隊長","喵喵勇者","喵喵王"]],
+  dog:    [["rescue","🚒","愛幫忙找東西","搜救小隊員","消防英雄","搜救隊長"],
+           ["vet","🩹","愛照顧受傷小鳥","小護理員","獸醫","動物醫院院長"],
+           ["soccer","⚽","愛追球","足球隊前鋒","冠軍隊長","世界盃球星"],
+           ["engineer","🏗️","愛挖沙堆蓋城堡","積木建築師","工程師","橋樑工程師"]],
+  bunny:  [["jump","🏅","愛跳跳跳","跳高選手","全國冠軍","奧運跳高金牌"],
+           ["farm","🥕","愛種紅蘿蔔","小農夫","植物學家","農業科學家"],
+           ["ballet","🩰","愛轉圈圈","舞蹈社","芭蕾首席","舞蹈家"],
+           ["baker","🧁","愛吃點心","烘焙小幫手","甜點師","甜點大師"]],
+  penguin:[["swim","🏊","愛玩水","游泳校隊","游泳冠軍","奧運游泳金牌"],
+           ["polar","🧊","愛玩冰塊","小探險家","極地科學家","南極探險隊長"],
+           ["weather","❄️","愛看下雪","氣象觀察員","氣象主播","氣象學家"],
+           ["robot","🤖","愛按按鈕","機器人社","程式設計師","機器人發明家"]],
+  bear:   [["boss","🍯","愛數蜂蜜罐","小老闆","商店店長","企業家"],
+           ["lift","🏋️","愛搬大石頭","舉重練習生","舉重冠軍","奧運舉重金牌"],
+           ["forest","🌳","愛抱大樹","森林小巡守","保育員","自然保育專家"],
+           ["doctor","🩺","愛幫娃娃看病","小醫生","醫生","名醫"]],
+  owl:    [["writer","📖","愛聽故事","小書蟲","童書作家","得獎作家"],
+           ["star","🌙","愛看月亮","觀星社","天文學家","天文台台長"],
+           ["teacher","✏️","愛教小鳥寫字","小老師","數學老師","魔法數學名師"],
+           ["chess","♟️","愛玩棋子","西洋棋社","棋王","世界棋王"]],
+  unicorn:[["paint","🎨","愛塗鴉","小畫家","插畫家","藝術大師"],
+           ["magic","🎩","愛變小把戲","魔術社","魔術師","魔術大師"],
+           ["sing","🎤","愛唱歌","合唱團","歌手","巨星"],
+           ["prism","🌈","愛玩三稜鏡","實驗小助手","科學家","諾貝爾獎科學家"]]
+};
+// 走哪條路：由「孩子名字＋寵物」算出來，固定不會變（重新整理、換手機都一樣）
+// 同一個孩子收滿 8 種後再抽到同種寵物（第 9、10 隻），自動換下一條路線
+// 後端若之後回傳 route（班上少見優先），就以後端為準
+function hashStr(s){ let h=2166136261; for(const c of s){ h^=c.codePointAt(0); h=Math.imul(h,16777619); } return h>>>0; }
+function routeOf(pet, name, slot, given){
+  const R = ROUTES[pet]; if(!R) return null;
+  if(given!=null && given!=="" && R[+given]) return R[+given];
+  return R[(hashStr(name+"|"+pet) + Math.floor((slot||0)/8)) % R.length];
+}
+const routeArt = (pet, r, stage) => r[0]==="king" ? `${pet}_${stage}` : `${pet}_${r[0]}_${stage}`;
+const routeTitle = (r, stage) => r ? r[1+stage] : "";
+
 const STAGE_NM = ["蛋","寶寶","少年","勇者","傳說","守護神獸"];
 const DECO = ["","","✨","🌟","👑",""];
 const NEXT_TXT = {hatch:"就孵出來！", teen:"變成「少年」！", hero:"變成「勇者」！", legend:"變成「傳說」！", full:"就收進收藏簿、拿到新的蛋！", mhatch:"神秘蛋就要孵化了！"};
@@ -279,20 +338,28 @@ const SHELL_AT = {
 };
 const PET_SCALE = .80;   // 寶寶有頂殼時縮小，上方留空給殼
 // 寵物（已孵）：stage 1~4；egg＝孩子挑的蛋（寶寶頭上的殼）
-function petHTML(pet, stage, size, egg){
+// route＝人生路線（routeOf 算出來的那一條）；寶寶頭旁冒「喜歡的小道具」，少年以後換成那條路線的圖
+function petHTML(pet, stage, size, egg, route){
   const P = PETS[pet] || {emo:"❔"};
-  if(ART.has(pet+"_"+stage)){
+  const prop = route ? `<span class="prop" style="font-size:${Math.max(12,size*.19)}px">${route[1]}</span>` : "";
+  if(stage===1 && ART.has(pet+"_1")){
     const A = SHELL_AT[pet];
-    if(stage===1 && A && egg!=="" && egg!=null){
+    if(A && egg!=="" && egg!=null){
       const pw = size*PET_SCALE, px = (size-pw)/2, py = size-pw;
       return `<div class="pet s1" style="width:${size}px;height:${size}px"><div class="mv mv-${pet}" style="${dl()}">
         <img src="img/${pet}_1.png" alt="" style="left:${px}px;top:${py}px;width:${pw}px;height:${pw}px">
-        <img class="shell" src="img/shell_${egg}.png" alt="" style="left:${px+A.x*pw}px;top:${py+A.y*pw}px;width:${A.w*pw}px;height:auto;transform:translate(-50%,-100%) rotate(${A.r}deg);transform-origin:50% 100%;${dl()}">${A.horn?`<img src="img/${pet}_1_horn.png" alt="" style="left:${px}px;top:${py}px;width:${pw}px;height:${pw}px">`:""}</div></div>`;
+        <img class="shell" src="img/shell_${egg}.png" alt="" style="left:${px+A.x*pw}px;top:${py+A.y*pw}px;width:${A.w*pw}px;height:auto;transform:translate(-50%,-100%) rotate(${A.r}deg);transform-origin:50% 100%;${dl()}">${A.horn?`<img src="img/${pet}_1_horn.png" alt="" style="left:${px}px;top:${py}px;width:${pw}px;height:${pw}px">`:""}</div>${prop}</div>`;
     }
-    return `<div class="pet s${stage}" style="width:${size}px;height:${size}px"><div class="mv mv-${pet}" style="${dl()}"><img src="img/${pet}_${stage}.png" alt="" style="inset:0;width:100%;height:100%"></div><span class="deco">${DECO[stage]}</span></div>`;
+    return `<div class="pet s1" style="width:${size}px;height:${size}px"><div class="mv mv-${pet}" style="${dl()}"><img src="img/${pet}_1.png" alt="" style="inset:0;width:100%;height:100%"></div>${prop}</div>`;
   }
+  const key = route ? routeArt(pet, route, stage) : pet+"_"+stage;
+  if(stage>1 && ART.has(key))
+    return `<div class="pet s${stage}" style="width:${size}px;height:${size}px"><div class="mv mv-${pet}" style="${dl()}"><img src="img/${key}.png" alt="" style="inset:0;width:100%;height:100%"></div><span class="deco">${DECO[stage]}</span></div>`;
+  // 這條路線的圖還沒畫好：先用寶寶圖＋發光＋小道具暫代
+  if(ART.has(pet+"_1"))
+    return `<div class="pet s${stage}" style="width:${size}px;height:${size}px"><div class="mv mv-${pet}" style="${dl()}"><img src="img/${pet}_1.png" alt="" style="left:${[0,0,6,3,0][stage]}%;top:${[0,0,6,3,0][stage]}%;width:${100-2*[0,0,6,3,0][stage]}%;height:${100-2*[0,0,6,3,0][stage]}%"></div><span class="deco">${DECO[stage]}</span>${prop}</div>`;
   const fs = size*[0,.58,.66,.72,.78][stage];
-  return `<div class="pet s${stage}" style="width:${size}px;height:${size}px;font-size:${size}px"><div class="mv mv-${pet}" style="${dl()}"><span class="emo" style="font-size:${fs}px">${P.emo}</span></div><span class="deco">${DECO[stage]}</span></div>`;
+  return `<div class="pet s${stage}" style="width:${size}px;height:${size}px;font-size:${size}px"><div class="mv mv-${pet}" style="${dl()}"><span class="emo" style="font-size:${fs}px">${P.emo}</span></div><span class="deco">${DECO[stage]}</span>${prop}</div>`;
 }
 // 神秘蛋（收集滿才出現）＋守護神獸（手上紙條寫 SUNNY 的禮物）
 function mysteryEggHTML(size, hot){
@@ -314,7 +381,7 @@ function guardianHTML(size, gift){
   return `<div class="pet s4 guard" style="${box}"><div class="mv mv-unicorn" style="${dl()}">${body}${scroll}</div></div>`;
 }
 const creature = (k, size) => k.mystery ? (k.stage ? guardianHTML(size, k.gift) : mysteryEggHTML(size, k.hot))
-  : (k.stage ? petHTML(k.pet, k.stage, size, k.egg) : eggHTML(k.egg, size, k.hot));
+  : (k.stage ? petHTML(k.pet, k.stage, size, k.egg, routeOf(k.pet, k.name||"", k.n||0, k.route)) : eggHTML(k.egg, size, k.hot));
 // 點寵物／蛋：跳一下＋冒愛心＋叮一聲
 document.addEventListener("click", e => {
   const el = e.target.closest("#app .pet, .dlg .pet"); if(!el || el.closest(".pickgrid") || el.closest(".krow")) return;
@@ -378,7 +445,8 @@ function albumHTML(d, C){
   const cells = [];
   for(let i=0;i<C.count;i++){
     const c = d.collection[i];
-    cells.push(c ? `<div class="got">${petHTML(c.pet,4,64,c.egg)}<div>${esc((PETS[c.pet]||{}).nm||"")}</div></div>`
+    const r = c ? routeOf(c.pet, d.name, i, c.route) : null;
+    cells.push(c ? `<div class="got">${petHTML(c.pet,4,64,c.egg,r)}<div>${esc(r?r[5]:(PETS[c.pet]||{}).nm||"")}</div></div>`
                  : `<div class="empty"><div class="slot">${i+1}</div></div>`);
   }
   const m = d.mystery ? (d.stage ? guardianHTML(64, null) : mysteryEggHTML(64)) : `<div class="slot">🎁</div>`;
@@ -396,6 +464,8 @@ async function showMe(){
   if(d.needPick) return pickPet(d);
   const C={...DEF_CFG,...(d.cfg||{})}, per=C.per, P=PETS[d.pet]||{}, E=EGGS[d.egg]||{nm:"蛋"};
   const stage=d.stage, level=d.level;
+  const R = !d.mystery && stage ? routeOf(d.pet, d.name, d.done, d.route) : null;
+  const who = {stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:d.gift,name:d.name,n:d.done,route:d.route};
   let title, badge, line="", pct=100;
   if(d.mystery){
     title = stage ? `${esc(d.name)} 的守護神獸` : `${esc(d.name)} 的神秘蛋`;
@@ -416,8 +486,10 @@ async function showMe(){
   $("#app").innerHTML=`
   <div class="card center">
     <div style="font-size:20px;font-weight:bold">${title}</div>
-    <div style="margin:8px 0">${creature({stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:d.gift,hot:!!(d.next&&d.next.at-d.pts<=4&&!stage)},d.mystery?230:190)}</div>
+    <div style="margin:8px 0">${creature({...who,hot:!!(d.next&&d.next.at-d.pts<=4&&!stage)},d.mystery?230:190)}</div>
     <div>${badge}</div>
+    ${R?`<div class="route">${R[1]} ${esc(routeTitle(R,stage))}</div>
+      <div class="ladder">${[1,2,3,4].map(i=>`<span class="${i===stage?"now":""}">${i<=stage?esc(routeTitle(R,i)):STAGE_NM[i]+"？"}</span>`).join("")}</div>`:""}
     ${d.next?`<div class="bar"><div style="width:${pct}%"></div></div><div>${line}</div>`:""}
     <div class="muted" style="margin-top:6px">目前 ${d.points} 點</div>
   </div>
@@ -438,10 +510,11 @@ async function showMe(){
   if(d.mystery && stage && !(seen.mystery && seen.stage)) msg=`🎉 守護神獸出現了！<br>牠帶來了禮物：<br><span style="color:#3a2a18">${esc(d.gift||"")}</span>`;
   else if(d.mystery && !seen.mystery) msg=`🌟 收藏簿集滿了！<br>出現一顆神秘蛋！`;
   else if(!d.mystery && seen.done===d.done){
-    if(stage>seen.stage) msg = seen.stage===0 ? `🐣 孵出來了！<br>是${P.nm}！` : `🌈 變身了！<br>變成「${STAGE_NM[stage]}」${P.nm}！`;
+    if(stage>seen.stage) msg = seen.stage===0 ? `🐣 孵出來了！<br>是${P.nm}！<br><span style="font-size:20px;color:#9a5a1c">${R?R[1]+" 牠"+esc(R[2]):""}</span>`
+      : `🌈 變身了！<br>變成「${esc(routeTitle(R,stage)||STAGE_NM[stage])}」！${stage===4?`<br><span style="font-size:18px;color:#9a5a1c">${P.nm}的夢想實現了 ✨</span>`:""}`;
     else if(level>seen.level) msg=`⬆️ 升到 Lv ${level} 了！`;
   }
-  if(msg) setTimeout(()=>{ chime(); confetti(); dialog(`${creature({stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:d.gift},150)}<div class="party">${msg}</div><div class="muted">繼續加油，SUNNY 看到了！</div>`,"耶！"); }, 300);
+  if(msg) setTimeout(()=>{ chime(); confetti(); dialog(`${creature(who,150)}<div class="party">${msg}</div><div class="muted">繼續加油，SUNNY 看到了！</div>`,"耶！"); }, 300);
 }
 async function showGarden(){
   setTab("garden");
@@ -471,8 +544,8 @@ function renderAdmin(){
     ${d.last?`<div class="lastbox"><span>上一筆：${esc(d.last.d)} ${esc(d.last.why)} ${d.last.pts>0?"+":""}${d.last.pts}　${d.last.names.map(esc).join("、")}</span><button id="undo">復原</button></div>`:""}
     <div class="toolbar"><button id="all">全選</button><button id="none">清除</button><span class="muted" id="cnt"></span></div>
     ${d.kids.map(k=>`<div class="krow${SEL.has(k.name)?" on":""}" data-n="${esc(k.name)}"><div class="ck">✓</div>
-      <div style="width:44px">${creature({stage:k.stage,pet:k.pet,egg:k.egg,mystery:k.mystery,gift:null},44)}</div><div class="nm">${esc(k.name)}</div>
-      <div class="pt">${k.points} 點<br>${k.mystery?(k.stage?"守護神獸":"神秘蛋"):(k.needPick?"待挑蛋":k.stage?"Lv "+k.level+" "+STAGE_NM[k.stage]:"蛋")}${k.n?"・📖"+k.n:""}</div></div>`).join("")}
+      <div style="width:44px">${creature({stage:k.stage,pet:k.pet,egg:k.egg,mystery:k.mystery,gift:null,name:k.name,n:k.n,route:k.route},44)}</div><div class="nm">${esc(k.name)}</div>
+      <div class="pt">${k.points} 點<br>${k.mystery?(k.stage?"守護神獸":"神秘蛋"):(k.needPick?"待挑蛋":k.stage?"Lv "+k.level+" "+esc(routeTitle(routeOf(k.pet,k.name,k.n,k.route),k.stage)||STAGE_NM[k.stage]):"蛋")}${k.n?"・📖"+k.n:""}</div></div>`).join("")}
     <div class="actbar"><button class="b-hw" data-r="作業">作業 +${per}</button><button class="b-fix" data-r="訂正">訂正 +${per}</button><button class="b-half" data-r="訂正半">訂正半 +${per/2}</button></div>`;
   const cnt=()=>{ $("#cnt").textContent=SEL.size?`已選 ${SEL.size} 人`:"點名字選人"; document.querySelectorAll(".actbar button").forEach(b=>b.disabled=!SEL.size); };
   document.querySelectorAll(".krow").forEach(r=>r.onclick=()=>{ const n=r.dataset.n; SEL.has(n)?SEL.delete(n):SEL.add(n); r.classList.toggle("on"); cnt(); });
