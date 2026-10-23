@@ -26,6 +26,15 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .pnin{font-size:24px;padding:10px 12px;border:3px solid var(--line);border-radius:14px;width:80%;max-width:320px;text-align:center;font-weight:bold}
 .warn{color:#c0392b;margin-top:10px;font-size:17px}
 .pnl{font-size:13px;color:#9a6a2a;font-weight:normal}.pnl .need{color:#c0392b}
+.morebtn{padding:6px 10px;font-size:16px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-left:4px;flex:none}
+.newkid{margin-left:auto;background:#2e9e4f!important;color:#fff!important}
+.b-cus{background:#8a6bd1!important;color:#fff!important}
+.leftbox{margin:14px 0 90px;padding:10px;border:2px dashed var(--line);border-radius:14px}
+.lrow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;color:#8a7a6a}
+.restbtn{padding:5px 12px;border-radius:10px;border:1px solid var(--line);background:#fff}
+.dlg h2{margin:0 0 8px}.dlg .pnin{width:90%;font-size:20px}
+.menu{display:flex;flex-direction:column;gap:8px;margin:8px 0}.menu button{padding:12px;font-size:18px;border-radius:12px;border:1px solid var(--line);background:#fff8ec;text-align:left}
+.menu .danger{color:#c0392b}
 .regbtn{padding:6px 10px;font-size:14px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-left:4px;flex:none}
 /* 寵物 */
 .pet{position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto}
@@ -281,9 +290,9 @@ const mock = (()=>{
   const db = () => LS.get("mockdb2") || {kids:ROSTER.map(f=>({full:f,name:f.slice(1),eggs:[],pets:[],routes:[],pn:""})), log:[], cfg:{...DEF_CFG}};
   const save = d => LS.set("mockdb2", d);
   const pts = d => { const p={}; d.log.forEach(l=>p[l.full]=(p[l.full]||0)+l.pts); return p; };
-  const find = (d,n) => d.kids.find(k=>k.full===n||k.name===n);
+  const find = (d,n) => d.kids.find(k=>!k.left&&(k.full===n||k.name===n));
   const key = s => String(s||"").replace(/\s+/g,"").toLowerCase();
-  const findPet = (d,s) => key(s) ? d.kids.find(k=>k.pn&&key(k.pn)===key(s)) : null;
+  const findPet = (d,s) => key(s) ? d.kids.find(k=>!k.left&&k.pn&&key(k.pn)===key(s)) : null;
   const md = t => { const x=new Date(t); return (x.getMonth()+1)+"/"+x.getDate(); };
   const C = d => ({...DEF_CFG, ...(d.cfg||{})});
   const st = (k,p,c) => stateOf(p[k.full]||0,k.eggs,k.pets,c,k.routes);
@@ -295,7 +304,7 @@ const mock = (()=>{
   const R = {"作業":c=>c.per,"課堂":c=>c.cls,"考試100":c=>c.e100,"考試95":c=>c.e95};
   return {
     get(q){ const d=db(), p=pts(d), c=C(d);
-      if(q.mode==="garden") return {ok:true, cfg:c, kids:d.kids.filter(k=>k.pn).map(k=>{const s=publicState(st(k,p,c),c,false);
+      if(q.mode==="garden") return {ok:true, cfg:c, kids:d.kids.filter(k=>k.pn&&!k.left).map(k=>{const s=publicState(st(k,p,c),c,false);
         return {pn:k.pn,egg:s.egg,pet:s.pet,route:s.route,stage:s.stage,mystery:s.mystery,n:s.done,needPick:s.needPick};}).sort((a,b)=>a.pn<b.pn?-1:1)};
       if(q.mode==="me"){ const k=findPet(d,q.pet); if(!k) return {ok:false,err:"no_pet"};
         const mine=d.log.filter(l=>l.full===k.full), tot=p[k.full]||0;
@@ -307,7 +316,7 @@ const mock = (()=>{
         if(!st(k,p,c).needPick) return {ok:false,err:"picked"}; addEgg(d,k,b.egg); save(d); return {ok:true}; }
       if(String(b.key)!=="test") return {ok:false,err:"bad_key"};
       if(b.mode==="admin"){ const lb=d.log.length?d.log.filter(l=>l.batch===d.log[d.log.length-1].batch):[];
-        return {ok:true,per:c.per,cfg:c,kids:d.kids.map(k=>{const s=st(k,p,c);
+        return {ok:true,per:c.per,cfg:c,left:d.kids.filter(k=>k.left).map(k=>({full:k.full,name:k.name,pn:k.pn,points:p[k.full]||0})),kids:d.kids.filter(k=>!k.left).map(k=>{const s=st(k,p,c);
           return {full:k.full,name:k.name,pn:k.pn,points:p[k.full]||0,egg:s.egg,pet:s.pet,route:s.route,stage:s.stage,level:s.level,mystery:s.mystery,n:s.done,needPick:s.needPick};}),
           last:lb.length?{d:md(lb[0].at),why:lb[0].why,names:lb.map(l=>l.full.slice(1)),pts:lb[0].pts}:null}; }
       if(b.mode==="register"){ const k=find(d,b.name); if(!k) return {ok:false,err:"no_kid"}; const pn=String(b.petName||"").replace(/\s+/g,"").slice(0,12);
@@ -316,6 +325,12 @@ const mock = (()=>{
         k.pn=pn; if(s.needPick) addEgg(d,k,b.egg); save(d); return {ok:true,pn}; }
       if(b.mode==="add"){ const v=R[b.reason]?R[b.reason](c):+b.pts; const now=Date.now();
         b.names.forEach(n=>{const k=find(d,n); if(k) d.log.push({at:now,full:k.full,pts:v,why:b.reason,batch:now});}); save(d); return {ok:true,pts:v}; }
+      if(b.mode==="addKid"){ const full=String(b.full||"").replace(/\s+/g,""); if(full.length<2) return {ok:false,err:"bad_name"}; const name=String(b.name||"").replace(/\s+/g,"")||full.slice(1);
+        const same=d.kids.find(k=>k.full===full); if(same&&!same.left) return {ok:false,err:"exists"};
+        if(d.kids.find(k=>!k.left&&k.name===name&&k.full!==full)) return {ok:false,err:"dup_short",name};
+        if(same){ same.left=false; save(d); return {ok:true,restored:true}; }
+        d.kids.push({full,name,eggs:[],pets:[],routes:[],pn:""}); save(d); return {ok:true}; }
+      if(b.mode==="leave"||b.mode==="restore"){ const on=b.mode==="leave"; const k=d.kids.find(x=>!!x.left===!on&&(x.full===b.name||x.name===b.name)); if(!k) return {ok:false,err:"no_kid"}; k.left=on; save(d); return {ok:true}; }
       if(b.mode==="undo"){ if(!d.log.length) return {ok:false,err:"empty"}; const bt=d.log[d.log.length-1].batch; const rm=d.log.filter(l=>l.batch===bt);
         d.log=d.log.filter(l=>l.batch!==bt); save(d); return {ok:true,removed:rm.map(l=>l.full),why:rm[0].why,pts:rm[0].pts}; }
       if(b.mode==="resetPet"){ const k=find(d,b.name); if(k){const s=st(k,p,c); k.eggs=k.eggs.slice(0,s.done); k.pets=k.pets.slice(0,s.done); k.routes=k.routes.slice(0,s.done); save(d);} return {ok:!!k}; }
@@ -419,6 +434,17 @@ function dialog(html, yes, no){
     document.body.appendChild(m);
     m.querySelector(".yes").onclick=()=>{m.remove();res(true)};
     if(no) m.querySelector(".no").onclick=()=>{m.remove();res(false)};
+  });
+}
+function formDlg(html, yes){
+  return new Promise(res=>{
+    const m=document.createElement("div"); m.className="mask";
+    m.innerHTML=`<div class="dlg">${html}<div class="row"><button class="no">取消</button><button class="yes">${yes||"確定"}</button></div></div>`;
+    document.body.appendChild(m);
+    const f=m.querySelector("input"); if(f) setTimeout(()=>f.focus(),50);
+    const val=()=>{ const o={}; m.querySelectorAll("[data-k]").forEach(i=>o[i.dataset.k]=i.value.trim()); return o; };
+    m.querySelector(".yes").onclick=()=>{ const v=val(); m.remove(); res(v); };
+    m.querySelector(".no").onclick=()=>{ m.remove(); res(null); };
   });
 }
 function toast(t, ms){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(), ms||2200); }
@@ -571,16 +597,28 @@ function renderAdmin(){
   $("#app").className="adm";
   $("#app").innerHTML=`
     ${d.last?`<div class="lastbox"><span>上一筆：${esc(d.last.d)} ${esc(d.last.why)} ${d.last.pts>0?"+":""}${d.last.pts}　${d.last.names.map(esc).join("、")}</span><button id="undo">復原</button></div>`:""}
-    <div class="toolbar"><button id="all">全選</button><button id="none">清除</button><span class="muted" id="cnt"></span></div>
+    <div class="toolbar"><button id="all">全選</button><button id="none">清除</button><span class="muted" id="cnt"></span><button id="newkid" class="newkid">＋新生</button></div>
     ${d.kids.map(k=>`<div class="krow${SEL.has(k.name)?" on":""}" data-n="${esc(k.name)}"><div class="ck">✓</div>
       <div style="width:44px">${creature({stage:k.stage,pet:k.pet,egg:k.egg,mystery:k.mystery,gift:null,name:"",n:k.n,route:k.route},44)}</div>
       <div class="nm">${esc(k.name)}<div class="pnl">${k.pn?"🐾 "+esc(k.pn):"<span class=need>還沒登記</span>"}</div></div>
-      <button class="regbtn" data-n="${esc(k.name)}">${k.pn?"✏️":"登記"}</button>
+      <button class="regbtn" data-n="${esc(k.name)}">${k.pn?"✏️":"登記"}</button><button class="morebtn" data-n="${esc(k.name)}">⋯</button>
       <div class="pt">${k.points} 點<br>${k.mystery?(k.stage?"守護神獸":"神秘蛋"):(k.needPick?"待挑蛋":k.stage?"Lv "+k.level+" "+esc(routeTitle(routeOf(k.pet,"",k.n,k.route),k.stage)||STAGE_NM[k.stage]):"蛋")}${k.n?"・📖"+k.n:""}</div></div>`).join("")}
-    <div class="actbar"><button class="b-hw" data-r="作業">作業 +${per}</button><button class="b-fix" data-r="課堂">課堂 +${d.cfg.cls}</button><button class="b-half" data-r="考試100">考 100 +${d.cfg.e100}</button><button class="b-half" data-r="考試95">考 95↑ +${d.cfg.e95}</button></div>`;
+    <div class="actbar"><button class="b-hw" data-r="作業">作業 +${per}</button><button class="b-fix" data-r="課堂">課堂 +${d.cfg.cls}</button><button class="b-half" data-r="考試100">考 100 +${d.cfg.e100}</button><button class="b-half" data-r="考試95">考 95↑ +${d.cfg.e95}</button><button class="b-cus" data-r="自訂">自訂 ±</button></div>
+    ${(d.left||[]).length?`<div class="leftbox"><div class="muted">已退班（點數和寵物都留著）</div>${d.left.map(k=>`<div class="lrow"><span>${esc(k.full)}${k.pn?"　🐾"+esc(k.pn):""}　${k.points} 點</span><button class="restbtn" data-n="${esc(k.full)}">恢復</button></div>`).join("")}</div>`:""}`;
   const cnt=()=>{ $("#cnt").textContent=SEL.size?`已選 ${SEL.size} 人`:"點名字選人"; document.querySelectorAll(".actbar button").forEach(b=>b.disabled=!SEL.size); };
-  document.querySelectorAll(".krow").forEach(r=>r.onclick=e=>{ if(e.target.closest(".regbtn")) return; const n=r.dataset.n; SEL.has(n)?SEL.delete(n):SEL.add(n); r.classList.toggle("on"); cnt(); });
+  document.querySelectorAll(".krow").forEach(r=>r.onclick=e=>{ if(e.target.closest(".regbtn,.morebtn")) return; const n=r.dataset.n; SEL.has(n)?SEL.delete(n):SEL.add(n); r.classList.toggle("on"); cnt(); });
   document.querySelectorAll(".regbtn").forEach(b=>b.onclick=()=>register(d.kids.find(k=>k.name===b.dataset.n)));
+  document.querySelectorAll(".morebtn").forEach(b=>b.onclick=()=>kidMenu(d.kids.find(k=>k.name===b.dataset.n)));
+  document.querySelectorAll(".restbtn").forEach(b=>b.onclick=async()=>{
+    if(!await dialog(`<div style="font-size:20px">讓 <b>${esc(b.dataset.n)}</b> 回來？<br><span class="muted">點數和寵物都會恢復</span></div>`,"恢復","取消")) return;
+    const r=await apiPost({mode:"restore",key:KEY,name:b.dataset.n}); toast(r.ok?"✅ 已恢復 "+b.dataset.n:"沒成功"); admin(); });
+  $("#newkid").onclick=async()=>{
+    const v=await formDlg(`<h2>➕ 新生</h2><div class="muted">全名（例：王小明）</div><input class="pnin" data-k="full" maxlength="10">
+      <div class="muted" style="margin-top:8px">平常叫他（可空白，預設去掉姓）</div><input class="pnin" data-k="name" maxlength="10">`,"加入");
+    if(!v||!v.full) return;
+    const r=await apiPost({mode:"addKid",key:KEY,full:v.full,name:v.name});
+    if(!r.ok) return toast(r.err==="exists"?"已經有這個人了":r.err==="dup_short"?`已經有人叫「${r.name}」，請填不一樣的叫法`:"沒成功："+(r.err||""), 3500);
+    toast(r.restored?"✅ 以前退班的，已恢復":"✅ 已加入 "+v.full+"，記得按「登記」挑蛋", 3500); admin(); };
   $("#all").onclick=()=>{ d.kids.forEach(k=>SEL.add(k.name)); renderAdmin(); };
   $("#none").onclick=()=>{ SEL.clear(); renderAdmin(); };
   if($("#undo")) $("#undo").onclick=async()=>{
@@ -589,6 +627,7 @@ function renderAdmin(){
   };
   document.querySelectorAll(".actbar button").forEach(b=>b.onclick=async()=>{
     const names=[...SEL];
+    if(b.dataset.r==="自訂") return customPts(names);
     if(/考試/.test(b.dataset.r) && !confirm(`${b.textContent}：${names.join("、")}，確定？`)) return;
     b.disabled=true;
     let r; try{ r=await apiPost({mode:"add",key:KEY,names,reason:b.dataset.r}); }catch(e){ toast("網路有問題，沒加到"); b.disabled=false; return; }
@@ -598,6 +637,41 @@ function renderAdmin(){
   cnt();
 }
 
+// 自訂加點／扣點（扣點打負數）
+async function customPts(names){
+  if(!names.length) return;
+  const v=await formDlg(`<h2>自訂點數</h2><div class="muted">${names.map(esc).join("、")}</div>
+    <div class="muted" style="margin-top:8px">點數（扣點打負數，例：-2）</div><input class="pnin" data-k="pts" type="number" inputmode="numeric" step="1">
+    <div class="muted" style="margin-top:8px">原因（孩子看得到）</div><input class="pnin" data-k="why" maxlength="12" placeholder="例：幫忙收作業">`,"送出");
+  if(!v) return;
+  const p=Math.round(+v.pts);
+  if(!p||Math.abs(p)>100) return toast("點數要是 -100～100、不能是 0");
+  const why=v.why||(p>0?"加分":"扣點");
+  let r; try{ r=await apiPost({mode:"add",key:KEY,names,reason:why,pts:p}); }catch(e){ return toast("網路有問題，沒加到"); }
+  if(!r.ok) return toast("沒成功："+(r.err||""));
+  toast(`✅ ${why} ${p>0?"+":""}${p}：${names.join("、")}`, 3000); SEL.clear(); admin();
+}
+// 單一孩子的選單
+async function kidMenu(k){
+  if(!k) return;
+  const m=document.createElement("div"); m.className="mask";
+  m.innerHTML=`<div class="dlg"><h2>${esc(k.full)}${k.pn?`<div class="muted">🐾 ${esc(k.pn)}・${k.points} 點</div>`:""}</h2>
+    <div class="menu"><button data-a="reg">${k.pn?"✏️ 改寵物名字":"🥚 登記（挑蛋＋取名）"}</button>
+    <button data-a="pts">± 幫他加點／扣點</button>
+    ${k.pn&&!k.needPick?`<button data-a="reset">🔄 現在這顆蛋重挑</button>`:""}
+    <button data-a="leave" class="danger">👋 退班</button></div>
+    <div class="row"><button class="no">關閉</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector(".no").onclick=()=>m.remove();
+  m.querySelectorAll(".menu button").forEach(b=>b.onclick=async()=>{ m.remove(); const a=b.dataset.a;
+    if(a==="reg") return register(k);
+    if(a==="pts") return customPts([k.name]);
+    if(a==="reset"){ if(!await dialog(`<div style="font-size:19px">讓 <b>${esc(k.full)}</b> 重挑現在這顆蛋？<br><span class="muted">寵物會重抽、收藏簿不動、點數不變</span></div>`,"重挑","取消")) return;
+      const r=await apiPost({mode:"resetPet",key:KEY,name:k.full}); toast(r.ok?"✅ 已重設，按「登記」讓他重挑":"沒成功"); return admin(); }
+    if(a==="leave"){ if(!await dialog(`<div style="font-size:19px"><b>${esc(k.full)}</b> 退班？<br><span class="muted">從名單和寵物園拿掉；點數、寵物都留著，之後可以恢復</span></div>`,"退班","取消")) return;
+      const r=await apiPost({mode:"leave",key:KEY,name:k.full}); toast(r.ok?"已退班："+k.full:"沒成功"); SEL.delete(k.name); return admin(); }
+  });
+}
 // 登記：還沒挑蛋→先挑蛋，再取寵物名字；已登記→只改名字
 async function register(k){
   if(!k) return;
