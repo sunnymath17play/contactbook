@@ -144,7 +144,9 @@ nav button span{display:block;font-size:26px}
 // ===== 設定 =====
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec";   // Apps Script 網頁應用程式網址（空白＝本機測試模式，資料只存這支手機）
 // 阿居畫好、已放進 img/ 的圖（一張一張加；沒列的先用暫代）。蛋＝egg_0~9，寵物＝<代號>_1~4
-const ART = new Set(["dragon_1", "dragon_2", "dragon_3", "dragon_4", "cat_1", "dog_1", "bunny_1", "penguin_1", "bear_1", "owl_1", "unicorn_1", ...Array.from({length:10}, (_, i) => "egg_" + i)]);
+const ART = new Set(["dragon_1", "dragon_2", "dragon_3", "dragon_4", "cat_1", "dog_1", "bunny_1", "penguin_1", "bear_1", "owl_1", "unicorn_1", ...Array.from({length:10}, (_, i) => "egg_" + i),
+  // 人生路線圖（SUNNY 2026-10-23 驗收 OK）
+  ...[["dragon",["math","actuary","chef","astro"]],["cat",["boxing","detective","piano","fashion"]],["dog",["rescue","vet","soccer","engineer"]],["bunny",["jump","farm","ballet","baker"]],["penguin",["swim","polar","weather","robot"]],["bear",["boss","lift","forest","doctor"]],["owl",["writer","star","teacher","chess"]],["unicorn",["paint","magic","sing","prism"]]].flatMap(([p,rs])=>rs.flatMap(r=>[2,3,4].map(s=>p+"_"+r+"_"+s)))]);
 
 // 8 種寵物：挑蛋時後台偷偷抽，孵出來才揭曉
 const PETS = {
