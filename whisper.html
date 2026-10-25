@@ -184,6 +184,22 @@
     border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:3px;box-shadow:0 0 0 2px #fff;}
   .done .videos{max-width:360px;width:100%;margin-top:18px;}
 
+  /* 🐣 三年級寵物蛋：上方小卡片＋全螢幕寵物房 */
+  .petcard{margin:0 0 14px;}
+  .petcard iframe{display:block;width:100%;height:104px;border:0;background:transparent;}
+  .done .petcard{max-width:360px;width:100%;margin-top:18px;}
+  .proom{background:linear-gradient(175deg,#FFF8EC,#FFEBD2);}
+  .proom iframe{flex:1;width:100%;border:0;background:#fff8ec;}
+  .proom .vback{background:#FFE9CC;color:#C26A1E;}
+  .proom .vbar h2{color:#C26A1E;}
+  /* 📷 考卷拍照 */
+  .photo-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;}
+  .photo-btn{border:2.5px dashed var(--peach);background:#FFFDF8;color:var(--ink);border-radius:16px;padding:12px 16px;
+    font-family:var(--font);font-size:17px;font-weight:800;cursor:pointer;}
+  .photo-prev{width:110px;height:82px;object-fit:cover;border-radius:12px;border:2px solid #E9D8BB;}
+  .photo-q{display:flex;align-items:center;gap:4px;font-size:16px;}
+  .photo-q input{width:56px;}
+
   /* 📺 影片教室：全螢幕 */
   .vroom{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;
     background:linear-gradient(175deg,#F4F9FF,#E3EEFA);-webkit-user-select:none;user-select:none;}
@@ -335,6 +351,7 @@
     <div class="today" id="today"></div>
   </div>
 
+  <div class="petcard" id="petcard"></div>
   <div class="letter" id="letter"></div>
   <!-- 影片教室按鈕直接寫在網頁裡（不等程式），跟整頁同時出現 -->
   <div class="videos" id="videos"><button class="vopen hop" type="button" data-vopen="1"><span class="ic">📺</span><span class="tx"><b>影片教室</b><small>點我進去看講解影片</small></span><span class="go">▶</span></button></div>
@@ -392,7 +409,14 @@
   <div class="letter" id="letter2"></div>
   <div class="today" id="today2"></div>
   <div class="videos" id="videos2"><button class="vopen" type="button" data-vopen="1"><span class="ic">📺</span><span class="tx"><b>影片教室</b><small>點我進去看講解影片</small></span><span class="go">▶</span></button></div>
+  <div class="petcard" id="petcard2"></div>
   <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
+</div>
+
+<!-- 🐣 寵物房（全螢幕，三年級才有） -->
+<div class="vroom proom" id="proom">
+  <div class="vbar"><button class="vback" id="pback">← 回樹洞</button><h2>🐣 我的寵物</h2></div>
+  <iframe id="pframe" title="我的寵物"></iframe>
 </div>
 
 <!-- 📺 影片教室（全螢幕） -->
@@ -550,7 +574,26 @@ function renderItems(){
     x.onclick=()=>{items.splice(i,1); if(!items.length) items.push(newItem()); renderItems();};
     top.appendChild(seg);top.appendChild(x);box.appendChild(top);
 
-    if(it.type==="上課內容"){
+    if(it.type==="考卷"){
+      // 考卷：拍下不會的那一題（SUNNY 才知道是哪一份），第幾題可以不填
+      const row=document.createElement("div");row.className="photo-row";
+      const file=document.createElement("input");file.type="file";file.accept="image/*";file.style.display="none";
+      const btn=document.createElement("button");btn.className="photo-btn";btn.type="button";
+      btn.textContent=it.photo?"📷 重拍一張":"📷 拍下不會的題目";
+      btn.onclick=()=>file.click();
+      file.onchange=async()=>{ const f=file.files&&file.files[0]; if(!f) return;
+        btn.textContent="📷 處理中…";
+        try{ it.photo=await shrink(f); box.classList.remove("bad"); }catch(e){ showMsg("照片讀不出來，換一張試試"); }
+        renderItems(); };
+      row.append(btn,file);
+      if(it.photo){ const im=document.createElement("img");im.className="photo-prev";im.src=it.photo;row.appendChild(im); }
+      const q=document.createElement("label");q.className="photo-q";
+      const qi=document.createElement("input");qi.type="text";qi.inputMode="numeric";qi.maxLength=3;qi.placeholder="題";qi.value=it.q||"";
+      qi.oninput=()=>{qi.value=qi.value.replace(/\D/g,"");it.q=qi.value;};
+      q.append("第",qi,"題（可不填）");
+      box.appendChild(row);box.appendChild(q);
+      box.insertAdjacentHTML("beforeend",`<div class="eg">把不會的那一題拍清楚，SUNNY 就知道是哪一份考卷囉！</div>`);
+    }else if(it.type==="上課內容"){
       const t=document.createElement("input");t.className="txt";t.type="text";t.maxLength=40;
       t.placeholder="哪個地方聽不懂？寫清楚一點";t.value=it.text||"";
       t.oninput=()=>{it.text=t.value;box.classList.remove("bad");};
@@ -571,7 +614,20 @@ function renderItems(){
   addBtn.textContent=items.length>=CONFIG.help.maxItems ? `最多 ${CONFIG.help.maxItems} 題喔` : "＋ 再加一題";
 }
 const lastBook=()=>{const b=lsGet("wh_book");return b==="講義A"||b==="講義B"?b:"";};
-const newItem=()=>({type:lastBook(),page:"",q:"",text:""});
+const newItem=()=>({type:lastBook(),page:"",q:"",text:"",photo:""});
+// 照片縮小成最長邊 1400、JPEG（上傳快、字還看得清楚）
+function shrink(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{ const s=Math.min(1,1400/Math.max(img.width,img.height)), c=document.createElement("canvas");
+      c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+      const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,c.width,c.height); g.drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url); let q=.72, d=c.toDataURL("image/jpeg",q);
+      while(d.length>500000&&q>.35){ q-=.1; d=c.toDataURL("image/jpeg",q); }
+      res(d); };
+    img.onerror=rej; img.src=url;
+  });
+}
 addBtn.onclick=()=>{ if(items.length<CONFIG.help.maxItems){ items.push(newItem()); renderItems(); } };
 
 $("gotIt").textContent=CONFIG.help.got;
@@ -600,7 +656,9 @@ function checkItems(){
   for(let i=0;i<items.length;i++){
     const it=items[i], n=`第${i+1}題`;
     if(!it.type) return [i,`${n}是講義A還是講義B呢？點一下上面的按鈕喔`];
-    if(it.type==="上課內容"){
+    if(it.type==="考卷"){
+      if(!it.photo) return [i,`${n}要拍一張考卷的照片喔，SUNNY 才知道是哪一份`];
+    }else if(it.type==="上課內容"){
       const t=(it.text||"").replace(/[\s，。！？、,.!?~～]/g,"");
       if(t.length<5) return [i,`${n}再寫清楚一點喔，是哪個地方聽不懂呢？`];
       if(VAGUE.test(t)||/^(我)?(不會|聽不懂|不懂|不知道)/.test(t)) return [i,`${n}要寫出是「哪一個地方」不懂喔，像例子那樣～`];
@@ -611,7 +669,7 @@ function checkItems(){
   }
   return null;
 }
-const itemText=it=>it.type==="上課內容" ? `上課：${it.text.trim()}` : `${it.type} p${+it.page}#${+it.q}`;
+const itemText=it=>it.type==="上課內容" ? `上課：${it.text.trim()}` : it.type==="考卷" ? `考卷📷${+it.q?"#"+(+it.q):""}` : `${it.type} p${+it.page}#${+it.q}`;
 
 /* ---------- SUNNY 的回信 ---------- */
 // 每支手機一組亂數代號，送出時一起帶上；SUNNY 回信後，這支手機打開就看得到
@@ -866,6 +924,28 @@ document.addEventListener("click",e=>{
   }catch(e){ VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
 })();
 
+/* ---------- 🐣 三年級寵物蛋：上方小卡片＋寵物房（用樹洞打的名字自動認人） ---------- */
+const PHOTO_EP="https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec";   // 寵物蛋後端（也收考卷照片）
+const PETS_ON = !!CH && /^三年級/.test(CLASS_NAME) && qs("preview")!=="1";
+function drawPetCards(){
+  if(!PETS_ON) return;
+  ["petcard","petcard2"].forEach(id=>{ $(id).innerHTML=`<iframe src="pets/?card=1&t=${Date.now()}" title="我的寵物蛋" scrolling="no"></iframe>`; });
+}
+function openPets(){ $("pframe").src="pets/?embed=1&t="+Date.now(); $("proom").classList.add("show"); history.pushState({p:1},""); }
+function closePets(){ $("proom").classList.remove("show"); $("pframe").src="about:blank"; drawPetCards(); }
+$("pback").onclick=()=>history.back();
+window.addEventListener("popstate",()=>{ if($("proom").classList.contains("show")) closePets(); });
+window.addEventListener("message",e=>{
+  const m=e.data&&e.data.pets; if(!m) return;
+  if(m==="open") openPets();
+  if(m==="name"){ const v=lsGet("wh_name"); if(v) $("name").value=v; }
+});
+if(PETS_ON){
+  drawPetCards();
+  let tm=null;   // 名字打好了 → 小卡片重新認人
+  $("name").addEventListener("input",()=>{ clearTimeout(tm); tm=setTimeout(()=>{ const v=$("name").value.trim(); if(v){ lsSet("wh_name",v); drawPetCards(); } },1200); });
+}
+
 /* ---------- 每天只能說一次 ---------- */
 const pad=n=>(n<10?"0":"")+n;
 const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());};
@@ -920,6 +1000,19 @@ $("send").onclick=async()=>{
   }
 
   lsSet("wh_name",name);
+  const photos=state.help.active ? items.filter(it=>it.type==="考卷"&&it.photo&&!it.pid) : [];
+  if(photos.length){
+    const btn0=$("send"); btn0.disabled=true; const h0=btn0.innerHTML; btn0.innerHTML="<span>📷</span>照片上傳中…";
+    try{
+      for(const it of photos){
+        const r=await fetch(PHOTO_EP,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+          body:JSON.stringify({mode:"photo",data:it.photo,cls:CH?CH.id:"",name})});
+        const j=await r.json(); if(!j.ok) throw 0; it.pid=j.id;
+      }
+    }catch(e){ btn0.disabled=false; btn0.innerHTML=h0; showMsg("照片沒傳上去 😢 檢查一下網路，再按一次試試"); return; }
+    btn0.disabled=false; btn0.innerHTML=h0;
+  }
+  const marks=state.help.active ? items.filter(it=>it.pid).map((it,i)=>`［考卷照片${it.q?"第"+(+it.q)+"題":""} ${it.pid}］`).join("") : "";
   const list=state.help.active ? items.map(it=>({type:it.type,page:+it.page||0,q:+it.q||0,text:(it.text||"").trim()})) : [];
   const payload={
     classId:CH?CH.id:"", className:CLASS_NAME, name, device:deviceId(),
@@ -928,7 +1021,7 @@ $("send").onclick=async()=>{
       items:list, where:[...new Set(list.map(it=>it.type))], reexplain:state.help.reexplain,
       detail:items.map(itemText).join("、")
     } : null,
-    text, time:new Date().toISOString()
+    text:(marks+text).slice(0,200), time:new Date().toISOString()
   };
   const btn=$("send");btn.disabled=true;
   const btnHTML=btn.innerHTML; btn.innerHTML="<span>🕊️</span>正在飛往樹洞…";

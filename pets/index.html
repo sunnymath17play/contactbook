@@ -26,6 +26,9 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .pnin{font-size:24px;padding:10px 12px;border:3px solid var(--line);border-radius:14px;width:80%;max-width:320px;text-align:center;font-weight:bold}
 .warn{color:#c0392b;margin-top:10px;font-size:17px}
 .pnl{font-size:13px;color:#9a6a2a;font-weight:normal}.pnl .need{color:#c0392b}
+.pendbox{background:#fff1f0;border:2px solid #ffc9c2;border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:16px}
+.prow{display:flex;gap:6px;margin-top:6px}.psel{flex:1;font-size:16px;padding:6px;border-radius:10px;border:1px solid var(--line)}
+.plink,.pign{padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:#fff}.plink{background:#2e9e4f;color:#fff}
 .morebtn{padding:6px 10px;font-size:16px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-left:4px;flex:none}
 .newkid{margin-left:auto;background:#2e9e4f!important;color:#fff!important}
 .b-cus{background:#8a6bd1!important;color:#fff!important}
@@ -61,6 +64,13 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .garden{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .garden>div{background:#fff3df;border-radius:16px;padding:8px 2px 10px;text-align:center;font-weight:bold}
 .garden>div.me{background:#ffe1b8;outline:3px solid var(--orange)}
+body.embed header{display:none}
+body.cardm{background:transparent}body.cardm header,body.cardm nav{display:none!important}body.cardm main{padding:0;max-width:none}
+.pcard{display:flex;align-items:center;gap:12px;background:#fff;border:2.5px solid #ffd59a;border-radius:22px;padding:8px 14px 8px 8px;cursor:pointer;
+  box-shadow:0 3px 12px rgba(245,124,58,.15);min-height:88px;font-size:16px;line-height:1.35}
+.pcard .pc-t{flex:1;min-width:0}.pcard b{font-size:18px}.pcard .bar{height:10px;margin:5px 0 3px}
+.pcard .go{font-size:22px;color:var(--orange);font-weight:bold}
+.pcard .em{font-size:44px;width:72px;text-align:center}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;background:none;padding:12px 0 14px;font-size:17px;color:var(--sub);border-radius:0}
 nav button.on{color:var(--orange);font-weight:bold}
@@ -304,6 +314,10 @@ const mock = (()=>{
   const R = {"作業":c=>c.per,"課堂":c=>c.cls,"考試100":c=>c.e100,"考試95":c=>c.e95};
   return {
     get(q){ const d=db(), p=pts(d), c=C(d);
+      if(q.mode==="byName"){ const nk=s=>String(s||"").replace(/\s+/g,"").toLowerCase(), qq=nk(q.name);
+        const hit=d.kids.filter(k=>!k.left&&([k.full,k.name,k.full.slice(1)].map(nk).includes(qq)||(k.alias||[]).includes(qq)));
+        if(hit.length!==1){ d.pend=d.pend||[]; if(qq&&!d.pend.includes(q.name)) d.pend.push(q.name); save(d); return {ok:true,status:"unknown"}; }
+        const k=hit[0]; return k.pn?{ok:true,status:"linked",pn:k.pn}:{ok:true,status:"new",name:k.name,hasEgg:k.eggs.length>0}; }
       if(q.mode==="garden") return {ok:true, cfg:c, kids:d.kids.filter(k=>k.pn&&!k.left).map(k=>{const s=publicState(st(k,p,c),c,false);
         return {pn:k.pn,egg:s.egg,pet:s.pet,route:s.route,stage:s.stage,mystery:s.mystery,n:s.done,needPick:s.needPick};}).sort((a,b)=>a.pn<b.pn?-1:1)};
       if(q.mode==="me"){ const k=findPet(d,q.pet); if(!k) return {ok:false,err:"no_pet"};
@@ -312,11 +326,13 @@ const mock = (()=>{
           ...publicState(stateOf(tot,k.eggs,k.pets,c,k.routes),c,true)}; }
     },
     post(b){ const d=db(), c=C(d), p=pts(d);
+      if(b.mode==="selfReg"){ const r=this.get({mode:"byName",name:b.name}); if(r.status==="unknown") return {ok:false,err:"unknown"}; if(r.status==="linked") return {ok:true,pn:r.pn};
+        const k=d.kids.find(x=>x.name===r.name); return this.post({mode:"register",key:"test",name:k.full,petName:b.petName,egg:b.egg}); }
       if(b.mode==="pick"){ const k=findPet(d,b.pet); if(!k) return {ok:false,err:"no_pet"};
         if(!st(k,p,c).needPick) return {ok:false,err:"picked"}; addEgg(d,k,b.egg); save(d); return {ok:true}; }
       if(String(b.key)!=="test") return {ok:false,err:"bad_key"};
       if(b.mode==="admin"){ const lb=d.log.length?d.log.filter(l=>l.batch===d.log[d.log.length-1].batch):[];
-        return {ok:true,per:c.per,cfg:c,left:d.kids.filter(k=>k.left).map(k=>({full:k.full,name:k.name,pn:k.pn,points:p[k.full]||0})),kids:d.kids.filter(k=>!k.left).map(k=>{const s=st(k,p,c);
+        return {ok:true,per:c.per,cfg:c,pending:(d.pend||[]).map(x=>({typed:x,d:""})),left:d.kids.filter(k=>k.left).map(k=>({full:k.full,name:k.name,pn:k.pn,points:p[k.full]||0})),kids:d.kids.filter(k=>!k.left).map(k=>{const s=st(k,p,c);
           return {full:k.full,name:k.name,pn:k.pn,points:p[k.full]||0,egg:s.egg,pet:s.pet,route:s.route,stage:s.stage,level:s.level,mystery:s.mystery,n:s.done,needPick:s.needPick};}),
           last:lb.length?{d:md(lb[0].at),why:lb[0].why,names:lb.map(l=>l.full.slice(1)),pts:lb[0].pts}:null}; }
       if(b.mode==="register"){ const k=find(d,b.name); if(!k) return {ok:false,err:"no_kid"}; const pn=String(b.petName||"").replace(/\s+/g,"").slice(0,12);
@@ -325,6 +341,7 @@ const mock = (()=>{
         k.pn=pn; if(s.needPick) addEgg(d,k,b.egg); save(d); return {ok:true,pn}; }
       if(b.mode==="add"){ const v=R[b.reason]?R[b.reason](c):+b.pts; const now=Date.now();
         b.names.forEach(n=>{const k=find(d,n); if(k) d.log.push({at:now,full:k.full,pts:v,why:b.reason,batch:now});}); save(d); return {ok:true,pts:v}; }
+      if(b.mode==="link"){ d.pend=(d.pend||[]).filter(x=>x!==b.typed); if(b.full){ const k=d.kids.find(x=>x.full===b.full); if(k){ k.alias=k.alias||[]; k.alias.push(String(b.typed).replace(/\s+/g,"").toLowerCase()); } } save(d); return {ok:true}; }
       if(b.mode==="addKid"){ const full=String(b.full||"").replace(/\s+/g,""); if(full.length<2) return {ok:false,err:"bad_name"}; const name=String(b.name||"").replace(/\s+/g,"")||full.slice(1);
         const same=d.kids.find(k=>k.full===full); if(same&&!same.left) return {ok:false,err:"exists"};
         if(d.kids.find(k=>!k.left&&k.name===name&&k.full!==full)) return {ok:false,err:"dup_short",name};
@@ -458,6 +475,89 @@ function confetti(){ const E=["🎉","⭐","✨","🎊","💛"]; for(let i=0;i<2
 const fail = () => { $("#app").innerHTML=`<div class="card center">連不上網路 😢<br><br><button class="big" onclick="location.reload()">再試一次</button></div>`; };
 
 // ===== 孩子端 =====
+// 在樹洞裡：?card＝上方小卡片、?embed＝全螢幕寵物房（樹洞已經有孩子打的名字，用名字自動認人）
+const CARD = /[?&]card/.test(location.search), EMBED = /[?&]embed/.test(location.search);
+if(CARD) document.body.classList.add("cardm"); else if(EMBED) document.body.classList.add("embed");
+const whName = () => { try{ return (localStorage.getItem("wh_name")||"").trim(); }catch(e){ return ""; } };
+const toParent = m => { try{ if(window.parent!==window) window.parent.postMessage({pets:m}, "*"); }catch(e){} };
+
+// 樹洞上方的小卡片：點了就開寵物房
+async function showCard(){
+  const box=(inner)=>{ $("#app").innerHTML=`<div class="pcard" id="pc">${inner}<span class="go">›</span></div>`; $("#pc").onclick=()=>toParent("open"); };
+  box(`<div class="em">🥚</div><div class="pc-t"><b>我的寵物蛋</b><div class="muted">載入中…</div></div>`);
+  try{
+    if(!ME){
+      const nm=whName();
+      if(!nm) return box(`<div class="em">🥚</div><div class="pc-t"><b>三年級寵物蛋</b><div class="muted">先在下面打上你的名字，<br>就能領一顆蛋喔！</div></div>`);
+      const r=await apiGet({mode:"byName",name:nm});
+      if(r.status==="linked"){ ME=r.pn; LS.set("pn",ME); }
+      else if(r.status==="new") return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(r.name)}，你的蛋在等你！</b><div class="muted">點我${r.hasEgg?"幫寵物取名字":"挑一顆蛋"} 👉</div></div>`);
+      else return box(`<div class="em">🥚</div><div class="pc-t"><b>寵物蛋</b><div class="muted">SUNNY 還在確認「${esc(nm)}」是誰，<br>確認好就能領蛋囉！</div></div>`);
+    }
+    const d=await apiGet({mode:"me",pet:ME});
+    if(!d.ok){ LS.del("pn"); ME=null; return showCard(); }
+    const C={...DEF_CFG,...(d.cfg||{})}, P=PETS[d.pet]||{}, E=EGGS[d.egg]||{nm:"蛋"};
+    const R=!d.mystery&&d.stage?routeOf(d.pet,"",d.done,d.route):null;
+    if(d.needPick) return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(d.pn)} 收進收藏簿了！</b><div class="muted">點我挑下一顆蛋 👉</div></div>`);
+    let pct=100, line="";
+    if(d.next){ const prev=d.mystery?0:[0,C.hatch,C.teen,C.hero,C.legend][d.stage]; pct=Math.max(0,Math.min(100,(d.pts-prev)/(d.next.at-prev)*100)); line=`再 ${d.next.at-d.pts} 點${NEXT_TXT[d.next.what]}`; }
+    const nm = d.mystery ? (d.stage?"守護神獸":"神秘蛋") : d.stage ? (routeTitle(R,d.stage)||P.nm) : E.nm;
+    box(`<div style="width:76px;flex:none">${creature({stage:d.stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:null,n:d.done,route:d.route,hot:!!(d.next&&d.next.at-d.pts<=4&&!d.stage)},76)}</div>
+      <div class="pc-t"><b>${esc(d.pn)}</b>　<span class="muted">${esc(nm)}</span>${d.next?`<div class="bar"><div style="width:${pct}%"></div></div><div class="muted">${line}</div>`:""}</div>`);
+  }catch(e){ box(`<div class="em">🥚</div><div class="pc-t"><b>我的寵物蛋</b><div class="muted">點我進去看</div></div>`); }
+}
+
+// 寵物房（樹洞裡）：沒登入就用樹洞名字認人；對上了自己挑蛋＋取名
+async function embedWho(msg){
+  $("#nav").style.display="none";
+  const nm=whName();
+  if(!nm || msg==="ask") return askName(msg==="ask"?"":msg);
+  $("#app").innerHTML='<div class="loading">載入中…</div>';
+  let r; try{ r=await apiGet({mode:"byName",name:nm}); }catch(e){ return fail(); }
+  if(r.status==="linked"){ ME=r.pn; LS.set("pn",ME); LS.del("seen"); toParent("changed"); return showMe(); }
+  if(r.status==="new") return selfReg(r);
+  $("#app").innerHTML=`<div class="card center"><h2>🥚 等 SUNNY 確認一下</h2>
+    <div>SUNNY 還不認識「<b>${esc(nm)}</b>」這個名字，<br>確認好就能領蛋囉！</div>
+    <div class="muted" style="margin-top:10px">名字打錯了嗎？</div><button class="big" id="fixnm" style="margin-top:8px">重新打名字</button></div>`;
+  $("#fixnm").onclick=()=>askName("");
+}
+function askName(msg){
+  $("#nav").style.display="none";
+  $("#app").innerHTML=`<div class="card center"><h2>👋 你叫什麼名字？</h2><div class="muted">打你的名字（跟樹洞一樣）</div>
+    <input id="nmin" class="pnin" maxlength="10" autocomplete="off" value="${esc(whName())}">${msg?`<div class="warn">${msg}</div>`:""}
+    <div style="margin-top:12px"><button class="big" id="nmgo">好了</button></div></div>`;
+  $("#nmgo").onclick=()=>{ const v=$("#nmin").value.trim(); if(!v) return; try{ localStorage.setItem("wh_name",v); }catch(e){} toParent("name"); embedWho(); };
+}
+async function selfReg(r){
+  let egg="";
+  if(!r.hasEgg){
+    egg = await new Promise(res=>{
+      $("#app").innerHTML=`<div class="card center"><h2>🥚 ${esc(r.name)}，挑一顆蛋！</h2>
+        <div class="muted">裡面住著誰？<b>孵出來才知道！</b><br>挑了就不能換喔</div></div>
+        <div class="pickgrid">${EGGS.map((e,i)=>`<button data-e="${i}">${eggHTML(i,96)}${e.nm}</button>`).join("")}</div>`;
+      document.querySelectorAll(".pickgrid button").forEach(b=>b.onclick=async()=>{
+        const i=+b.dataset.e;
+        if(await dialog(`${eggHTML(i,130)}<div style="font-size:21px">要 <b>${EGGS[i].nm}</b> 嗎？<br><span class="muted">挑了就不能換喔</span></div>`,"就是它！","再想想")) res(i);
+      });
+    });
+  }
+  const ask=(m)=>{
+    $("#app").innerHTML=`<div class="card center"><h2>🐾 幫你的寵物取名字！</h2>
+      ${egg!==""?`<div style="margin:6px 0">${eggHTML(egg,100)}</div>`:""}
+      <div class="muted">最多 12 個字，不能跟別人一樣喔</div>
+      <input id="pnin" class="pnin" maxlength="12" autocomplete="off" placeholder="寵物名字">${m?`<div class="warn">${m}</div>`:""}
+      <div style="margin-top:12px"><button class="big" id="pnok">決定了！</button></div></div>`;
+    $("#pnok").onclick=async()=>{
+      const v=$("#pnin").value.replace(/\s+/g,""); if(!v) return ask("要先取名字喔");
+      $("#pnok").disabled=true;
+      let x; try{ x=await apiPost({mode:"selfReg",name:whName(),egg,petName:v}); }catch(e){ return ask("網路有問題，再按一次"); }
+      if(!x.ok) return ask(x.err==="dup"?`「${esc(v)}」已經有人用了，換一個吧`:"沒成功，再試一次");
+      ME=x.pn; LS.set("pn",ME); LS.del("seen"); toParent("changed"); chime(); confetti(); showMe();
+    };
+  };
+  ask("");
+}
+
 // 孩子用「寵物名字」登入（SUNNY 在平板幫孩子登記好）；這台裝置記住，之後不用再打
 let ME = LS.get("pn");
 LS.del("name");                                     // 舊版（點名字）留下的紀錄不用了
@@ -506,12 +606,12 @@ function albumHTML(d, C){
     <div class="album">${cells.join("")}</div></div>`;
 }
 async function showMe(pre){
-  if(!ME) return whoAmI();
+  if(!ME) return EMBED ? embedWho() : whoAmI();
   $("#nav").style.display="flex"; setTab("me");
   let d = pre;
   if(!d){ $("#app").innerHTML='<div class="loading">載入中…</div>';
     try{ d=await apiGet({mode:"me",pet:ME}); }catch(e){ return fail(); } }
-  if(!d.ok){ LS.del("pn"); ME=null; return whoAmI("這個寵物名字找不到了，請再輸入一次"); }
+  if(!d.ok){ LS.del("pn"); ME=null; return EMBED ? embedWho() : whoAmI("這個寵物名字找不到了，請再輸入一次"); }
   d.name = d.pn; ME = d.pn; LS.set("pn", ME);
   if(d.needPick) return pickPet(d);
   const C={...DEF_CFG,...(d.cfg||{})}, per=C.per, P=PETS[d.pet]||{}, E=EGGS[d.egg]||{nm:"蛋"};
@@ -556,7 +656,8 @@ async function showMe(pre){
   </div>
   ${d.recent.length?`<div class="card"><h2>📒 最近加的點</h2><div class="recent">${d.recent.map(r=>`<div><span>${esc(r.d)}　${esc(r.why)}</span><b>${r.pts>0?"+":""}${r.pts}</b></div>`).join("")}</div></div>`:""}
   <div class="center"><button class="ghost" id="notme">換別的寵物名字</button></div>`;
-  $("#notme").onclick=()=>{ LS.del("pn"); LS.del("seen"); ME=null; whoAmI(); };
+  if(EMBED) $("#notme").textContent="這不是我的寵物";
+  $("#notme").onclick=()=>{ LS.del("pn"); LS.del("seen"); ME=null; toParent("changed"); EMBED ? embedWho("ask") : whoAmI(); };
   // 慶祝：跟這支手機上次看到的比
   const seen=LS.get("seen");
   LS.set("seen",{done:d.done,stage,level,mystery:d.mystery});
@@ -597,6 +698,9 @@ function renderAdmin(){
   $("#app").className="adm";
   $("#app").innerHTML=`
     ${d.last?`<div class="lastbox"><span>上一筆：${esc(d.last.d)} ${esc(d.last.why)} ${d.last.pts>0?"+":""}${d.last.pts}　${d.last.names.map(esc).join("、")}</span><button id="undo">復原</button></div>`:""}
+    ${(d.pending||[]).map(p=>`<div class="pendbox"><div>🌳 樹洞有人打了「<b>${esc(p.typed)}</b>」${esc(p.d)}，是誰？</div>
+      <div class="prow"><select class="psel" data-t="${esc(p.typed)}"><option value="">選孩子…</option>${d.kids.map(k=>`<option value="${esc(k.full)}">${esc(k.full)}</option>`).join("")}</select>
+      <button class="plink" data-t="${esc(p.typed)}">連結</button><button class="pign" data-t="${esc(p.typed)}">忽略</button></div></div>`).join("")}
     <div class="toolbar"><button id="all">全選</button><button id="none">清除</button><span class="muted" id="cnt"></span><button id="newkid" class="newkid">＋新生</button></div>
     ${d.kids.map(k=>`<div class="krow${SEL.has(k.name)?" on":""}" data-n="${esc(k.name)}"><div class="ck">✓</div>
       <div style="width:44px">${creature({stage:k.stage,pet:k.pet,egg:k.egg,mystery:k.mystery,gift:null,name:"",n:k.n,route:k.route},44)}</div>
@@ -609,6 +713,12 @@ function renderAdmin(){
   document.querySelectorAll(".krow").forEach(r=>r.onclick=e=>{ if(e.target.closest(".regbtn,.morebtn")) return; const n=r.dataset.n; SEL.has(n)?SEL.delete(n):SEL.add(n); r.classList.toggle("on"); cnt(); });
   document.querySelectorAll(".regbtn").forEach(b=>b.onclick=()=>register(d.kids.find(k=>k.name===b.dataset.n)));
   document.querySelectorAll(".morebtn").forEach(b=>b.onclick=()=>kidMenu(d.kids.find(k=>k.name===b.dataset.n)));
+  document.querySelectorAll(".plink").forEach(b=>b.onclick=async()=>{
+    const full=[...document.querySelectorAll(".psel")].find(s=>s.dataset.t===b.dataset.t).value;
+    if(!full) return toast("先選是哪個孩子");
+    const r=await apiPost({mode:"link",key:KEY,typed:b.dataset.t,full}); toast(r.ok?`✅「${b.dataset.t}」＝${full}，下次樹洞就認得了`:"沒成功", 3500); admin(); });
+  document.querySelectorAll(".pign").forEach(b=>b.onclick=async()=>{
+    const r=await apiPost({mode:"link",key:KEY,typed:b.dataset.t,full:""}); toast(r.ok?"已忽略":"沒成功"); admin(); });
   document.querySelectorAll(".restbtn").forEach(b=>b.onclick=async()=>{
     if(!await dialog(`<div style="font-size:20px">讓 <b>${esc(b.dataset.n)}</b> 回來？<br><span class="muted">點數和寵物都會恢復</span></div>`,"恢復","取消")) return;
     const r=await apiPost({mode:"restore",key:KEY,name:b.dataset.n}); toast(r.ok?"✅ 已恢復 "+b.dataset.n:"沒成功"); admin(); });
@@ -714,6 +824,7 @@ async function register(k){
 
 // ===== 開始 =====
 if(/[?&]admin/.test(location.search)) admin();
+else if(CARD) showCard();
 else showMe();
 </script>
 </body>

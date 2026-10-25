@@ -53,6 +53,11 @@
   #gate{max-width:340px;margin:60px auto;text-align:center;}
   #gate .btn{width:100%;margin-top:12px;padding:14px;font-size:17px;}
   [hidden]{display:none!important;}
+  .phs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .ph{display:block;max-width:100%;border-radius:10px;border:2px solid #E9D8BB;cursor:zoom-in}
+  .phwait{font-size:14px;color:#9a8a7a;padding:10px;border:2px dashed #E9D8BB;border-radius:10px}
+  .phbig{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99;display:flex;align-items:center;justify-content:center;padding:10px}
+  .phbig img{max-width:100%;max-height:100%}
 </style>
 </head>
 <body>
@@ -125,9 +130,23 @@ function said(r){
   if(r["悄悄話"]) p.push(esc(r["悄悄話"]));
   if(r["心情"]) p.push("心情"+esc(r["心情"]));
   if(r["星星"]) p.push("★".repeat(+r["星星"]));
-  if(r["聽不懂"]) p.push(`<span class="q">🙋不懂：${esc(r["第幾頁題"]||r["聽不懂"])}${r["想再講解"]?"，想再講解":""}</span>`);
-  if(r["打字內容"]) p.push("「"+esc(r["打字內容"])+"」");
+  if(r["聽不懂"]) p.push(`<span class="q">🙋不懂：${esc(String(r["第幾頁題"]||r["聽不懂"]).replace(/考卷p0#0/g,"考卷📷").replace(/考卷p0#(\d+)/g,"考卷📷第$1題"))}${r["想再講解"]?"，想再講解":""}</span>`);
+  const txt=String(r["打字內容"]||"").replace(PH_RE,"").trim();
+  if(txt) p.push("「"+esc(txt)+"」");
   return p.join("　");
+}
+// 考卷照片：存在寵物蛋後端，用同一組管理密碼讀
+const PHOTO_EP="https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec";
+const PH_RE=/［考卷照片(第\d+題)?\s*(P[0-9A-Z]+)］/g;
+const PH_CACHE={};
+function photosOf(r){ return [...String(r["打字內容"]||"").matchAll(PH_RE)].map(m=>({id:m[2],q:m[1]||""})); }
+async function loadPhoto(el,id){
+  try{
+    if(!PH_CACHE[id]){ const j=await (await fetch(PHOTO_EP+"?mode=photo&key="+encodeURIComponent(KEY)+"&id="+encodeURIComponent(id))).json(); if(!j.ok) throw 0; PH_CACHE[id]=j.data; }
+    const im=document.createElement("img"); im.className="ph"; im.src=PH_CACHE[id];
+    im.onclick=()=>{ const b=document.createElement("div"); b.className="phbig"; b.innerHTML=`<img src="${PH_CACHE[id]}">`; b.onclick=()=>b.remove(); document.body.appendChild(b); };
+    el.replaceWith(im);
+  }catch(e){ el.textContent="照片讀不到（"+id+"）"; }
 }
 function render(){
   const list=$("list"); list.innerHTML="";
@@ -148,6 +167,7 @@ function render(){
         ${done(r)?'<span class="tag ok">已回 ✓</span>':""}</div>
       <div class="meta">${when(r["收到時間"])}</div>
       <div class="said">${said(r)||"（只按了送出）"}</div>
+      ${photosOf(r).length?`<div class="phs">${photosOf(r).map(p=>`<div class="phwait" data-ph="${esc(p.id)}">📷 考卷照片${esc(p.q)} 載入中…</div>`).join("")}</div>`:""}
       ${done(r)?`<div class="said reply">💌 ${esc(r["SUNNY 回覆"])}</div>`:""}`;
     const ta=document.createElement("textarea");
     ta.maxLength=300; ta.placeholder=done(r)?"想改回信就在這裡重打":"回一句話給孩子…";
@@ -166,6 +186,7 @@ function render(){
     row2.appendChild(btn);
     c.appendChild(ta); c.appendChild(row2);
     list.appendChild(c);
+    c.querySelectorAll("[data-ph]").forEach(el=>loadPhoto(el,el.dataset.ph));
   });
 }
 $("tab").onclick=()=>{ onlyTodo=!onlyTodo; render(); };
