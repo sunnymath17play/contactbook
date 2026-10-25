@@ -167,7 +167,7 @@ function render(){
         ${done(r)?'<span class="tag ok">已回 ✓</span>':""}</div>
       <div class="meta">${when(r["收到時間"])}</div>
       <div class="said">${said(r)||"（只按了送出）"}</div>
-      ${photosOf(r).length?`<div class="phs">${photosOf(r).map(p=>`<div class="phwait" data-ph="${esc(p.id)}">📷 考卷照片${esc(p.q)} 載入中…</div>`).join("")}</div>`:""}
+      ${photosOf(r).length?`<div class="phs">${photosOf(r).map(p=>done(r)?`<div class="phwait">📷 考卷照片${esc(p.q)}（回信後已刪除）</div>`:`<div class="phwait" data-ph="${esc(p.id)}">📷 考卷照片${esc(p.q)} 載入中…</div>`).join("")}</div>`:""}
       ${done(r)?`<div class="said reply">💌 ${esc(r["SUNNY 回覆"])}</div>`:""}`;
     const ta=document.createElement("textarea");
     ta.maxLength=300; ta.placeholder=done(r)?"想改回信就在這裡重打":"回一句話給孩子…";
@@ -179,7 +179,11 @@ function render(){
       btn.disabled=true; btn.textContent="送出中…";
       try{
         const j=await sendReply(r.row,text);
-        if(j&&j.ok){ r["SUNNY 回覆"]=text; r["回覆時間"]=new Date().toISOString(); render(); }
+        if(j&&j.ok){ r["SUNNY 回覆"]=text; r["回覆時間"]=new Date().toISOString();
+          const ids=photosOf(r).map(p=>p.id);   // 回信了 → 考卷照片刪掉
+          if(ids.length) fetch(PHOTO_EP,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode:"delPhoto",key:KEY,ids})}).catch(()=>{});
+          ids.forEach(id=>delete PH_CACHE[id]);
+          render(); }
         else { btn.textContent="沒送出去，再按一次"; btn.disabled=false; }
       }catch(e){ btn.textContent="沒送出去，再按一次"; btn.disabled=false; }
     };
