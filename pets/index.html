@@ -29,6 +29,7 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .pendbox{background:#fff1f0;border:2px solid #ffc9c2;border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:16px}
 .prow{display:flex;gap:6px;margin-top:6px}.psel{flex:1;font-size:16px;padding:6px;border-radius:10px;border:1px solid var(--line)}
 .plink,.pign{padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:#fff}.plink{background:#2e9e4f;color:#fff}
+.howto{text-align:left}.howto h2{text-align:center}.howto ol{padding-left:22px;margin:6px 0 10px;font-size:16.5px;line-height:1.55}.howto li{margin-bottom:6px}
 .morebtn{padding:6px 10px;font-size:16px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-left:4px;flex:none}
 .newkid{margin-left:auto;background:#2e9e4f!important;color:#fff!important}
 .b-cus{background:#8a6bd1!important;color:#fff!important}
@@ -481,6 +482,20 @@ if(CARD) document.body.classList.add("cardm"); else if(EMBED) document.body.clas
 const whName = () => { try{ return (localStorage.getItem("wh_name")||"").trim(); }catch(e){ return ""; } };
 const toParent = m => { try{ if(window.parent!==window) window.parent.postMessage({pets:m}, "*"); }catch(e){} };
 
+function howTo(C){
+  C={...DEF_CFG,...(C||{})};
+  return dialog(`<div class="howto"><h2>🐣 寵物蛋怎麼玩？</h2>
+    <ol>
+      <li><b>寫作業就加點</b>：作業完成 +${C.per}，在課堂上寫完又寫得好再 +${C.cls}，期中／期末考考很好還有大加分！</li>
+      <li><b>${C.hatch} 點蛋就孵化</b>：裡面是誰？孵出來才知道！</li>
+      <li><b>點數越多長越大</b>：寶寶 → 少年 → 勇者 → 傳說，每隻都有自己的夢想職業喔</li>
+      <li><b>養到 ${C.full} 點</b>就收進「收藏簿」，再挑下一顆蛋</li>
+      <li><b>收集滿 ${C.count} 隻</b>會出現神秘蛋，裡面有 SUNNY 送你的禮物 🎁</li>
+      <li>點「🏡 寵物園」可以看全班的寵物（看不到是誰的喔）</li>
+    </ol>
+    <div class="muted">點數是 SUNNY 幫你加的，自己不能加喔～ 點一下寵物，牠會跳起來！</div></div>`, "我知道了！");
+}
+
 // 樹洞上方的小卡片：點了就開寵物房
 async function showCard(){
   const box=(inner)=>{ $("#app").innerHTML=`<div class="pcard" id="pc">${inner}<span class="go">›</span></div>`; $("#pc").onclick=()=>toParent("open"); };
@@ -533,7 +548,7 @@ async function selfReg(r){
   if(!r.hasEgg){
     egg = await new Promise(res=>{
       $("#app").innerHTML=`<div class="card center"><h2>🥚 ${esc(r.name)}，挑一顆蛋！</h2>
-        <div class="muted">裡面住著誰？<b>孵出來才知道！</b><br>挑了就不能換喔</div></div>
+        <div class="muted">寫作業就能加點，點數夠了蛋就會孵化！<br>裡面住著誰？<b>孵出來才知道！</b>挑了就不能換喔</div></div>
         <div class="pickgrid">${EGGS.map((e,i)=>`<button data-e="${i}">${eggHTML(i,96)}${e.nm}</button>`).join("")}</div>`;
       document.querySelectorAll(".pickgrid button").forEach(b=>b.onclick=async()=>{
         const i=+b.dataset.e;
@@ -544,7 +559,7 @@ async function selfReg(r){
   const ask=(m)=>{
     $("#app").innerHTML=`<div class="card center"><h2>🐾 幫你的寵物取名字！</h2>
       ${egg!==""?`<div style="margin:6px 0">${eggHTML(egg,100)}</div>`:""}
-      <div class="muted">最多 12 個字，不能跟別人一樣喔</div>
+      <div class="muted">最多 12 個字，不能跟別人一樣喔<br>（全班在寵物園看到的是這個名字，不會看到你的名字）</div>
       <input id="pnin" class="pnin" maxlength="12" autocomplete="off" placeholder="寵物名字">${m?`<div class="warn">${m}</div>`:""}
       <div style="margin-top:12px"><button class="big" id="pnok">決定了！</button></div></div>`;
     $("#pnok").onclick=async()=>{
@@ -655,7 +670,9 @@ async function showMe(pre){
       <li><b>期中／期末考 95 分以上</b>　+${C.e95}</li></ul>
   </div>
   ${d.recent.length?`<div class="card"><h2>📒 最近加的點</h2><div class="recent">${d.recent.map(r=>`<div><span>${esc(r.d)}　${esc(r.why)}</span><b>${r.pts>0?"+":""}${r.pts}</b></div>`).join("")}</div></div>`:""}
-  <div class="center"><button class="ghost" id="notme">換別的寵物名字</button></div>`;
+  <div class="center"><button class="big" id="howbtn" style="background:#2e9e4f;margin-bottom:6px">❓ 寵物蛋怎麼玩</button><button class="ghost" id="notme">換別的寵物名字</button></div>`;
+  $("#howbtn").onclick=()=>howTo(C);
+  if(!LS.get("howto")){ LS.set("howto",1); setTimeout(()=>howTo(C), 600); }
   if(EMBED) $("#notme").textContent="這不是我的寵物";
   $("#notme").onclick=()=>{ LS.del("pn"); LS.del("seen"); ME=null; toParent("changed"); EMBED ? embedWho("ask") : whoAmI(); };
   // 慶祝：跟這支手機上次看到的比

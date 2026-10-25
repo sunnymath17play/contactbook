@@ -592,7 +592,7 @@ function renderItems(){
       qi.oninput=()=>{qi.value=qi.value.replace(/\D/g,"");it.q=qi.value;};
       q.append("第",qi,"題（可不填）");
       box.appendChild(row);box.appendChild(q);
-      box.insertAdjacentHTML("beforeend",`<div class="eg">把不會的那一題拍清楚，SUNNY 就知道是哪一份考卷囉！</div>`);
+      box.insertAdjacentHTML("beforeend",`<div class="eg"><b>怎麼拍？</b>①按「📷 拍下不會的題目」②對準<b>那一題</b>拍，題目要整題拍進去、字要清楚 ③會的話寫第幾題 ④按最下面「偷偷送出去」<br>這樣 SUNNY 就知道是哪一份考卷的哪一題囉！</div>`);
     }else if(it.type==="上課內容"){
       const t=document.createElement("input");t.className="txt";t.type="text";t.maxLength=40;
       t.placeholder="哪個地方聽不懂？寫清楚一點";t.value=it.text||"";
