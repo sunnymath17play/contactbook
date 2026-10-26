@@ -52,7 +52,7 @@ async function mount(id, v){
 function panel(html){
   let p = $("chal");
   if (!p) { p = document.createElement("div"); p.id = "chal"; p.className = "chal"; $("vroom").appendChild(p); }
-  p.innerHTML = `<div class="chwrap">${html}</div>`;
+  p.innerHTML = `<div class="chwrap">${html}<img class="chbrand" src="${IMG}logo.png" alt="SUNNY 魔法數學"></div>`;   // 品牌：小小放在最下面，不搶戲
   $("vroom").classList.add("chal-on"); p.scrollTop = 0;
   return p;
 }
@@ -191,6 +191,8 @@ async function drawCert({ grand, name, line1, line2 }){
   x.textAlign = "left";
   x.fillText(`${d.getFullYear() - 1911} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`, W * 0.15, H * 0.77);
   x.fillText("SUNNY 老師", W * 0.15, H * 0.81);
+  // 品牌 LOGO：小小的放在署名上方，像老師的印章
+  try { const lg = await loadImg(IMG + "logo.png"), lw = W * 0.26; x.globalAlpha = 0.95; x.drawImage(lg, W * 0.135, H * 0.665, lw, lw * lg.naturalHeight / lg.naturalWidth); x.globalAlpha = 1; } catch (e) {}
   return cv.toDataURL("image/jpeg", 0.9);
 }
 function unitDone(unit){
