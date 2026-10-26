@@ -184,6 +184,10 @@ const LAYOUT = {
   grand: { sign: "SUNNY", img: "cert_grand.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.27, 0.40, 0.435, 0.50, 0.56, 0.63], logo: [0.135, 0.665, 0.26], date: [0.15, 0.77, 0.81] },
   // 單元專用大獎狀（阿居畫；沒有專用的單元就用上面通用的 grand）
   grand_三角形: { img: "cert_grand_三角形.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.19, 0.19, 0.2], date: ["c", 0.595, 0.625], sign: "SUNNY" },
+  grand_角度: { img: "cert_grand_角度.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.29, 0.375, 0.405, 0.45, 0.49, 0.53], logo: [0.19, 0.19, 0.2], date: ["c", 0.57, null], sign: "SUNNY" },
+  grand_除法: { img: "cert_grand_除法.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.19, 0.19, 0.2], date: ["c", 0.595, 0.625], sign: "SUNNY" },
+  grand_角: { img: "cert_grand_角.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.29, 0.375, 0.405, 0.45, 0.49, 0.53], logo: [0.19, 0.19, 0.2], date: ["c", 0.57, null], sign: "SUNNY" },
+  grand_加與減: { img: "cert_grand_加與減.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.235, 0.2, 0.19], date: ["c", 0.595, 0.625], sign: "SUNNY" },
 };
 async function drawCert({ grand, unit, name, line1, line2 }){
   const L = grand ? (LAYOUT["grand_" + unit] || LAYOUT.grand) : LAYOUT.small, bg = await loadImg(IMG + L.img);
@@ -204,8 +208,10 @@ async function drawCert({ grand, unit, name, line1, line2 }){
   const d = new Date();
   const dx = L.date[0] === "c" ? cx : W * L.date[0];
   x.fillStyle = "#7A6550"; fit("x", W * 0.034, W, 700); x.textAlign = L.date[0] === "c" ? "center" : "left";
-  x.fillText(`${d.getFullYear() - 1911} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`, dx, H * L.date[1]);
-  x.fillText(L.sign, dx, H * L.date[2]);
+  const ds = `${d.getFullYear() - 1911} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+  // 日期第二格是 null ＝ 日期和署名寫在同一行（浩克手上道具比較高的獎狀）
+  if (L.date[2] == null) x.fillText(`${ds}　${L.sign}`, dx, H * L.date[1]);
+  else { x.fillText(ds, dx, H * L.date[1]); x.fillText(L.sign, dx, H * L.date[2]); }
   return cv.toDataURL("image/jpeg", 0.9);
 }
 function unitDone(unit){
