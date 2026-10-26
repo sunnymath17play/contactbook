@@ -638,7 +638,7 @@ window.CHALLENGES={
   ]
  },
  "IIckF6rerig": {
-  "title": "電視是幾元？（便宜的要畫短一點）",
+  "title": "電視是幾元？（應用題第1題）",
   "unit": "加與減",
   "order": 3,
   "draft": false,
