@@ -175,10 +175,12 @@ function loadImg(src){ return new Promise((res, rej) => { const i = new Image();
 // 小獎狀：阿居 2026-10-26 畫的影片小挑戰專屬獎狀（浩克在右下；字置中一欄；LOGO 左上角；署名只寫 SUNNY）
 const LAYOUT = {
   small: { img: "cert_video.jpg", title: "獎　狀", tc: "#E0731B", y: [0.28, 0.385, 0.42, 0.48, 0.535, 0.595], logo: [0.14, 0.165, 0.22], date: ["c", 0.665, 0.70], sign: "SUNNY" },
-  grand: { sign: "SUNNY", img: "cert_grand.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.27, 0.40, 0.435, 0.50, 0.56, 0.63], logo: [0.135, 0.665, 0.26], date: [0.15, 0.77, 0.81] }
+  grand: { sign: "SUNNY", img: "cert_grand.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.27, 0.40, 0.435, 0.50, 0.56, 0.63], logo: [0.135, 0.665, 0.26], date: [0.15, 0.77, 0.81] },
+  // 單元專用大獎狀（阿居畫；沒有專用的單元就用上面通用的 grand）
+  grand_三角形: { img: "cert_grand_三角形.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.19, 0.19, 0.2], date: ["c", 0.595, 0.625], sign: "SUNNY" },
 };
-async function drawCert({ grand, name, line1, line2 }){
-  const L = LAYOUT[grand ? "grand" : "small"], bg = await loadImg(IMG + L.img);
+async function drawCert({ grand, unit, name, line1, line2 }){
+  const L = grand ? (LAYOUT["grand_" + unit] || LAYOUT.grand) : LAYOUT.small, bg = await loadImg(IMG + L.img);
   const W = bg.naturalWidth, H = bg.naturalHeight, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d"); x.drawImage(bg, 0, 0);
   const F = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif', cx = W / 2, Y = L.y.map(v => v * H);
@@ -224,7 +226,7 @@ async function showGrand(name, unit){
   const p = passed(); p["__grand_" + unit] = new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p));
   panel(`<div class="chtop">🎉 單元全部過關！</div><div class="chcert"><div class="chload">大獎狀製作中…</div></div>`, true);
   const n = allVids().filter(v => (v.unit || "") === unit).length;
-  const url = await drawCert({ grand: true, name, line1: `「${unit}」${n} 支影片`, line2: "小挑戰全部過關" });
+  const url = await drawCert({ grand: true, unit, name, line1: `「${unit}」${n} 支影片`, line2: "小挑戰全部過關" });
   panel(`<div class="chtop">🎉 單元全部過關！</div>
     <div class="chcert"><img src="${url}" alt="大獎狀"></div>
     <div class="chtip">👆 長按大獎狀可以存到手機，拿給 SUNNY 看！</div>
