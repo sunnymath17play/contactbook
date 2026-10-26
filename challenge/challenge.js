@@ -7,7 +7,12 @@
    過關紀錄只存在這支手機（localStorage wh_ch_pass）
    ============================================================ */
 (function(){
-const D = window.CHALLENGES || {};
+const lsGet0 = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+if (/[?&]chtest=1/.test(location.search)) try { localStorage.setItem("wh_chtest", "1"); } catch (e) {}
+if (/[?&]chtest=0/.test(location.search)) try { localStorage.setItem("wh_chtest", ""); } catch (e) {}
+const TESTER = lsGet0("wh_chtest") === "1";
+// 題目檔寫 "draft": true ＝ SUNNY 還沒審：只有測試連結（&chtest=1）看得到，孩子看不到
+const D = Object.fromEntries(Object.entries(window.CHALLENGES || {}).filter(([, c]) => !c.draft || TESTER));
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
@@ -79,6 +84,7 @@ function ask(){
   cur.wrong = cur.wrong && cur.tries ? cur.wrong : [];
   const dots = c.qs.map((_, k) => `<i class="${k < cur.i ? (cur.res[k] ? "ok" : "no") : k === cur.i ? "now" : ""}"></i>`).join("");
   panel(`<div class="chtop">🏆 小挑戰　第 ${cur.i + 1} 題／共 ${c.qs.length} 題<span class="chdots">${dots}</span></div>
+    ${q.svg ? `<div class="chfig">${q.svg}</div>` : ""}
     <div class="chq">${esc(q.q).replace(/\n/g, "<br>")}</div>
     ${cur.tries ? `<div class="chagain">看完了，再答一次！</div>` : ""}
     ${q.choices
@@ -249,9 +255,7 @@ function tileNote(vs){
 }
 function close(){ stopSeg(); hide(); cur = null; try { yt && yt.destroy && yt.destroy(); } catch (e) {} yt = null; }
 
-// 試用期：只有 SUNNY 的測試連結（網址加 &chtest=1，手機會記住）看得到；SUNNY 點頭後把 TRIAL 改 false
+// TRIAL＝整個功能試用（目前已正式開放＝false）；單支影片還沒審用題目檔的 draft
 const TRIAL = false;
-if (/[?&]chtest=1/.test(location.search)) lsSet("wh_chtest", "1");
-if (/[?&]chtest=0/.test(location.search)) lsSet("wh_chtest", "");
-if (!TRIAL || lsGet("wh_chtest") === "1") window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close };
+if (!TRIAL || TESTER) window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close };
 })();
