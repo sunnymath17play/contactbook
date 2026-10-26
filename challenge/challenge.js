@@ -248,7 +248,7 @@ function tileNote(vs){
 function close(){ stopSeg(); hide(); cur = null; try { yt && yt.destroy && yt.destroy(); } catch (e) {} yt = null; }
 
 // 試用期：只有 SUNNY 的測試連結（網址加 &chtest=1，手機會記住）看得到；SUNNY 點頭後把 TRIAL 改 false
-const TRIAL = true;
+const TRIAL = false;
 if (/[?&]chtest=1/.test(location.search)) lsSet("wh_chtest", "1");
 if (/[?&]chtest=0/.test(location.search)) lsSet("wh_chtest", "");
 if (!TRIAL || lsGet("wh_chtest") === "1") window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close };
