@@ -1,0 +1,56 @@
+/* 🏆 影片教室「看完小挑戰」（配色跟樹洞一樣） */
+#vroom.chal-on .vbody{display:none;}
+.chal{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(24px + env(safe-area-inset-bottom));
+  background:linear-gradient(175deg,#FFF9EC,#FFEFD2);}
+#vroom.chal-on .chal{display:block;animation:fade .25s;}
+.chwrap{max-width:480px;margin:0 auto;}
+.vplayer #chYT{display:block;width:100%!important;height:auto!important;aspect-ratio:16/9;max-height:42vh;border:0;}
+.chnow{display:flex;align-items:center;gap:8px;}
+.chnow span{flex:1;min-width:0;}
+.chgo{flex:0 0 auto;border:none;border-radius:12px;padding:8px 12px;min-height:42px;cursor:pointer;
+  background:linear-gradient(180deg,#FFC94A,#F59E1B);color:#fff;font-family:var(--font);font-weight:800;font-size:15px;box-shadow:0 3px 0 #D97F0A;}
+
+.chtop{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:#C2650A;margin:2px 2px 12px;}
+.chdots{margin-left:auto;display:flex;gap:6px;}
+.chdots i{width:12px;height:12px;border-radius:50%;background:#F3DDB8;}
+.chdots i.now{background:#F59E1B;box-shadow:0 0 0 3px #FFE3B0;}
+.chdots i.ok{background:#3DB25E;} .chdots i.no{background:#E5675B;}
+
+.chsay{display:flex;align-items:flex-end;gap:10px;margin:6px 0 16px;}
+.chface{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#fff;border:4px solid #fff;box-shadow:0 4px 12px rgba(194,101,10,.18);flex:0 0 auto;}
+.chface.sm{width:56px;height:56px;border-width:3px;}
+.chbub{position:relative;flex:1;background:#fff;border-radius:20px;padding:14px 16px;font-size:18px;line-height:1.6;font-weight:700;color:var(--ink);
+  box-shadow:0 4px 14px rgba(194,101,10,.12);}
+.chbub:before{content:"";position:absolute;left:-9px;bottom:18px;border:10px solid transparent;border-right-color:#fff;border-left:0;}
+.chbig{font-size:22px;color:#C2650A;}
+
+.chq{background:#fff;border:3px solid #FFD58A;border-radius:20px;padding:16px;font-size:20px;line-height:1.65;font-weight:800;color:var(--ink);margin-bottom:12px;}
+.chagain{font-size:15.5px;font-weight:800;color:#7C5CD6;margin:-4px 4px 10px;}
+.chch{display:grid;gap:10px;}
+.chopt{border:3px solid #E9D9BF;background:#fff;border-radius:16px;min-height:58px;padding:10px 14px;cursor:pointer;
+  font-family:var(--font);font-size:19px;font-weight:800;color:var(--ink);text-align:center;transition:transform .1s;}
+.chopt:active{transform:scale(.97);}
+.chopt.bad{border-color:#E5675B;background:#FFECEA;color:#C2453A;animation:chshake .35s;}
+.chopt:disabled{opacity:.45;text-decoration:line-through;}
+@keyframes chshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.chnum{display:flex;align-items:center;gap:8px;background:#fff;border:3px solid #FFD58A;border-radius:18px;padding:10px 12px;font-size:18px;font-weight:800;}
+.chnum input{flex:1;min-width:0;border:2px solid #E9D9BF;border-radius:12px;padding:10px;font-family:var(--font);font-size:21px;font-weight:800;text-align:center;
+  -webkit-user-select:text;user-select:text;}
+.chbtn{border:none;border-radius:14px;min-height:50px;padding:10px 16px;cursor:pointer;font-family:var(--font);font-weight:800;font-size:17px;
+  background:linear-gradient(180deg,#FFC94A,#F59E1B);color:#fff;box-shadow:0 4px 0 #D97F0A;}
+.chbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #D97F0A;}
+.chbtn.big{display:block;width:100%;min-height:58px;font-size:19px;margin-top:6px;}
+.chbtn.gold{background:linear-gradient(180deg,#FF8A5B,#E5532E);box-shadow:0 4px 0 #B83B1C;margin-top:12px;}
+.chlink{display:block;margin:14px auto 0;border:none;background:none;color:#9A7A55;font-family:var(--font);font-weight:800;font-size:16px;
+  padding:8px 12px;min-height:44px;cursor:pointer;text-decoration:underline;text-underline-offset:4px;}
+.chmean{display:flex;align-items:center;gap:10px;margin-top:8px;background:#F1ECFF;border:2px solid #CBBDF5;border-radius:16px;padding:12px;
+  font-size:16.5px;line-height:1.6;font-weight:700;color:#4B3A8A;}
+.chmean[hidden]{display:none;}
+
+.chcert{display:flex;justify-content:center;}
+.chcert img{width:100%;max-width:360px;border-radius:12px;box-shadow:0 8px 24px rgba(120,70,10,.25);-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;}
+.chload{padding:60px 0;font-size:17px;font-weight:800;color:#C2650A;}
+.chtip{text-align:center;font-size:15.5px;font-weight:800;color:#9A6A2A;margin-top:12px;}
+
+.chtag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#FFE7B8;color:#B8650A;font-size:12.5px;font-weight:800;vertical-align:1px;white-space:nowrap;}
+.chtag.ok{background:#DDF3E2;color:#2E8A4A;}

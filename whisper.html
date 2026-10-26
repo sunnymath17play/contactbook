@@ -312,6 +312,7 @@
     .title{font-size:22px;}
   }
 </style>
+<link rel="stylesheet" href="challenge/challenge.css">
 </head>
 <body>
 <div class="wrap">
@@ -426,6 +427,9 @@
   <div class="vbody" id="vbody"><div class="vwrap" id="vwrap"></div></div>
 </div>
 
+<!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
+<script src="challenge/data.js"></script>
+<script src="challenge/challenge.js"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -773,11 +777,11 @@ function renderVideos(list){
 // 一部影片：橫滑卡片／清單一行
 const card=v=>`<button class="vcard" type="button" data-play="${escH(v.id)}">
   <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
-  <span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}</span></button>`;
+  <span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}${window.CHAL?CHAL.badge(v.id):""}</span></button>`;
 const line=v=>`<button class="vline" type="button" data-play="${escH(v.id)}">
   <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
   <span><span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}</span>
-  <span class="vm" style="display:block">${escH(srcOf(v).label||v.unit)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}</span></span></button>`;
+  <span class="vm" style="display:block">${escH(srcOf(v).label||v.unit)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}${window.CHAL?CHAL.badge(v.id):""}</span></span></button>`;
 
 let VIEW="home";
 function units(){
@@ -888,7 +892,9 @@ function showKey(k){
 }
 function play(id){
   const v=VIDS.find(x=>x.id===id); if(!v) return;
-  $("vplayer").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1"
+  if(window.CHAL) CHAL.close();
+  if(window.CHAL&&CHAL.has(id)) CHAL.mount(id,v);   // 有小挑戰的影片：看完跳出題目
+  else $("vplayer").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1"
     allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">▶ 正在看：${escH(v.title)}</div>`;
   $("vplayer").classList.add("show");
   markSeen(id);
@@ -896,7 +902,7 @@ function play(id){
 }
 // 手機「返回」＝回上一層：單元清單 → 影片教室首頁 → 樹洞
 function openRoom(){ VIEW="home"; drawRoom(); $("vroom").classList.add("show"); history.pushState({v:"home"},""); }
-function closeRoom(){ $("vroom").classList.remove("show"); $("vplayer").innerHTML=""; $("vplayer").classList.remove("show"); renderVideos(VIDS); }
+function closeRoom(){ if(window.CHAL) CHAL.close(); $("vroom").classList.remove("show"); $("vplayer").innerHTML=""; $("vplayer").classList.remove("show"); renderVideos(VIDS); }
 window.addEventListener("popstate",e=>{
   if(!$("vroom").classList.contains("show")) return;
   if(e.state&&e.state.v==="home"){ VIEW="home"; drawRoom(); } else closeRoom();
