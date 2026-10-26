@@ -48,10 +48,20 @@
 .chmean[hidden]{display:none;}
 
 .chcert{display:flex;justify-content:center;}
-.chcert img{width:100%;max-width:360px;border-radius:12px;box-shadow:0 8px 24px rgba(120,70,10,.25);-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;}
+.chcert img{display:block;width:auto;max-width:100%;max-height:calc(100vh - 250px);max-height:calc(100dvh - 250px);border-radius:12px;
+  box-shadow:0 8px 24px rgba(120,70,10,.25);-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;}
 .chload{padding:60px 0;font-size:17px;font-weight:800;color:#C2650A;}
 .chtip{text-align:center;font-size:15.5px;font-weight:800;color:#9A6A2A;margin-top:12px;}
 
 .chtag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#FFE7B8;color:#B8650A;font-size:12.5px;font-weight:800;vertical-align:1px;white-space:nowrap;}
 .chtag.ok{background:#DDF3E2;color:#2E8A4A;}
 .chbrand{display:block;width:96px;height:auto;margin:28px auto 0;opacity:.8;pointer-events:none;}
+/* 獎狀畫面：影片收起來，獎狀整張放進螢幕 */
+#vroom.chal-full .vplayer{display:none;}
+#vroom.chal-full .chal{padding-top:10px;}
+#vroom.chal-full .chtop{margin-bottom:8px;}
+#vroom.chal-full .chtip{margin-top:8px;}
+#vroom.chal-full .chlink{margin-top:4px;}
+#vroom.chal-full .chbrand{display:none;}
+.chtile{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.85);color:#C2650A;font-size:12.5px;font-weight:800;white-space:nowrap;}
+.chtile.ok{color:#2E8A4A;}

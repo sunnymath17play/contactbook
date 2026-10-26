@@ -49,14 +49,14 @@ async function mount(id, v){
 }
 
 // ---------- 小挑戰面板（蓋住下面的影片清單，影片留在上面） ----------
-function panel(html){
+function panel(html, full){
   let p = $("chal");
   if (!p) { p = document.createElement("div"); p.id = "chal"; p.className = "chal"; $("vroom").appendChild(p); }
   p.innerHTML = `<div class="chwrap">${html}<img class="chbrand" src="${IMG}logo.png" alt="SUNNY 魔法數學"></div>`;   // 品牌：小小放在最下面，不搶戲
-  $("vroom").classList.add("chal-on"); p.scrollTop = 0;
+  $("vroom").classList.add("chal-on"); $("vroom").classList.toggle("chal-full", !!full); p.scrollTop = 0;
   return p;
 }
-function hide(){ $("vroom").classList.remove("chal-on"); const p = $("chal"); if (p) p.innerHTML = ""; }
+function hide(){ $("vroom").classList.remove("chal-on", "chal-full"); const p = $("chal"); if (p) p.innerHTML = ""; }
 const face = (n, cls = "") => `<img class="chface ${cls}" src="${IMG}face_${n}.png" alt="浩克">`;
 const say = (n, t) => `<div class="chsay">${face(n)}<div class="chbub">${t}</div></div>`;
 
@@ -202,27 +202,28 @@ function unitDone(unit){
   return vs.length > 1 && vs.every(v => D[v.id] && p[v.id]);
 }
 async function showCert(name){
+  try { yt && yt.pauseVideo && yt.pauseVideo(); } catch (e) {}
   const c = cur.c;
-  panel(`<div class="chtop">🏅 全部答對！拿到獎狀了</div><div class="chcert"><div class="chload">獎狀製作中…</div></div>`);
+  panel(`<div class="chtop">🏅 全部答對！拿到獎狀了</div><div class="chcert"><div class="chload">獎狀製作中…</div></div>`, true);
   const url = await drawCert({ name, line1: `看完「${c.title}」`, line2: "小挑戰全部答對" });
   const grand = unitDone(c.unit) && !passed()["__grand_" + c.unit];
   panel(`<div class="chtop">🏅 全部答對！拿到獎狀了</div>
     <div class="chcert"><img src="${url}" alt="獎狀"></div>
     <div class="chtip">👆 長按獎狀可以存到手機，拿給爸爸媽媽看！</div>
     ${grand ? `<button type="button" class="chbtn big gold" id="chGrand">🎉 「${esc(c.unit)}」全部過關！領大獎狀</button>` : ""}
-    <button type="button" class="chlink" id="chDone">回影片清單</button>`);
+    <button type="button" class="chlink" id="chDone">回影片清單</button>`, true);
   if (grand) $("chGrand").onclick = () => showGrand(name, c.unit);
   $("chDone").onclick = done;
 }
 async function showGrand(name, unit){
   const p = passed(); p["__grand_" + unit] = new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p));
-  panel(`<div class="chtop">🎉 單元全部過關！</div><div class="chcert"><div class="chload">大獎狀製作中…</div></div>`);
+  panel(`<div class="chtop">🎉 單元全部過關！</div><div class="chcert"><div class="chload">大獎狀製作中…</div></div>`, true);
   const n = allVids().filter(v => (v.unit || "") === unit).length;
   const url = await drawCert({ grand: true, name, line1: `「${unit}」${n} 支影片`, line2: "小挑戰全部過關" });
   panel(`<div class="chtop">🎉 單元全部過關！</div>
     <div class="chcert"><img src="${url}" alt="大獎狀"></div>
     <div class="chtip">👆 長按大獎狀可以存到手機，拿給 SUNNY 看！</div>
-    <button type="button" class="chlink" id="chDone">回影片清單</button>`);
+    <button type="button" class="chlink" id="chDone">回影片清單</button>`, true);
   $("chDone").onclick = done;
 }
 function done(){ hide(); if (typeof drawRoom === "function") drawRoom(); }
@@ -232,11 +233,18 @@ function badge(id){
   if (!D[id]) return "";
   return passed()[id] ? '<span class="chtag ok">🏅 過關</span>' : '<span class="chtag">🏆 小挑戰</span>';
 }
+// 首頁單元方塊上的小字：這個單元有幾部有小挑戰／過關幾部
+function tileNote(vs){
+  const has = vs.filter(v => D[v.id]); if (!has.length) return "";
+  const ok = has.filter(v => passed()[v.id]).length;
+  return ok === has.length ? `<span class="chtile ok">🏅 小挑戰全過關</span>`
+    : `<span class="chtile">🏆 ${has.length} 部有小挑戰${ok ? `・過關 ${ok}` : ""}</span>`;
+}
 function close(){ stopSeg(); hide(); cur = null; try { yt && yt.destroy && yt.destroy(); } catch (e) {} yt = null; }
 
 // 試用期：只有 SUNNY 的測試連結（網址加 &chtest=1，手機會記住）看得到；SUNNY 點頭後把 TRIAL 改 false
 const TRIAL = true;
 if (/[?&]chtest=1/.test(location.search)) lsSet("wh_chtest", "1");
 if (/[?&]chtest=0/.test(location.search)) lsSet("wh_chtest", "");
-if (!TRIAL || lsGet("wh_chtest") === "1") window.CHAL = { has: id => !!D[id], mount, badge, close };
+if (!TRIAL || lsGet("wh_chtest") === "1") window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close };
 })();

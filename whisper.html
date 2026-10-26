@@ -813,7 +813,7 @@ function drawRoom(){
       <div class="vrow">${VIDS.slice(0,6).map(card).join("")}</div>
       <div class="vsec">📚 選單元</div>
       <div class="vtiles">${units().map(([u,vs],i)=>`<button class="vtile" type="button" data-unit="${escH(u)}" style="background:${TILE_BG[i%TILE_BG.length]}">
-          ${dot(vs)}<span class="e">${iconOf(u)}</span><b>${escH(u)}</b><small>${vs.length} 部</small></button>`).join("")}
+          ${dot(vs)}<span class="e">${iconOf(u)}</span><b>${escH(u)}</b><small>${vs.length} 部</small>${window.CHAL?CHAL.tileNote(vs):""}</button>`).join("")}
         ${ask.length?`<button class="vtile wide" type="button" data-unit="__ask" style="background:#E3F0FF">${dot(ask)}<span class="e">🙋</span>
           <span><b>同學問過的題目</b><br><small>${ask.length} 部，別人問的你可能也想知道</small></span></button>`:""}
         ${school.length?`<button class="vtile wide" type="button" data-unit="__school" style="background:#FFE7C2">${dot(school)}<span class="e">🏫</span>
