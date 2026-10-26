@@ -289,7 +289,7 @@ window.CHALLENGES={
   "title": "必考小蝦題（除法應用題）",
   "unit": "除法應用題",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "小陽計算一個數乘以 12 的時候，把 12 看成 21，得到 1176。\n第一步，要先算哪一個，才能找出瑪莉框框？",
@@ -335,7 +335,7 @@ window.CHALLENGES={
   "title": "倍的問題：先找班長",
   "unit": "乘法(一)",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "「一本筆記本的價錢是橡皮擦的 3 倍。」\n這句話裡，誰是班長？",
@@ -385,7 +385,7 @@ window.CHALLENGES={
   "title": "重新分配：改分班",
   "unit": "除法",
   "order": 2,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "陽光國小的學生從 14 班改成 10 班。\n全部的學生人數會怎樣？",
@@ -431,7 +431,7 @@ window.CHALLENGES={
   "title": "環形面積用分配律",
   "unit": "圓面積",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "10 × 10 × 3.14 − 6 × 6 × 3.14\n用分配律，可以改寫成哪一個？",
@@ -478,7 +478,7 @@ window.CHALLENGES={
   "title": "未知數比大小（乘法）",
   "unit": "乘法",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "丙 × 4 = 丁 × 7\n丙和丁，誰比較大？",
@@ -518,7 +518,7 @@ window.CHALLENGES={
   "title": "未知數比大小（加法）",
   "unit": "加與減",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "2315 + A = 1890 + B\nA 和 B，誰比較大？",
@@ -558,7 +558,7 @@ window.CHALLENGES={
   "title": "未知數比大小（減法）",
   "unit": "加與減",
   "order": 2,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "8340 − 甲 = 6715 − 乙\n甲和乙，誰比較大？",
@@ -598,7 +598,7 @@ window.CHALLENGES={
   "title": "比例式：內項積＝外項積（兩種證明）",
   "unit": "比與比值",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "比例式 3 : 8 = 6 : 16 裡，\n「外項」是哪兩個數？",
@@ -641,7 +641,7 @@ window.CHALLENGES={
   "title": "三角板特殊題01（拼平角）",
   "unit": "角度",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "三角板像圖這樣靠在一條直線上，\n問號這個角是幾度？\n（三角板只有兩種：90°、45°、45° 和 90°、30°、60°）",
@@ -686,7 +686,7 @@ window.CHALLENGES={
   "title": "三角板特殊題02（拼平角）",
   "unit": "角度",
   "order": 2,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "三角板像圖這樣靠在一條直線上，\n問號這個角是幾度？\n（三角板只有兩種：90°、45°、45° 和 90°、30°、60°）",
@@ -734,7 +734,7 @@ window.CHALLENGES={
   "title": "三角板特殊題03（拼平角）",
   "unit": "角度",
   "order": 3,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "三角板像圖這樣靠在一條直線上，\n問號這個角是幾度？\n（三角板只有兩種：90°、45°、45° 和 90°、30°、60°）",
@@ -783,7 +783,7 @@ window.CHALLENGES={
   "title": "用三角板找直角（第3題）",
   "unit": "角",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "用三角板找直角，第一步要做什麼？",
@@ -833,7 +833,7 @@ window.CHALLENGES={
   "title": "角的比較（第6題）",
   "unit": "角",
   "order": 2,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "甲角的邊畫得比較長，乙角的邊畫得比較短。\n甲角一定比較大嗎？",
@@ -872,7 +872,7 @@ window.CHALLENGES={
   "title": "誰的錢比較多？（倍＋有餘數的除法）",
   "unit": "除法",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "小陽錢包裡的錢的 8 倍是 960 元。\n小陽的錢包裡有幾元？",

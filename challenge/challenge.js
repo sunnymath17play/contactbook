@@ -96,7 +96,9 @@ function ask(){
   if (q.choices) document.querySelectorAll(".chopt").forEach(b => b.onclick = () => check(b.dataset.a, b));
   else $("chNum").onsubmit = e => { e.preventDefault(); const a = $("chIn").value.trim(); if (a) check(a); };
 }
-const same = (a, b) => String(a).replace(/\s/g, "") === String(b).replace(/\s/g, "");
+// 打數字的題目：全形數字轉半形、去掉逗號，孩子多打了單位（120元）也算對，比數值（60.0＝60）
+const toNum = s => { const m = String(s).replace(/[０-９．]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[,，\s]/g, "").match(/^-?\d+(\.\d+)?/); return m ? +m[0] : NaN; };
+const same = (a, b) => String(a).replace(/\s/g, "") === String(b).replace(/\s/g, "") || (/^-?\d+(\.\d+)?$/.test(String(b)) && toNum(a) === +b);
 
 function check(a, btn){
   const q = cur.c.qs[cur.i];
