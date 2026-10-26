@@ -171,28 +171,32 @@ function askName(){
 
 // 獎狀用阿居畫的底圖，名字和影片名稱用程式寫上去 → 變成一張圖，孩子可以長按存起來
 function loadImg(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+// 每張獎狀底圖的字要排在哪（比例＝佔整張寬高的幾成）
+// 小獎狀：阿居 2026-10-26 畫的影片小挑戰專屬獎狀（浩克在右下，字排中上、LOGO＋日期在左下）
+const LAYOUT = {
+  small: { img: "cert_video.jpg", title: "獎　狀", tc: "#E0731B", y: [0.245, 0.345, 0.38, 0.44, 0.495, 0.55], logo: [0.15, 0.6, 0.25], date: [0.15, 0.725, 0.765] },
+  grand: { img: "cert_grand.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.27, 0.40, 0.435, 0.50, 0.56, 0.63], logo: [0.135, 0.665, 0.26], date: [0.15, 0.77, 0.81] }
+};
 async function drawCert({ grand, name, line1, line2 }){
-  const bg = await loadImg(IMG + (grand ? "cert_grand.jpg" : "cert.jpg"));
+  const L = LAYOUT[grand ? "grand" : "small"], bg = await loadImg(IMG + L.img);
   const W = bg.naturalWidth, H = bg.naturalHeight, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d"); x.drawImage(bg, 0, 0);
-  const F = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif', cx = W / 2;
+  const F = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif', cx = W / 2, Y = L.y.map(v => v * H);
   x.textAlign = "center"; x.textBaseline = "middle";
   const fit = (t, size, maxW, weight = 900) => { let s = size; do { x.font = `${weight} ${s}px ${F}`; s -= 2; } while (x.measureText(t).width > maxW && s > 20); };
-  const y0 = H * (grand ? 0.27 : 0.25);
-  x.fillStyle = grand ? "#B8460B" : "#E0731B"; fit(grand ? "大 獎 狀" : "獎　狀", W * 0.11, W * 0.7); x.fillText(grand ? "大 獎 狀" : "獎　狀", cx, y0);
-  x.fillStyle = "#3B2A1A"; fit(name, W * 0.085, W * 0.66); x.fillText(name, cx, y0 + H * 0.13);
-  x.strokeStyle = "#F2B33D"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx - W * 0.28, y0 + H * 0.165); x.lineTo(cx + W * 0.28, y0 + H * 0.165); x.stroke();
+  x.fillStyle = L.tc; fit(L.title, W * 0.11, W * 0.7); x.fillText(L.title, cx, Y[0]);
+  x.fillStyle = "#3B2A1A"; fit(name, W * 0.085, W * 0.66); x.fillText(name, cx, Y[1]);
+  x.strokeStyle = "#F2B33D"; x.lineWidth = 4; x.beginPath(); x.moveTo(cx - W * 0.28, Y[2]); x.lineTo(cx + W * 0.28, Y[2]); x.stroke();
   x.fillStyle = "#4A3B2C";
-  fit(line1, W * 0.05, W * 0.66, 800); x.fillText(line1, cx, y0 + H * 0.23);
-  fit(line2, W * 0.05, W * 0.66, 800); x.fillText(line2, cx, y0 + H * 0.29);
-  fit("特頒此狀，以資鼓勵！", W * 0.045, W * 0.66, 800); x.fillText("特頒此狀，以資鼓勵！", cx, y0 + H * 0.36);
-  const d = new Date();
-  x.fillStyle = "#7A6550"; fit("x", W * 0.036, W, 700);
-  x.textAlign = "left";
-  x.fillText(`${d.getFullYear() - 1911} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`, W * 0.15, H * 0.77);
-  x.fillText("SUNNY 老師", W * 0.15, H * 0.81);
+  fit(line1, W * 0.05, W * 0.66, 800); x.fillText(line1, cx, Y[3]);
+  fit(line2, W * 0.05, W * 0.66, 800); x.fillText(line2, cx, Y[4]);
+  fit("特頒此狀，以資鼓勵！", W * 0.045, W * 0.66, 800); x.fillText("特頒此狀，以資鼓勵！", cx, Y[5]);
   // 品牌 LOGO：小小的放在署名上方，像老師的印章
-  try { const lg = await loadImg(IMG + "logo.png"), lw = W * 0.26; x.globalAlpha = 0.95; x.drawImage(lg, W * 0.135, H * 0.665, lw, lw * lg.naturalHeight / lg.naturalWidth); x.globalAlpha = 1; } catch (e) {}
+  try { const lg = await loadImg(IMG + "logo.png"), lw = W * L.logo[2]; x.drawImage(lg, W * L.logo[0], H * L.logo[1], lw, lw * lg.naturalHeight / lg.naturalWidth); } catch (e) {}
+  const d = new Date();
+  x.fillStyle = "#7A6550"; fit("x", W * 0.036, W, 700); x.textAlign = "left";
+  x.fillText(`${d.getFullYear() - 1911} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`, W * L.date[0], H * L.date[1]);
+  x.fillText("SUNNY 老師", W * L.date[0], H * L.date[2]);
   return cv.toDataURL("image/jpeg", 0.9);
 }
 function unitDone(unit){
