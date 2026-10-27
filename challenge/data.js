@@ -385,7 +385,7 @@ window.CHALLENGES={
   "title": "巧克力和餅乾一共幾元？（應用題第3題）",
   "unit": "乘法(一)",
   "order": 2,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "一枝原子筆 15 元，一個鉛筆盒的價錢是原子筆的 6 倍。\n一個鉛筆盒要怎麼算？",
@@ -432,7 +432,7 @@ window.CHALLENGES={
   "title": "彩帶還剩下多長？（應用題第4題）",
   "unit": "公分與毫米",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "把「7 公分 4 毫米」放上單位定位板（尺、寸、分、毫米），\n可以看成哪一個數？",
@@ -740,7 +740,7 @@ window.CHALLENGES={
   "title": "字典是幾元？（應用題第2題）",
   "unit": "加與減",
   "order": 4,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "小美有 500 元，買了 1 本書和 1 枝 60 元的筆後，還剩下 200 元。\n書的價錢要怎麼算？",
