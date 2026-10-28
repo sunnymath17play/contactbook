@@ -45,6 +45,7 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .leftbox{margin:14px 0 90px;padding:10px;border:2px dashed var(--line);border-radius:14px}
 .lrow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;color:#8a7a6a}
 .restbtn{padding:5px 12px;border-radius:10px;border:1px solid var(--line);background:#fff}
+.pm{display:flex;gap:8px;justify-content:center;margin-top:10px}.pm button{flex:1;max-width:150px;font-size:18px;font-weight:bold;padding:10px;border-radius:12px;border:3px solid var(--line);background:#fff;color:#888}.pm button.on[data-s="+"]{border-color:#2e9e4f;background:#e6f7ea;color:#2e9e4f}.pm button.on[data-s="-"]{border-color:#d9480f;background:#fff0e6;color:#d9480f}
 .dlg h2{margin:0 0 8px}.dlg .pnin{width:90%;font-size:20px}
 .menu{display:flex;flex-direction:column;gap:8px;margin:8px 0}.menu button{padding:12px;font-size:18px;border-radius:12px;border:1px solid var(--line);background:#fff8ec;text-align:left}
 .menu .danger{color:#c0392b}
@@ -792,15 +793,17 @@ function renderAdmin(){
   cnt();
 }
 
-// 自訂加點／扣點（扣點打負數）
+// 自訂加點／扣點（手機數字鍵盤沒有「-」→ 用加點／扣點按鈕選，點數只打正數）
+function pmPick(b){ const w=b.parentNode; w.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); w.querySelector("input").value=b.dataset.s; }
 async function customPts(names){
   if(!names.length) return;
   const v=await formDlg(`<h2>自訂點數</h2><div class="muted">${names.map(esc).join("、")}</div>
-    <div class="muted" style="margin-top:8px">點數（扣點打負數，例：-2）</div><input class="pnin" data-k="pts" type="number" inputmode="numeric" step="1">
+    <div class="pm"><input type="hidden" data-k="sign" value="+"><button type="button" class="on" data-s="+" onclick="pmPick(this)">➕ 加點</button><button type="button" data-s="-" onclick="pmPick(this)">➖ 扣點</button></div>
+    <div class="muted" style="margin-top:8px">幾點？（只要打數字）</div><input class="pnin" data-k="pts" type="number" inputmode="numeric" min="1" step="1">
     <div class="muted" style="margin-top:8px">原因（孩子看得到）</div><input class="pnin" data-k="why" maxlength="12" placeholder="例：幫忙收作業">`,"送出");
   if(!v) return;
-  const p=Math.round(+v.pts);
-  if(!p||Math.abs(p)>100) return toast("點數要是 -100～100、不能是 0");
+  const p=Math.round(Math.abs(+v.pts))*(v.sign==="-"?-1:1);
+  if(!p||Math.abs(p)>100) return toast("點數要打 1～100");
   const why=v.why||(p>0?"加分":"扣點");
   let r; try{ r=await apiPost({mode:"add",key:KEY,names,reason:why,pts:p}); }catch(e){ return toast("網路有問題，沒加到"); }
   if(!r.ok) return toast("沒成功："+(r.err||""));
