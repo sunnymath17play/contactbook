@@ -527,11 +527,11 @@ async function showCard(){
   try{
     if(!ME){
       const nm=whName();
-      if(!nm) return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(CLASS_NAME)}寵物蛋</b><div class="muted">先在下面打上你的名字，<br>就能領一顆蛋喔！</div></div>`);
+      if(!nm) return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(CLASS_NAME)}寵物蛋</b><div class="muted">先在下面打上你的<b>本名</b>（真的名字，不是綽號），<br>就能領一顆蛋喔！</div></div>`);
       const r=await apiGet({mode:"byName",name:nm});
       if(r.status==="linked"){ ME=r.pn; LS.set("pn",ME); }
       else if(r.status==="new") return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(r.name)}，你的蛋在等你！</b><div class="muted">點我${r.hasEgg?"幫寵物取名字":"挑一顆蛋"} 👉</div></div>`);
-      else return box(`<div class="em">🥚</div><div class="pc-t"><b>寵物蛋</b><div class="muted">SUNNY 還在確認「${esc(nm)}」是誰，<br>確認好就能領蛋囉！</div></div>`);
+      else return box(`<div class="em">🥚</div><div class="pc-t"><b>寵物蛋</b><div class="muted">「${esc(nm)}」不是本名喔！<br>點我改打<b>真的名字</b>就能領蛋 👉</div></div>`);
     }
     const d=await apiGet({mode:"me",pet:ME});
     if(!d.ok){ LS.del("pn"); ME=null; return showCard(); }
@@ -555,14 +555,15 @@ async function embedWho(msg){
   let r; try{ r=await apiGet({mode:"byName",name:nm}); }catch(e){ return fail(); }
   if(r.status==="linked"){ ME=r.pn; LS.set("pn",ME); LS.del("seen"); toParent("changed"); return showMe(); }
   if(r.status==="new") return selfReg(r);
-  $("#app").innerHTML=`<div class="card center"><h2>🥚 等 SUNNY 確認一下</h2>
-    <div>SUNNY 還不認識「<b>${esc(nm)}</b>」這個名字，<br>確認好就能領蛋囉！</div>
-    <div class="muted" style="margin-top:10px">名字打錯了嗎？</div><button class="big" id="fixnm" style="margin-top:8px">重新打名字</button></div>`;
+  $("#app").innerHTML=`<div class="card center"><h2>🥚 要打本名才能領蛋喔！</h2>
+    <div>「<b>${esc(nm)}</b>」SUNNY 對不到是誰，<br>請打你<b>真的名字</b>（不是綽號）</div>
+    <div class="muted" style="margin-top:10px">例如：陳小明 或 小明</div><button class="big" id="fixnm" style="margin-top:8px">重新打本名</button>
+    <div class="muted" style="margin-top:10px">（打的是本名還不行？SUNNY 會幫你確認）</div></div>`;
   $("#fixnm").onclick=()=>askName("");
 }
 function askName(msg){
   $("#nav").style.display="none";
-  $("#app").innerHTML=`<div class="card center"><h2>👋 你叫什麼名字？</h2><div class="muted">打你的名字（跟樹洞一樣）</div>
+  $("#app").innerHTML=`<div class="card center"><h2>👋 你的本名是？</h2><div class="muted">要打<b>本名</b>（真的名字，不是綽號）<br>例如：陳小明 或 小明</div>
     <input id="nmin" class="pnin" maxlength="10" autocomplete="off" value="${esc(whName())}">${msg?`<div class="warn">${msg}</div>`:""}
     <div style="margin-top:12px"><button class="big" id="nmgo">好了</button></div></div>`;
   $("#nmgo").onclick=()=>{ const v=$("#nmin").value.trim(); if(!v) return; try{ localStorage.setItem("wh_name",v); }catch(e){} toParent("name"); embedWho(); };
