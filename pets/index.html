@@ -4,8 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SUNNY 寵物蛋</title>
-<link rel="icon" href="img/icon_egg.png">
-<link rel="apple-touch-icon" href="img/icon_egg.png">
+<link rel="icon" href="img/icon_egg.png" id="ico">
+<link rel="apple-touch-icon" href="img/icon_egg.png" id="aico">
+<meta name="apple-mobile-web-app-title" content="寵物蛋" id="aname">
+<script>
+// 各班自己的主畫面圖示和名稱（SUNNY 2026-10-28：五B要跟三年級分開）。三年級沿用彩虹蛋。
+(function(){ var q=location.search, c=(q.match(/[?&]c=([^&]+)/)||[])[1], adm=/[?&]admin/.test(q);
+  var ICON={"2024b":"img/icon_egg_2024b.png"}, NAME={"2024b":"五B寵物蛋"};
+  if(ICON[c]){ document.getElementById("ico").href=ICON[c]; document.getElementById("aico").href=ICON[c]; }
+  document.getElementById("aname").content=(NAME[c]||(c?"寵物蛋":"三年級寵物蛋"))+(adm?"加點":"");
+})();
+</script>
 <style>
 :root{--bg:#fff8ec;--card:#fff;--ink:#3a2a18;--sub:#8a6d4b;--orange:#ff8a1f;--green:#2e9e4f;--blue:#1857c4;--pink:#e8267f;--line:#f0dcc0}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -856,7 +865,7 @@ async function register(k){
 
 // ===== 開始 =====
 $("#ttl").textContent = "SUNNY "+CLASS_NAME+"寵物蛋";
-document.title = CLASS_NAME+"寵物蛋";
+document.title = CLASS_NAME+"寵物蛋"+(/[?&]admin/.test(location.search)?"加點":"");
 if(!READY){   // 這班的後端還沒架好
   $("#app").innerHTML = CARD
     ? `<div class="pcard"><div class="em">🥚</div><div class="pc-t"><b>${esc(CLASS_NAME)}寵物蛋</b><div class="muted">SUNNY 正在準備，快要可以領蛋囉！</div></div></div>`
