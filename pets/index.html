@@ -563,7 +563,7 @@ async function embedWho(msg){
 }
 function askName(msg){
   $("#nav").style.display="none";
-  $("#app").innerHTML=`<div class="card center"><h2>👋 你的本名是？</h2><div class="muted">要打<b>本名</b>（真的名字，不是綽號）<br>例如：陳小明 或 小明</div>
+  $("#app").innerHTML=`<div class="card center"><h2>👋 你的本名是？</h2><div class="muted">要打<b>本名</b>（真的名字，不是綽號）<br>例如：陳小明 或 小明</div><div class="muted" style="margin-top:6px">這是讓 SUNNY 知道你是誰；<br>寵物的名字等一下<b>自己取</b> 🐾</div>
     <input id="nmin" class="pnin" maxlength="10" autocomplete="off" value="${esc(whName())}">${msg?`<div class="warn">${msg}</div>`:""}
     <div style="margin-top:12px"><button class="big" id="nmgo">好了</button></div></div>`;
   $("#nmgo").onclick=()=>{ const v=$("#nmin").value.trim(); if(!v) return; try{ localStorage.setItem("wh_name",v); }catch(e){} toParent("name"); embedWho(); };
@@ -582,13 +582,16 @@ async function selfReg(r){
     });
   }
   const ask=(m)=>{
-    $("#app").innerHTML=`<div class="card center"><h2>🐾 幫你的寵物取名字！</h2>
+    $("#app").innerHTML=`<div class="card center"><h2>🐾 幫你的寵物取個名字！</h2>
       ${egg!==""?`<div style="margin:6px 0">${eggHTML(egg,100)}</div>`:""}
-      <div class="muted">最多 12 個字，不能跟別人一樣喔<br>（全班在寵物園看到的是這個名字，不會看到你的名字）</div>
-      <input id="pnin" class="pnin" maxlength="12" autocomplete="off" placeholder="寵物名字">${m?`<div class="warn">${m}</div>`:""}
+      <div style="font-size:18px;margin:4px 0">名字<b>自己想</b>，<b style="color:#d9480f">不要用你自己的名字</b>喔！</div>
+      <div class="muted">例如：小火球、布丁、閃電俠<br>以後就用這個名字找你的寵物<br>最多 12 個字，不能跟別人一樣（寵物園只看得到寵物名字）</div>
+      <input id="pnin" class="pnin" maxlength="12" autocomplete="off" placeholder="寵物的名字">${m?`<div class="warn">${m}</div>`:""}
       <div style="margin-top:12px"><button class="big" id="pnok">決定了！</button></div></div>`;
     $("#pnok").onclick=async()=>{
       const v=$("#pnin").value.replace(/\s+/g,""); if(!v) return ask("要先取名字喔");
+      const mine=[r.name,whName()].map(x=>String(x||"").replace(/s+/g,"")).filter(x=>x.length>=2);
+      if(mine.some(x=>v.includes(x)||x.includes(v))) return ask("這是你自己的名字喔！幫寵物想一個<b>新名字</b>吧");
       $("#pnok").disabled=true;
       let x; try{ x=await apiPost({mode:"selfReg",name:whName(),egg,petName:v}); }catch(e){ return ask("網路有問題，再按一次"); }
       if(!x.ok) return ask(x.err==="dup"?`「${esc(v)}」已經有人用了，換一個吧`:"沒成功，再試一次");
@@ -846,6 +849,7 @@ async function register(k){
   const ask = async (msg) => {
     $("#app").className="";
     $("#app").innerHTML=`<div class="card center"><h2>🐾 ${esc(k.name)} 的寵物叫什麼名字？</h2>
+      <div style="font-size:17px;margin:4px 0">名字<b>自己想</b>，<b style="color:#d9480f">不要用自己的名字</b>（例如：小火球、布丁）</div>
       <div class="muted">之後在家打這個名字就能看寵物（最多 12 個字，不能跟別人一樣）</div>
       ${egg!==""?`<div style="margin:8px 0">${eggHTML(egg,90)}</div>`:""}
       <input id="pnin" class="pnin" maxlength="12" autocomplete="off" value="${esc(k.pn||"")}" placeholder="寵物名字">
