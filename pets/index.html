@@ -166,7 +166,20 @@ nav button span{display:block;font-size:26px}
 </nav>
 <script>
 // ===== 設定 =====
-const ENDPOINT = "https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec";   // Apps Script 網頁應用程式網址（空白＝本機測試模式，資料只存這支手機）
+// 各班獨立（SUNNY 2026-10-28）：網址 ?c=<班級代號>（跟聯絡本、樹洞同一套；代號＝該屆三年級那一學年，永久不變）
+// 每班有自己的試算表＋Apps Script（程式碼一樣），ep＝那班的網頁應用程式網址。沒帶 ?c= 的舊連結＝三年級（2026）。
+// ep 空白＝那班還沒架好後端，頁面會顯示「準備中」；本機測試加 ?mock 用假後端（管理密碼 test）。
+const CLASSES = {
+  "2026":  {y:2026, v:0, ep:"https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec"},
+  "2024b": {y:2024, v:2, ep:""}   // 五年級B：試算表「五年級B寵物蛋」架好後把網址貼這裡
+};
+const CLS = CLASSES[new URLSearchParams(location.search).get("c")] ? new URLSearchParams(location.search).get("c") : "2026";
+const MOCK = /[?&]mock/.test(location.search);
+const ENDPOINT = MOCK ? "" : CLASSES[CLS].ep;
+const READY = MOCK || !!ENDPOINT;
+// 班名跟著學年自動升級（8/1 換新學年），寫法同樹洞的 titleOf
+const CLASS_NAME = (()=>{ const d=new Date(), sy=(d.getMonth()+1)>=8?d.getFullYear():d.getFullYear()-1, c=CLASSES[CLS], g=3+(sy-c.y);
+  return (g>6?"已畢業":({3:"三",4:"四",5:"五",6:"六"}[g]||"")+"年級")+(c.v===1?"A":c.v===2?"B":""); })();
 // 阿居畫好、已放進 img/ 的圖（一張一張加；沒列的先用暫代）。蛋＝egg_0~9，寵物＝<代號>_1~4
 const ART = new Set(["dragon_1", "dragon_2", "dragon_3", "dragon_4", "cat_1", "dog_1", "bunny_1", "penguin_1", "bear_1", "owl_1", "unicorn_1", ...Array.from({length:10}, (_, i) => "egg_" + i),
   // 人生路線圖（SUNNY 2026-10-23 驗收 OK）
@@ -283,7 +296,9 @@ function publicState(st, C, withGift){
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const LS = { get:k=>{try{return JSON.parse(localStorage.getItem("pets_"+k))}catch(e){return null}}, set:(k,v)=>localStorage.setItem("pets_"+k, JSON.stringify(v)), del:k=>localStorage.removeItem("pets_"+k) };
+// 這支手機記住的東西各班分開（三年級沿用舊的 pets_ 開頭，孩子不用重新登入）
+const LSP = CLS==="2026" ? "pets_" : "pets_"+CLS+"_";
+const LS = { get:k=>{try{return JSON.parse(localStorage.getItem(LSP+k))}catch(e){return null}}, set:(k,v)=>{try{localStorage.setItem(LSP+k, JSON.stringify(v))}catch(e){}}, del:k=>{try{localStorage.removeItem(LSP+k)}catch(e){}} };
 
 // ===== 後端 =====
 async function apiGet(q){
@@ -296,7 +311,7 @@ async function apiPost(body){
 }
 // 本機測試用的假後端（規則跟 Apps Script 一樣；ENDPOINT 清空就會用這個；管理密碼 test）
 const mock = (()=>{
-  const ROSTER=['陳映榤','王寶儀','黃宥甄','陳宥蓉','鄭丞佑','盧柏丞','崔守勝','許恩碩','曹睿軒','高子宸','張宇希','張晴媗','陳韋衡','黃丞毅','芮可可','鄭又榤','鄭宇勝','楊羽菁','鄭凱元'];
+  const ROSTER = CLS==="2024b" ? ['顏紹桓','林欣品','郭稟諺','王奕晴','郭尚繹','廖奕凱','林家吟','溫智媗','鍾向妍','趙邦盛','梁恆睿','林家妤','趙二隼'] : ['陳映榤','王寶儀','黃宥甄','陳宥蓉','鄭丞佑','盧柏丞','崔守勝','許恩碩','曹睿軒','高子宸','張宇希','張晴媗','陳韋衡','黃丞毅','芮可可','鄭又榤','鄭宇勝','楊羽菁','鄭凱元'];
   const RN={dragon:5,cat:5,dog:4,bunny:4,penguin:4,bear:4,owl:4,unicorn:4};
   const db = () => LS.get("mockdb2") || {kids:ROSTER.map(f=>({full:f,name:f.slice(1),eggs:[],pets:[],routes:[],pn:""})), log:[], cfg:{...DEF_CFG}};
   const save = d => LS.set("mockdb2", d);
@@ -503,7 +518,7 @@ async function showCard(){
   try{
     if(!ME){
       const nm=whName();
-      if(!nm) return box(`<div class="em">🥚</div><div class="pc-t"><b>三年級寵物蛋</b><div class="muted">先在下面打上你的名字，<br>就能領一顆蛋喔！</div></div>`);
+      if(!nm) return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(CLASS_NAME)}寵物蛋</b><div class="muted">先在下面打上你的名字，<br>就能領一顆蛋喔！</div></div>`);
       const r=await apiGet({mode:"byName",name:nm});
       if(r.status==="linked"){ ME=r.pn; LS.set("pn",ME); }
       else if(r.status==="new") return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(r.name)}，你的蛋在等你！</b><div class="muted">點我${r.hasEgg?"幫寵物取名字":"挑一顆蛋"} 👉</div></div>`);
@@ -693,7 +708,7 @@ async function showGarden(){
   setTab("garden");
   $("#app").innerHTML='<div class="loading">載入中…</div>';
   let g; try{ g=await apiGet({mode:"garden"}); }catch(e){ return fail(); }
-  $("#app").innerHTML=`<div class="card center" style="padding:12px"><h2 style="margin:0">🏡 三年級寵物園</h2></div>
+  $("#app").innerHTML=`<div class="card center" style="padding:12px"><h2 style="margin:0">🏡 ${esc(CLASS_NAME)}寵物園</h2></div>
     <div class="garden">${g.kids.map(k=>`<div class="${k.pn===ME?"me":""}${k.mystery&&k.stage?" legend":""}">${creature({...k,name:"",gift:k.mystery&&k.stage?"":null},84)}<div>${esc(k.pn)}</div>${k.n?`<div class="nbadge">📖 ${k.n}</div>`:""}</div>`).join("")}</div>`;
 }
 function setTab(t){ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t)); }
@@ -702,7 +717,7 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=> b.dataset.t===
 // ===== 管理頁（?admin）=====
 let KEY = LS.get("key"), SEL = new Set(), ADM = null;
 async function admin(){
-  $("#ttl").textContent="寵物蛋・加點";
+  $("#ttl").textContent=CLASS_NAME+"寵物蛋・加點";
   if(!KEY){
     const k=prompt("管理密碼"); if(!k) return; KEY=k;
   }
@@ -840,7 +855,14 @@ async function register(k){
 }
 
 // ===== 開始 =====
-if(/[?&]admin/.test(location.search)) admin();
+$("#ttl").textContent = "SUNNY "+CLASS_NAME+"寵物蛋";
+document.title = CLASS_NAME+"寵物蛋";
+if(!READY){   // 這班的後端還沒架好
+  $("#app").innerHTML = CARD
+    ? `<div class="pcard"><div class="em">🥚</div><div class="pc-t"><b>${esc(CLASS_NAME)}寵物蛋</b><div class="muted">SUNNY 正在準備，快要可以領蛋囉！</div></div></div>`
+    : `<div class="card center"><div style="font-size:60px">🥚</div><h2>${esc(CLASS_NAME)}寵物蛋準備中</h2><div class="muted">SUNNY 正在幫大家準備蛋，<br>快要可以領了，再等一下下喔！</div></div>`;
+}
+else if(/[?&]admin/.test(location.search)) admin();
 else if(CARD) showCard();
 else showMe();
 </script>

@@ -414,7 +414,7 @@
   <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
 </div>
 
-<!-- 🐣 寵物房（全螢幕，三年級才有） -->
+<!-- 🐣 寵物房（全螢幕，有寵物蛋的班級才有：PETS_CLASSES） -->
 <div class="vroom proom" id="proom">
   <div class="vbar"><button class="vback" id="pback">← 回樹洞</button><h2>🐣 我的寵物</h2></div>
   <iframe id="pframe" title="我的寵物"></iframe>
@@ -930,14 +930,17 @@ document.addEventListener("click",e=>{
   }catch(e){ VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
 })();
 
-/* ---------- 🐣 三年級寵物蛋：上方小卡片＋寵物房（用樹洞打的名字自動認人） ---------- */
+/* ---------- 🐣 寵物蛋：上方小卡片＋寵物房（用樹洞打的名字自動認人）；有寵物蛋的班級列在 PETS_CLASSES ---------- */
 const PHOTO_EP="https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec";   // 寵物蛋後端（也收考卷照片）
-const PETS_ON = !!CH && /^三年級/.test(CLASS_NAME) && qs("preview")!=="1";
+// 用班級代號判斷（不用年級名稱），升年級後寵物蛋照樣在；寵物蛋網頁 pets/ 的 CLASSES 也要有同一個代號
+const PETS_CLASSES = ["2026"];   // 五年級B（"2024b"）等後端架好、pets/ 的 CLASSES 填了網址再加進來
+const PETS_ON = !!CH && PETS_CLASSES.includes(CH.id) && qs("preview")!=="1";
+const PETS_Q = CH && CH.id!=="2026" ? "c="+CH.id+"&" : "";
 function drawPetCards(){
   if(!PETS_ON) return;
-  ["petcard","petcard2"].forEach(id=>{ $(id).innerHTML=`<iframe src="pets/?card=1&t=${Date.now()}" title="我的寵物蛋" scrolling="no"></iframe>`; });
+  ["petcard","petcard2"].forEach(id=>{ $(id).innerHTML=`<iframe src="pets/?${PETS_Q}card=1&t=${Date.now()}" title="我的寵物蛋" scrolling="no"></iframe>`; });
 }
-function openPets(){ $("pframe").src="pets/?embed=1&t="+Date.now(); $("proom").classList.add("show"); history.pushState({p:1},""); }
+function openPets(){ $("pframe").src="pets/?"+PETS_Q+"embed=1&t="+Date.now(); $("proom").classList.add("show"); history.pushState({p:1},""); }
 function closePets(){ $("proom").classList.remove("show"); $("pframe").src="about:blank"; drawPetCards(); }
 $("pback").onclick=()=>history.back();
 window.addEventListener("popstate",()=>{ if($("proom").classList.contains("show")) closePets(); });
