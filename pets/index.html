@@ -180,7 +180,7 @@ nav button span{display:block;font-size:26px}
 // ep 空白＝那班還沒架好後端，頁面會顯示「準備中」；本機測試加 ?mock 用假後端（管理密碼 test）。
 const CLASSES = {
   "2026":  {y:2026, v:0, ep:"https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec"},
-  "2024b": {y:2024, v:2, ep:""}   // 五年級B：試算表「五年級B寵物蛋」架好後把網址貼這裡
+  "2024b": {y:2024, v:2, ep:"https://script.google.com/macros/s/AKfycbxTqrjL43ZD31zvDHQxLAnpxq9FyXF87ns56Q_mVPbel4RiRj4I1A2GUCkWbN8i8dm12Q/exec"}   // 五年級B：試算表「五年級B寵物蛋」（2026-10-28 架好）
 };
 const CLS = CLASSES[new URLSearchParams(location.search).get("c")] ? new URLSearchParams(location.search).get("c") : "2026";
 const MOCK = /[?&]mock/.test(location.search);

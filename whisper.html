@@ -933,7 +933,7 @@ document.addEventListener("click",e=>{
 /* ---------- 🐣 寵物蛋：上方小卡片＋寵物房（用樹洞打的名字自動認人）；有寵物蛋的班級列在 PETS_CLASSES ---------- */
 const PHOTO_EP="https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec";   // 寵物蛋後端（也收考卷照片）
 // 用班級代號判斷（不用年級名稱），升年級後寵物蛋照樣在；寵物蛋網頁 pets/ 的 CLASSES 也要有同一個代號
-const PETS_CLASSES = ["2026"];   // 五年級B（"2024b"）等後端架好、pets/ 的 CLASSES 填了網址再加進來
+const PETS_CLASSES = ["2026", "2024b"];   // 三年級、五年級B（2026-10-28）
 const PETS_ON = !!CH && PETS_CLASSES.includes(CH.id) && qs("preview")!=="1";
 const PETS_Q = CH && CH.id!=="2026" ? "c="+CH.id+"&" : "";
 function drawPetCards(){
