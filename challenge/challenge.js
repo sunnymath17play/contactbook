@@ -4,7 +4,7 @@
    答錯：第一次給提示＋「回去看這一段」（影片跳到講這個觀念的那幾句，播完自動回來）
          第二次就公布答案和說明，這支影片這次不算過關，可以再挑戰
    題目在 window.CHALLENGES（challenge/data.js，由 程式碼\影片小挑戰\build.cjs 產生）
-   過關紀錄只存在這支手機（localStorage wh_ch_pass）
+   過關紀錄存在這支手機（localStorage wh_ch_pass），也用「班級＋名字」同步到樹洞後台（whisper.html 的 WH_SYNC），換平板也接得上
    ============================================================ */
 (function(){
 const lsGet0 = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
@@ -19,7 +19,8 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return 
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const IMG = "challenge/img/";
 const passed = () => { try { return JSON.parse(lsGet("wh_ch_pass") || "{}"); } catch (e) { return {}; } };
-const savePass = id => { const p = passed(); p[id] = p[id] || new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p)); };
+const savePass = id => { const p = passed(); p[id] = p[id] || new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p)); sync(); };
+const sync = () => { if (window.WH_SYNC) window.WH_SYNC(); };   // 過關紀錄送到樹洞後台（換平板也接得上）
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const allVids = () => { try { return VIDS; } catch (e) { return []; } };   // 樹洞的影片清單（這個班現在年級）
 
@@ -174,7 +175,7 @@ function askName(){
   panel(`<div class="chtop">🏅 全部答對！</div>
     ${say("yay", "太厲害了！獎狀上要寫什麼名字？")}
     <form class="chnum" id="chName"><input id="chNm" type="text" maxlength="12" placeholder="你的名字"><button type="submit" class="chbtn">拿獎狀</button></form>`);
-  $("chName").onsubmit = e => { e.preventDefault(); const n = $("chNm").value.trim(); if (!n) return; lsSet("wh_name", n); showCert(n); };
+  $("chName").onsubmit = e => { e.preventDefault(); const n = $("chNm").value.trim(); if (!n) return; lsSet("wh_name", n); const f = document.getElementById("name"); if (f) f.value = n; sync(); showCert(n); };
 }
 
 // 獎狀用阿居畫的底圖，名字和影片名稱用程式寫上去 → 變成一張圖，孩子可以長按存起來
@@ -237,7 +238,7 @@ async function showCert(name){
   $("chDone").onclick = done;
 }
 async function showGrand(name, unit){
-  const p = passed(); p["__grand_" + unit] = new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p));
+  const p = passed(); p["__grand_" + unit] = p["__grand_" + unit] || new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p)); sync();
   panel(`<div class="chtop">🎉 單元全部過關！</div><div class="chcert"><div class="chload">大獎狀製作中…</div></div>`, true);
   const n = allVids().filter(v => (v.unit || "") === unit).length;
   const url = await drawCert({ grand: true, unit, name, line1: `「${unit}」${n} 支影片`, line2: "小挑戰全部過關" });

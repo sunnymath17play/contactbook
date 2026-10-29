@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>悄悄話樹洞｜SUNNY 魔法數學</title>
+<!-- 加到主畫面（平板／電腦也能看影片教室）用的圖示和名字 -->
+<link rel="apple-touch-icon" href="tree-icon.png">
+<link rel="icon" href="tree-icon.png">
+<meta name="apple-mobile-web-app-title" content="SUNNY影片教室">
+<meta name="application-name" content="SUNNY影片教室">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
@@ -241,6 +246,29 @@
   .vnone{background:#FFF8EC;border:2px dashed var(--gold);border-radius:16px;padding:12px 14px;
     font-size:15.5px;font-weight:700;line-height:1.55;color:var(--ink);text-align:center;}
 
+  /* 換平板看：名字（接回獎狀）＋📲 分享卡 */
+  .vme{display:flex;align-items:center;gap:8px;background:#FFF8EC;border:2px dashed var(--gold);border-radius:14px;
+    padding:9px 12px;font-size:15px;font-weight:800;color:var(--ink);}
+  .vme input{flex:1;min-width:0;border:2px solid #F3DDBF;border-radius:10px;padding:7px 10px;font-family:var(--font);font-size:16px;font-weight:700;color:var(--ink);}
+  .vme button{border:none;border-radius:10px;padding:8px 14px;background:var(--sun);color:#fff;font-family:var(--font);font-weight:800;font-size:15px;cursor:pointer;}
+  .vme small{display:block;font-size:12.5px;color:var(--ink-soft);font-weight:700;}
+  .vshare-btn{display:flex;align-items:center;gap:10px;width:100%;margin-top:22px;border:2px solid #D7E6F7;background:#F4F9FF;border-radius:16px;
+    padding:11px 14px;font-family:var(--font);text-align:left;cursor:pointer;color:var(--ink);}
+  .vshare-btn .e{font-size:28px;}
+  .vshare-btn b{display:block;font-size:16px;} .vshare-btn small{font-size:13px;color:var(--ink-soft);font-weight:700;}
+  .vshare{position:fixed;inset:0;z-index:60;background:rgba(60,45,30,.45);display:none;align-items:center;justify-content:center;padding:18px;}
+  .vshare.show{display:flex;animation:fade .2s;}
+  .vshare .box{background:#fff;border-radius:22px;max-width:360px;width:100%;padding:18px 18px 16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.2);}
+  .vshare h3{font-size:19px;margin-bottom:4px;}
+  .vshare .sub{font-size:14px;color:var(--ink-soft);font-weight:700;line-height:1.5;}
+  .vshare .qr{margin:12px auto 8px;width:210px;height:210px;}
+  .vshare .qr img,.vshare .qr svg{width:100%;height:100%;display:block;image-rendering:pixelated;}
+  .vshare .steps{text-align:left;font-size:14px;font-weight:700;line-height:1.6;background:#FFF8EC;border-radius:12px;padding:8px 12px;margin:8px 0 10px;}
+  .vshare .row{display:flex;gap:8px;}
+  .vshare .row button{flex:1;border:none;border-radius:12px;min-height:46px;font-family:var(--font);font-weight:800;font-size:15.5px;cursor:pointer;}
+  .vshare .go{background:linear-gradient(180deg,var(--gold),var(--sun));color:#fff;}
+  .vshare .no{background:#F1ECE4;color:var(--ink-soft);}
+
   .vrow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 10px;margin:0 -2px;}
   .vrow::-webkit-scrollbar{display:none;}
   .vcard{flex:0 0 72%;max-width:260px;scroll-snap-align:start;background:#fff;border:none;border-radius:16px;overflow:hidden;
@@ -312,7 +340,7 @@
     .title{font-size:22px;}
   }
 </style>
-<link rel="stylesheet" href="challenge/challenge.css?v=1793255889529">
+<link rel="stylesheet" href="challenge/challenge.css?v=1793282611147">
 </head>
 <body>
 <div class="wrap">
@@ -427,9 +455,22 @@
   <div class="vbody" id="vbody"><div class="vwrap" id="vwrap"></div></div>
 </div>
 
+<!-- 📲 換平板／電腦看：QR code＋連結（只帶這個班的代號，別的年級看不到） -->
+<div class="vshare" id="vshare">
+  <div class="box">
+    <h3>📲 用平板、電腦也能看</h3>
+    <div class="sub">不用一直借爸媽的手機！<br>用家裡的平板、電腦掃一下就能看影片</div>
+    <div class="qr" id="vshareQr"></div>
+    <div class="steps">① 用平板的相機掃上面的 QR code<br>② 打開後按「分享」→「加入主畫面」<br>③ 之後點平板上的 🌳 圖示就能看<br>
+      <span style="color:var(--ink-soft)">在平板打上你的名字，獎狀和看過的影片都會跟過去 🏆</span></div>
+    <div class="row"><button type="button" class="go" id="vshareSend">📤 傳連結</button><button type="button" class="no" id="vshareClose">關閉</button></div>
+  </div>
+</div>
+<script src="qrcode.js"></script>
+
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
-<script src="challenge/data.js?v=1793255889529"></script>
-<script src="challenge/challenge.js?v=1793255889529"></script>
+<script src="challenge/data.js?v=1793282611147"></script>
+<script src="challenge/challenge.js?v=1793282611147"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -722,7 +763,61 @@ const escH=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;
 let VIDS=[];
 const isNew=v=>{const t=Date.parse(v.date);return !!t && Date.now()-t<7*86400000;};
 const seenSet=()=>{try{return new Set(JSON.parse(lsGet("wh_watched")||"[]"));}catch(e){return new Set();}};
-const markSeen=id=>{const s=seenSet();s.add(id);lsSet("wh_watched",JSON.stringify([...s].slice(-300)));};
+const markSeen=id=>{const s=seenSet();s.add(id);lsSet("wh_watched",JSON.stringify([...s].slice(-300)));WH_SYNC();};
+
+/* ---------- 🏆 換平板也接得上：過關紀錄＋看過的影片，用「班級＋名字」存到樹洞後台 ---------- */
+// 先合併後台的到這支手機，再把合併後的送回後台（兩邊都留最早過關的日期）
+let syncTm=null;
+function mergeProgress(r){
+  if(!r||!r.ok) return;
+  let p={}; try{ p=JSON.parse(lsGet("wh_ch_pass")||"{}"); }catch(e){}
+  Object.entries(r.pass||{}).forEach(([k,v])=>{ if(!p[k]||v<p[k]) p[k]=v; });
+  lsSet("wh_ch_pass",JSON.stringify(p));
+  const s=seenSet(); (r.watched||[]).forEach(id=>s.add(id)); lsSet("wh_watched",JSON.stringify([...s].slice(-300)));
+}
+async function syncProgress(){
+  const nm=(lsGet("wh_name")||"").trim();
+  if(!CH||!nm||!ENDPOINT||qs("preview")==="1") return;
+  try{
+    const r=await fetch(ENDPOINT+"?mode=progress&class="+encodeURIComponent(CH.id)+"&name="+encodeURIComponent(nm));
+    mergeProgress(await r.json());
+    let pass={}; try{ pass=JSON.parse(lsGet("wh_ch_pass")||"{}"); }catch(e){}
+    await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({mode:"progress",classId:CH.id,name:nm,pass,watched:[...seenSet()]})});
+    if($("vroom").classList.contains("show")) drawRoom();
+  }catch(e){}
+}
+// 看完影片、過關、打名字之後呼叫（3 秒內多次只送一次）
+function WH_SYNC(){ clearTimeout(syncTm); syncTm=setTimeout(syncProgress,3000); }
+window.WH_SYNC=WH_SYNC;
+
+// 影片教室專用連結：只帶這個班的代號（升年級跟著換），&v=1 打開就直接進影片教室
+const roomLink=()=>location.origin+location.pathname+"?c="+encodeURIComponent(CH?CH.id:"")+"&v=1";
+function openShare(){
+  const box=$("vshareQr"); box.innerHTML="";
+  try{ const q=qrcode(0,"M"); q.addData(roomLink()); q.make(); box.innerHTML=q.createSvgTag({cellSize:6,margin:2,scalable:true}); }
+  catch(e){ box.textContent=roomLink(); }
+  $("vshare").classList.add("show");
+}
+$("vshareClose").onclick=()=>$("vshare").classList.remove("show");
+$("vshare").onclick=e=>{ if(e.target.id==="vshare") $("vshare").classList.remove("show"); };
+$("vshareSend").onclick=async()=>{
+  const url=roomLink(), text=`SUNNY 的${CLASS_NAME}影片教室，用平板／電腦打開就能看 📺`;
+  if(navigator.share){ try{ await navigator.share({title:"SUNNY 影片教室",text,url}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+  try{ await navigator.clipboard.writeText(url); $("vshareSend").textContent="✅ 連結複製好了"; }
+  catch(e){ prompt("複製這個連結：",url); }
+};
+// 影片教室最上面：這台還不知道是誰 → 請他打名字（獎狀跟著名字走）
+function meBox(){
+  if((lsGet("wh_name")||"").trim()) return "";
+  return `<form class="vme" id="vme"><span>👋 我是</span><input id="vmeName" maxlength="10" placeholder="打你的名字"><button type="submit">好</button></form>
+    <small style="display:block;margin:4px 4px 0;font-size:12.5px;color:var(--ink-soft);font-weight:700">打名字，換平板看也接得上你的獎狀 🏆</small>`;
+}
+document.addEventListener("submit",e=>{
+  if(e.target.id!=="vme") return; e.preventDefault();
+  const n=$("vmeName").value.trim(); if(!n) return;
+  lsSet("wh_name",n); $("name").value=n; drawRoom(); syncProgress();
+});
 const CNUM="一二三四五六七八九十";
 const SRCS=[["講義A","📖 講義A"],["講義B","📖 講義B"],["評量","📝 評量"],["單元複習","🔁 單元複習"],["校卷複習","🏫 校卷複習・必考常考題"]];
 // 題目出處（講義A p124#6／講義B p30#2／期中評量一#5／期末評量二#3／單元複習01#4）
@@ -805,7 +900,7 @@ function drawRoom(){
   }else if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
     const dot=vs=>{const n=vs.filter(v=>isNew(v)&&!seen.has(v.id)).length;return n?`<span class="vdot">新 ${n}</span>`:"";};
-    w.innerHTML=`<div class="vsec">🔍 卡在哪裡？先點一個</div>
+    w.innerHTML=meBox()+`<div class="vsec">🔍 卡在哪裡？先點一個</div>
       <div class="vsrc" id="vsrc">${SRCS.map(([k,t])=>`<button type="button" class="vsrcb" data-src="${k}">${t}</button>`).join("")}</div>
       <div id="vfindBox"></div>
       <div class="vfind-out" id="vfindOut"></div>
@@ -818,7 +913,9 @@ function drawRoom(){
           <span><b>同學問過的題目</b><br><small>${ask.length} 部，別人問的你可能也想知道</small></span></button>`:""}
         ${school.length?`<button class="vtile wide" type="button" data-unit="__school" style="background:#FFE7C2">${dot(school)}<span class="e">🏫</span>
           <span><b>校卷複習・必考常考題</b><br><small>${school.length} 部，考試前一定要看！</small></span></button>`:""}
-      </div>`;
+      </div>
+      <button type="button" class="vshare-btn" data-share="1"><span class="e">📲</span>
+        <span><b>用平板、電腦也能看</b><small>掃 QR code，不用一直借爸媽的手機</small></span></button>`;
     drawFind();
   }else{
     const isAsk=VIEW==="__ask", isSchool=VIEW==="__school";
@@ -909,7 +1006,8 @@ window.addEventListener("popstate",e=>{
 });
 $("vback").onclick=()=>history.back();
 document.addEventListener("click",e=>{
-  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key],[data-ask]"); if(!t) return;
+  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key],[data-ask],[data-share]"); if(!t) return;
+  if(t.dataset.share){ openShare(); return; }
   if(t.dataset.ask){ goAsk(); return; }
   if(t.dataset.src){ FIND_SRC=t.dataset.src; drawFind(); return; }
   if(t.dataset.key){ showKey(t.dataset.key); return; }
@@ -922,6 +1020,8 @@ document.addEventListener("click",e=>{
   const KEY="wh_vids_"+CH.id;
   try{ const c=JSON.parse(lsGet(KEY)||"null"); if(Array.isArray(c)) VIDS=c; }catch(e){}
   renderVideos();   // 馬上出現
+  if(qs("v")==="1") openRoom();   // 平板／電腦用的影片教室連結：打開就直接進影片教室
+  syncProgress();   // 換過裝置的：把獎狀和看過的影片接回來
   try{
     const r=await fetch(ENDPOINT+"?mode=videos&class="+encodeURIComponent(CH.id));
     const j=await r.json();
@@ -1008,7 +1108,7 @@ $("send").onclick=async()=>{
     }
   }
 
-  lsSet("wh_name",name);
+  lsSet("wh_name",name); WH_SYNC();
   const photos=state.help.active ? items.filter(it=>it.type==="考卷"&&it.photo&&!it.pid) : [];
   if(photos.length){
     const btn0=$("send"); btn0.disabled=true; const h0=btn0.innerHTML; btn0.innerHTML="<span>📷</span>照片上傳中…";
