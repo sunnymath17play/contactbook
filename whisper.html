@@ -257,7 +257,17 @@
   .vshare-btn>span:nth-child(2){flex:1;}
   .vshare-btn .go{font-size:16px;color:var(--sky);}
   .vshare-btn .vsh-ic{width:58px;height:58px;border-radius:14px;flex:0 0 auto;box-shadow:0 2px 6px rgba(245,124,58,.25);}
-  .vshare-btn b{display:block;font-size:16px;} .vshare-btn small{font-size:13px;color:var(--ink-soft);font-weight:700;}
+  .vshare-btn b{display:block;font-size:20px;line-height:1.3;} .vshare-btn small{font-size:14px;color:var(--ink-soft);font-weight:700;}
+  /* 新功能閃亮亮（SHINE_UNTIL 之前）：金色光圈一閃一閃＋一道光掃過 */
+  .vshare-btn{position:relative;overflow:hidden;}
+  .vshare-btn.shine{border-color:var(--gold);background:linear-gradient(180deg,#FFFBEF,#FFF1D6);animation:vshGlow 1.6s ease-in-out infinite;}
+  .vshare-btn.shine::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:45%;pointer-events:none;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.9),transparent);transform:skewX(-20deg);animation:vshSweep 2.4s ease-in-out infinite;}
+  .vshare-btn.shine b{color:var(--sun-deep);}
+  .vshare-btn.shine .go{color:var(--sun);}
+  @keyframes vshGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,211,107,0),0 3px 10px rgba(245,124,58,.2);}50%{box-shadow:0 0 0 5px rgba(255,211,107,.5),0 3px 14px rgba(245,124,58,.35);}}
+  @keyframes vshSweep{0%{left:-60%;}55%,100%{left:130%;}}
+  @media (prefers-reduced-motion:reduce){.vshare-btn.shine,.vshare-btn.shine::after{animation:none;}}
   .vshare{position:fixed;inset:0;z-index:60;background:rgba(60,45,30,.45);display:none;align-items:center;justify-content:center;padding:18px;}
   .vshare.show{display:flex;animation:fade .2s;}
   .vshare .box{background:#fff;border-radius:22px;max-width:360px;width:100%;padding:18px 18px 16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.2);}
@@ -462,7 +472,7 @@
   <div class="box">
     <img src="video-icon.png" alt="" style="width:64px;height:64px;border-radius:16px;display:block;margin:0 auto 6px">
     <h3>用平板、電腦也能看</h3>
-    <div class="sub">不用一直借爸媽的手機！<br>用家裡的平板、電腦掃一下就能看影片</div>
+    <div class="sub">用家裡的平板、電腦掃一下就能看影片</div>
     <div class="qr" id="vshareQr"></div>
     <div class="steps">① 用平板的相機掃上面的 QR code<br>② 打開後按「分享」→「加入主畫面」<br>③ 之後點平板上的 <img src="video-icon.png" alt="" style="width:20px;height:20px;border-radius:5px;vertical-align:-4px"> 圖示就能看<br>
       <span style="color:var(--ink-soft)">在平板打上你的名字，獎狀和看過的影片都會跟過去 🏆</span></div>
@@ -811,10 +821,13 @@ $("vshareSend").onclick=async()=>{
   catch(e){ prompt("複製這個連結：",url); }
 };
 // 影片教室最上面：📲 換平板看（已經是用平板連結 &v=1 打開的就不顯示）
+// 新功能先閃亮亮兩週（2026-10-29 上線，閃到 11/12 為止，之後自動變回一般按鈕）
+const SHINE_UNTIL="2026-11-13T00:00:00+08:00";
 function shareBtn(){
   if(qs("v")==="1") return "";
-  return `<button type="button" class="vshare-btn" data-share="1"><img class="vsh-ic" src="video-icon.png" alt="">
-    <span><b>用平板、電腦也能看</b><small>掃 QR code，不用一直借爸媽的手機</small></span><span class="go">▶</span></button>`;
+  const shine=Date.now()<Date.parse(SHINE_UNTIL);
+  return `<button type="button" class="vshare-btn${shine?" shine":""}" data-share="1"><img class="vsh-ic" src="video-icon.png" alt="">
+    <span><b>用平板、電腦也能看</b><small>掃一下 QR code 就能看</small></span><span class="go">▶</span></button>`;
 }
 // 影片教室最上面：這台還不知道是誰 → 請他打名字（獎狀跟著名字走）
 function meBox(){
