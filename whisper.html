@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>悄悄話樹洞｜SUNNY 魔法數學</title>
 <!-- 加到主畫面（平板／電腦也能看影片教室）用的圖示和名字 -->
-<link rel="apple-touch-icon" href="tree-icon.png">
-<link rel="icon" href="tree-icon.png">
+<link rel="apple-touch-icon" href="video-icon.png">
+<link rel="icon" href="video-icon.png">
 <meta name="apple-mobile-web-app-title" content="SUNNY影片教室">
 <meta name="application-name" content="SUNNY影片教室">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -252,9 +252,11 @@
   .vme input{flex:1;min-width:0;border:2px solid #F3DDBF;border-radius:10px;padding:7px 10px;font-family:var(--font);font-size:16px;font-weight:700;color:var(--ink);}
   .vme button{border:none;border-radius:10px;padding:8px 14px;background:var(--sun);color:#fff;font-family:var(--font);font-weight:800;font-size:15px;cursor:pointer;}
   .vme small{display:block;font-size:12.5px;color:var(--ink-soft);font-weight:700;}
-  .vshare-btn{display:flex;align-items:center;gap:10px;width:100%;margin-top:22px;border:2px solid #D7E6F7;background:#F4F9FF;border-radius:16px;
-    padding:11px 14px;font-family:var(--font);text-align:left;cursor:pointer;color:var(--ink);}
-  .vshare-btn .e{font-size:28px;}
+  .vshare-btn{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 12px;border:2px solid #D7E6F7;background:#F4F9FF;border-radius:16px;
+    padding:11px 14px;font-family:var(--font);text-align:left;cursor:pointer;color:var(--ink);box-shadow:0 3px 10px rgba(110,159,214,.18);}
+  .vshare-btn>span:nth-child(2){flex:1;}
+  .vshare-btn .go{font-size:16px;color:var(--sky);}
+  .vshare-btn .vsh-ic{width:58px;height:58px;border-radius:14px;flex:0 0 auto;box-shadow:0 2px 6px rgba(245,124,58,.25);}
   .vshare-btn b{display:block;font-size:16px;} .vshare-btn small{font-size:13px;color:var(--ink-soft);font-weight:700;}
   .vshare{position:fixed;inset:0;z-index:60;background:rgba(60,45,30,.45);display:none;align-items:center;justify-content:center;padding:18px;}
   .vshare.show{display:flex;animation:fade .2s;}
@@ -458,10 +460,11 @@
 <!-- 📲 換平板／電腦看：QR code＋連結（只帶這個班的代號，別的年級看不到） -->
 <div class="vshare" id="vshare">
   <div class="box">
-    <h3>📲 用平板、電腦也能看</h3>
+    <img src="video-icon.png" alt="" style="width:64px;height:64px;border-radius:16px;display:block;margin:0 auto 6px">
+    <h3>用平板、電腦也能看</h3>
     <div class="sub">不用一直借爸媽的手機！<br>用家裡的平板、電腦掃一下就能看影片</div>
     <div class="qr" id="vshareQr"></div>
-    <div class="steps">① 用平板的相機掃上面的 QR code<br>② 打開後按「分享」→「加入主畫面」<br>③ 之後點平板上的 🌳 圖示就能看<br>
+    <div class="steps">① 用平板的相機掃上面的 QR code<br>② 打開後按「分享」→「加入主畫面」<br>③ 之後點平板上的 <img src="video-icon.png" alt="" style="width:20px;height:20px;border-radius:5px;vertical-align:-4px"> 圖示就能看<br>
       <span style="color:var(--ink-soft)">在平板打上你的名字，獎狀和看過的影片都會跟過去 🏆</span></div>
     <div class="row"><button type="button" class="go" id="vshareSend">📤 傳連結</button><button type="button" class="no" id="vshareClose">關閉</button></div>
   </div>
@@ -807,6 +810,12 @@ $("vshareSend").onclick=async()=>{
   try{ await navigator.clipboard.writeText(url); $("vshareSend").textContent="✅ 連結複製好了"; }
   catch(e){ prompt("複製這個連結：",url); }
 };
+// 影片教室最上面：📲 換平板看（已經是用平板連結 &v=1 打開的就不顯示）
+function shareBtn(){
+  if(qs("v")==="1") return "";
+  return `<button type="button" class="vshare-btn" data-share="1"><img class="vsh-ic" src="video-icon.png" alt="">
+    <span><b>用平板、電腦也能看</b><small>掃 QR code，不用一直借爸媽的手機</small></span><span class="go">▶</span></button>`;
+}
 // 影片教室最上面：這台還不知道是誰 → 請他打名字（獎狀跟著名字走）
 function meBox(){
   if((lsGet("wh_name")||"").trim()) return "";
@@ -900,7 +909,7 @@ function drawRoom(){
   }else if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
     const dot=vs=>{const n=vs.filter(v=>isNew(v)&&!seen.has(v.id)).length;return n?`<span class="vdot">新 ${n}</span>`:"";};
-    w.innerHTML=meBox()+`<div class="vsec">🔍 卡在哪裡？先點一個</div>
+    w.innerHTML=shareBtn()+meBox()+`<div class="vsec">🔍 卡在哪裡？先點一個</div>
       <div class="vsrc" id="vsrc">${SRCS.map(([k,t])=>`<button type="button" class="vsrcb" data-src="${k}">${t}</button>`).join("")}</div>
       <div id="vfindBox"></div>
       <div class="vfind-out" id="vfindOut"></div>
@@ -913,9 +922,7 @@ function drawRoom(){
           <span><b>同學問過的題目</b><br><small>${ask.length} 部，別人問的你可能也想知道</small></span></button>`:""}
         ${school.length?`<button class="vtile wide" type="button" data-unit="__school" style="background:#FFE7C2">${dot(school)}<span class="e">🏫</span>
           <span><b>校卷複習・必考常考題</b><br><small>${school.length} 部，考試前一定要看！</small></span></button>`:""}
-      </div>
-      <button type="button" class="vshare-btn" data-share="1"><span class="e">📲</span>
-        <span><b>用平板、電腦也能看</b><small>掃 QR code，不用一直借爸媽的手機</small></span></button>`;
+      </div>`;
     drawFind();
   }else{
     const isAsk=VIEW==="__ask", isSchool=VIEW==="__school";
