@@ -385,7 +385,7 @@ window.CHALLENGES={
   "title": "姐姐比哥哥多幾元？（應用題第6題）",
   "unit": "乘法(一)",
   "order": 3,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "弟弟有 120 元，哥哥的錢是弟弟的 4 倍。\n哥哥比弟弟多幾元？要怎麼算？",
@@ -478,7 +478,7 @@ window.CHALLENGES={
   "title": "一個數是多少？（應用題第5題）",
   "unit": "加與減",
   "order": 6,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "倒推的時候，題目裡的「再減去 600」要怎麼變？",
@@ -523,7 +523,7 @@ window.CHALLENGES={
   "title": "2公分4毫米的3倍是幾毫米？（第七大題）",
   "unit": "公分與毫米",
   "order": 3,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "3 公分 2 毫米的 2 倍是幾毫米？",
@@ -621,7 +621,7 @@ window.CHALLENGES={
   "title": "總共有多高？（應用題第4題）",
   "unit": "公分與毫米",
   "order": 4,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "一本筆記本厚 1 公分 2 毫米，疊了 3 本。\n總共有多厚？",
@@ -671,7 +671,7 @@ window.CHALLENGES={
   "title": "這枝筆長多少？（選擇題第3題）",
   "unit": "公分與毫米",
   "order": 2,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "一枝鉛筆的一端對準刻度 3 公分，另一端在刻度 8 公分 6 毫米。\n這枝鉛筆長多少？",
@@ -768,7 +768,7 @@ window.CHALLENGES={
   "title": "帶2000元夠不夠？（應用題第2題）",
   "unit": "加與減",
   "order": 5,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "小陽要買 2 盒 350 元的餅乾和 1 個 480 元的玩具，帶 1000 元。\n夠不夠？",
@@ -815,7 +815,7 @@ window.CHALLENGES={
   "title": "長方形的寬是多少？（選擇題第5題）",
   "unit": "周長",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "一個長方形的四條邊一共長 24 公分，長是 7 公分。\n寬是多少？",
