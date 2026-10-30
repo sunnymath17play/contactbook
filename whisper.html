@@ -838,7 +838,9 @@ function meBox(){
 document.addEventListener("submit",e=>{
   if(e.target.id!=="vme") return; e.preventDefault();
   const n=$("vmeName").value.trim(); if(!n) return;
-  lsSet("wh_name",n); $("name").value=n; drawRoom(); syncProgress();
+  lsSet("wh_name",n); $("name").value=n;
+  if(VSTATE==="needname"||VSTATE==="locked"){ VSTATE="loading"; VIEW="home"; renderVideos(); drawRoom(); loadVideos(); }
+  else { drawRoom(); syncProgress(); }
 });
 const CNUM="一二三四五六七八九十";
 const SRCS=[["講義A","📖 講義A"],["講義B","📖 講義B"],["評量","📝 評量"],["單元複習","🔁 單元複習"],["校卷複習","🏫 校卷複習・必考常考題"]];
@@ -878,7 +880,8 @@ let VSTATE="loading";   // loading 載入中／ok／fail 連不上
 function renderVideos(list){
   if(list) VIDS=list;
   const seen=seenSet(), fresh=VIDS.filter(v=>isNew(v)&&!seen.has(v.id)).length;
-  const sub = VSTATE==="locked" ? `影片教室暫停囉`
+  const sub = VSTATE==="needname" ? `打你的名字就能看影片`
+    : VSTATE==="locked" ? `點進來打你的本名`
     : VIDS.length ? `${escH(CLASS_NAME)}・共 ${VIDS.length} 部，點我進去看`
     : VSTATE==="loading" ? `${escH(CLASS_NAME)}・影片載入中…`
     : `陸續上架中・卡住可以問 SUNNY`;
@@ -912,8 +915,12 @@ function drawRoom(){
   if(VIEW==="home" && !VIDS.length){
     // 還沒有影片（或還在載入／連不上）
     const sentToday=$("done").classList.contains("show");
-    w.innerHTML = VSTATE==="locked"
-      ? `<div class="vnone" style="margin-top:20px">影片教室暫停囉 🌙</div>`
+    const nm=(lsGet("wh_name")||"").trim();
+    w.innerHTML = VSTATE==="needname"||VSTATE==="locked"
+      ? `<div class="vnone" style="margin-top:20px">${VSTATE==="locked"
+          ? `找不到「${escH(nm)}」這個名字 🤔<br>打你的<b>本名</b>試試看（例如：王小明 或 小明）`
+          : `👋 先打你的名字，就能看影片囉！`}</div>
+        <form class="vme" id="vme" style="margin-top:12px"><span>我是</span><input id="vmeName" maxlength="10" placeholder="打你的名字"><button type="submit">好</button></form>`
       : VSTATE==="loading"
       ? `<div class="vnone" style="margin-top:20px">📺 影片載入中，等一下下喔…</div>`
       : VSTATE==="fail"
@@ -1038,24 +1045,28 @@ document.addEventListener("click",e=>{
   else if(t.dataset.unit){ VIEW=t.dataset.unit; drawRoom(); history.pushState({v:"unit"},""); }
   else if(t.dataset.play) play(t.dataset.play);
 });
-(async()=>{
-  if(!CH||!ENDPOINT||!/年級/.test(CLASS_NAME)){ ["videos","videos2"].forEach(id=>{ $(id).innerHTML=""; }); return; }
-  const KEY="wh_vids_"+CH.id, LOCK="wh_vlock_"+CH.id;
-  if(lsGet(LOCK)==="1") VSTATE="locked";   // 退班的：上次就鎖了，記住的清單也不拿出來
-  else try{ const c=JSON.parse(lsGet(KEY)||"null"); if(Array.isArray(c)) VIDS=c; }catch(e){}
-  renderVideos();   // 馬上出現
-  if(qs("v")==="1") openRoom();   // 平板／電腦用的影片教室連結：打開就直接進影片教室
-  if(VSTATE!=="locked") syncProgress();   // 換過裝置的：把獎狀和看過的影片接回來
+// 影片教室只給在班的孩子看（2026-10-30）：用樹洞打的名字對 SUNNY 的在班名單
+// needname＝還沒打名字；locked＝名字對不上在班名單（或退班）→ 都顯示打名字的格子
+const VKEY=()=>"wh_vids_"+CH.id, VLOCK=()=>"wh_vlock_"+CH.id;
+async function loadVideos(){
   try{
-    // 帶名字＋裝置：退班名單上的孩子影片教室鎖住（2026-10-30）
     const r=await fetch(ENDPOINT+"?mode=videos&class="+encodeURIComponent(CH.id)
       +"&name="+encodeURIComponent((lsGet("wh_name")||"").trim())+"&device="+encodeURIComponent(lsGet("wh_device")||""));
     const j=await r.json();
     if(!(j&&j.ok&&Array.isArray(j.videos))) throw 0;
-    if(j.locked){ VSTATE="locked"; lsSet(LOCK,"1"); lsSet(KEY,"[]"); renderVideos([]); return; }
-    if(VSTATE==="locked") lsSet(LOCK,"");
-    VSTATE="ok"; lsSet(KEY,JSON.stringify(j.videos)); renderVideos(j.videos);
-  }catch(e){ if(VSTATE!=="locked") VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
+    if(j.need_name||j.locked){ VSTATE=j.locked?"locked":"needname"; lsSet(VLOCK(),"1"); lsSet(VKEY(),"[]"); VIDS=[]; renderVideos([]); return; }
+    lsSet(VLOCK(),"");
+    VSTATE="ok"; lsSet(VKEY(),JSON.stringify(j.videos)); renderVideos(j.videos); syncProgress();
+  }catch(e){ if(VSTATE!=="locked"&&VSTATE!=="needname") VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
+}
+(async()=>{
+  if(!CH||!ENDPOINT||!/年級/.test(CLASS_NAME)){ ["videos","videos2"].forEach(id=>{ $(id).innerHTML=""; }); return; }
+  if(!(lsGet("wh_name")||"").trim()) VSTATE="needname";
+  else if(lsGet(VLOCK())==="1") VSTATE="locked";   // 上次對不上：記住的清單不拿出來
+  else try{ const c=JSON.parse(lsGet(VKEY())||"null"); if(Array.isArray(c)) VIDS=c; }catch(e){}
+  renderVideos();   // 馬上出現
+  if(qs("v")==="1") openRoom();   // 平板／電腦用的影片教室連結：打開就直接進影片教室
+  loadVideos();
 })();
 
 /* ---------- 🐣 寵物蛋：上方小卡片＋寵物房（用樹洞打的名字自動認人）；有寵物蛋的班級列在 PETS_CLASSES ---------- */
