@@ -45,12 +45,30 @@ async function mount(id, v){
     <div class="now chnow"><span>▶ 正在看：${esc(v.title)}</span>
       <button type="button" class="chgo" id="chGo">${passed()[id] ? "🏅 再挑戰" : "🏆 小挑戰"}</button></div>`;
   $("chGo").onclick = () => intro();
+  if (window.LOCAL_VIDS && LOCAL_VIDS.includes(id)) return mountFile(id);
   await loadAPI();
   if (!cur || cur.id !== id) return;
   yt = new YT.Player("chYT", {
     host: "https://www.youtube-nocookie.com", videoId: id,
     playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1 },
     events: { onStateChange: e => { if (e.data === 0 && !seg && cur && cur.id === id && !$("vroom").classList.contains("chal-on")) intro(); } }
+  });
+  // 沒有高畫質檔、用 YouTube 播的：平板可能很糊 → 給「用 YouTube 看」按鈕
+  const now = document.querySelector("#vplayer .chnow span");
+  if (now && !now.querySelector(".ytout")) now.insertAdjacentHTML("beforeend", `<a class="ytout" href="https://youtu.be/${encodeURIComponent(id)}" target="_blank" rel="noopener">📺 畫面不清楚？用 YouTube 看</a>`);
+}
+// 有高畫質影片檔（v/<編號>.mp4）：直接用 <video> 播（平板才不會糊），包成跟 YouTube 播放器一樣的用法；檔案壞了就退回 YouTube
+function mountFile(id){
+  const box = $("chYT");
+  box.outerHTML = `<video id="chYT" src="v/${encodeURIComponent(id)}.mp4" controls autoplay playsinline preload="auto"></video>`;
+  const v = $("chYT");
+  yt = { seekTo: t => { v.currentTime = t; }, playVideo: () => { const p = v.play(); p && p.catch(() => {}); }, pauseVideo: () => v.pause(),
+    getCurrentTime: () => v.currentTime, getPlayerState: () => v.ended ? 0 : v.paused ? 2 : 1, destroy: () => { v.pause(); v.removeAttribute("src"); v.load(); } };
+  v.addEventListener("ended", () => { if (!seg && cur && cur.id === id && !$("vroom").classList.contains("chal-on")) intro(); });
+  v.addEventListener("error", async () => {
+    if (!cur || cur.id !== id || !$("vplayer").contains(v)) return;
+    v.outerHTML = `<div id="chYT"></div>`; yt = null;
+    window.LOCAL_VIDS = LOCAL_VIDS.filter(x => x !== id); mount(id, cur.v);
   });
 }
 

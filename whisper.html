@@ -225,8 +225,11 @@
   .vbar h2{flex:1;text-align:center;font-size:18.5px;font-weight:800;color:#4F7FB3;margin-right:60px;}
   .vplayer{flex:0 0 auto;background:#000;display:none;}
   .vplayer.show{display:block;}
-  .vplayer iframe{display:block;width:100%;aspect-ratio:16/9;max-height:42vh;border:0;}
+  .vplayer iframe,.vplayer video{display:block;width:100%;aspect-ratio:16/9;max-height:42vh;border:0;background:#000;object-fit:contain;}
   .vplayer .now{background:#fff;padding:8px 14px;font-size:15px;font-weight:800;color:var(--ink);}
+  /* 用 YouTube 播的影片（沒有高畫質檔的）：平板可能很糊 → 給一個直接開 YouTube 的小按鈕 */
+  .vplayer .ytout{display:inline-block;margin-left:8px;padding:3px 10px;border-radius:999px;background:#FDECEC;color:#C4302B;
+    font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;}
   .vbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(24px + env(safe-area-inset-bottom));}
   .vwrap{max-width:480px;margin:0 auto;}
   .vsec{font-size:16.5px;font-weight:800;color:var(--ink-soft);margin:16px 2px 9px;}
@@ -361,7 +364,7 @@
     .title{font-size:22px;}
   }
 </style>
-<link rel="stylesheet" href="challenge/challenge.css?v=1793352127724">
+<link rel="stylesheet" href="challenge/challenge.css?v=1793378566295">
 </head>
 <body>
 <div class="wrap">
@@ -491,8 +494,10 @@
 <script src="qrcode.js"></script>
 
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
-<script src="challenge/data.js?v=1793352127724"></script>
-<script src="challenge/challenge.js?v=1793352127724"></script>
+<!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
+<script src="v/list.js?v=1793378566389"></script>
+<script src="challenge/data.js?v=1793378566295"></script>
+<script src="challenge/challenge.js?v=1793378566295"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -1044,12 +1049,21 @@ function showKey(k){
   document.querySelectorAll(".vkey").forEach(b=>b.classList.toggle("on",b.dataset.key===k));
   $("vfindOut").innerHTML=VIDS.filter(v=>srcOf(v).key===k).sort(bySrc).map(line).join("");
 }
+// 平板看 YouTube 嵌入很糊（2026-10-31 SUNNY）→ 有影片檔的直接播檔案；沒有的用 YouTube，旁邊給「用 YouTube 看」按鈕
+function hasFile(id){ return !!(window.LOCAL_VIDS&&LOCAL_VIDS.includes(id)); }
+function ytEmbed(id,v){
+  $("vplayer").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1"
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">▶ 正在看：${escH(v.title)}<a class="ytout" href="https://youtu.be/${encodeURIComponent(id)}" target="_blank" rel="noopener">📺 畫面不清楚？用 YouTube 看</a></div>`;
+}
 function play(id){
   const v=VIDS.find(x=>x.id===id); if(!v) return;
   if(window.CHAL) CHAL.close();
   if(window.CHAL&&CHAL.has(id)) CHAL.mount(id,v);   // 有小挑戰的影片：看完跳出題目
-  else $("vplayer").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1"
-    allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">▶ 正在看：${escH(v.title)}</div>`;
+  else if(hasFile(id)){   // 有高畫質影片檔：直接播（壞掉就退回 YouTube）
+    $("vplayer").innerHTML=`<video src="v/${encodeURIComponent(id)}.mp4" controls autoplay playsinline preload="auto"></video><div class="now">▶ 正在看：${escH(v.title)}</div>`;
+    const el=$("vplayer").querySelector("video"); el.onerror=()=>{ if($("vplayer").contains(el)) ytEmbed(id,v); };
+  }
+  else ytEmbed(id,v);
   $("vplayer").classList.add("show");
   markSeen(id);
   // 觀看紀錄（SUNNY 要看每天／每週哪部影片被看幾次）
