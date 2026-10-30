@@ -878,7 +878,8 @@ let VSTATE="loading";   // loading 載入中／ok／fail 連不上
 function renderVideos(list){
   if(list) VIDS=list;
   const seen=seenSet(), fresh=VIDS.filter(v=>isNew(v)&&!seen.has(v.id)).length;
-  const sub = VIDS.length ? `${escH(CLASS_NAME)}・共 ${VIDS.length} 部，點我進去看`
+  const sub = VSTATE==="locked" ? `影片教室暫停囉`
+    : VIDS.length ? `${escH(CLASS_NAME)}・共 ${VIDS.length} 部，點我進去看`
     : VSTATE==="loading" ? `${escH(CLASS_NAME)}・影片載入中…`
     : `陸續上架中・卡住可以問 SUNNY`;
   const html=`<span class="ic">📺</span>
@@ -911,7 +912,9 @@ function drawRoom(){
   if(VIEW==="home" && !VIDS.length){
     // 還沒有影片（或還在載入／連不上）
     const sentToday=$("done").classList.contains("show");
-    w.innerHTML = VSTATE==="loading"
+    w.innerHTML = VSTATE==="locked"
+      ? `<div class="vnone" style="margin-top:20px">影片教室暫停囉 🌙</div>`
+      : VSTATE==="loading"
       ? `<div class="vnone" style="margin-top:20px">📺 影片載入中，等一下下喔…</div>`
       : VSTATE==="fail"
       ? `<div class="vnone" style="margin-top:20px">影片教室現在連不上 😢<br>等一下再試試看喔！</div>`
@@ -1037,17 +1040,22 @@ document.addEventListener("click",e=>{
 });
 (async()=>{
   if(!CH||!ENDPOINT||!/年級/.test(CLASS_NAME)){ ["videos","videos2"].forEach(id=>{ $(id).innerHTML=""; }); return; }
-  const KEY="wh_vids_"+CH.id;
-  try{ const c=JSON.parse(lsGet(KEY)||"null"); if(Array.isArray(c)) VIDS=c; }catch(e){}
+  const KEY="wh_vids_"+CH.id, LOCK="wh_vlock_"+CH.id;
+  if(lsGet(LOCK)==="1") VSTATE="locked";   // 退班的：上次就鎖了，記住的清單也不拿出來
+  else try{ const c=JSON.parse(lsGet(KEY)||"null"); if(Array.isArray(c)) VIDS=c; }catch(e){}
   renderVideos();   // 馬上出現
   if(qs("v")==="1") openRoom();   // 平板／電腦用的影片教室連結：打開就直接進影片教室
-  syncProgress();   // 換過裝置的：把獎狀和看過的影片接回來
+  if(VSTATE!=="locked") syncProgress();   // 換過裝置的：把獎狀和看過的影片接回來
   try{
-    const r=await fetch(ENDPOINT+"?mode=videos&class="+encodeURIComponent(CH.id));
+    // 帶名字＋裝置：退班名單上的孩子影片教室鎖住（2026-10-30）
+    const r=await fetch(ENDPOINT+"?mode=videos&class="+encodeURIComponent(CH.id)
+      +"&name="+encodeURIComponent((lsGet("wh_name")||"").trim())+"&device="+encodeURIComponent(lsGet("wh_device")||""));
     const j=await r.json();
     if(!(j&&j.ok&&Array.isArray(j.videos))) throw 0;
+    if(j.locked){ VSTATE="locked"; lsSet(LOCK,"1"); lsSet(KEY,"[]"); renderVideos([]); return; }
+    if(VSTATE==="locked") lsSet(LOCK,"");
     VSTATE="ok"; lsSet(KEY,JSON.stringify(j.videos)); renderVideos(j.videos);
-  }catch(e){ VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
+  }catch(e){ if(VSTATE!=="locked") VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
 })();
 
 /* ---------- 🐣 寵物蛋：上方小卡片＋寵物房（用樹洞打的名字自動認人）；有寵物蛋的班級列在 PETS_CLASSES ---------- */
