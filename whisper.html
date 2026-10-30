@@ -494,12 +494,7 @@
     </div>
 
     <div class="card">
-      <div class="q"><span class="n">4</span>今天的心情</div>
-      <div class="moods" id="moods"></div>
-    </div>
-
-    <div class="card">
-      <div class="q"><span class="n">5</span>打字給 SUNNY</div>
+      <div class="q"><span class="n">4</span>打字給 SUNNY</div>
       <textarea id="text" maxlength="200" placeholder="想跟 SUNNY 說什麼都可以寫在這裡～不寫也沒關係喔"></textarea>
     </div>
   </div>
@@ -662,16 +657,7 @@ Object.entries(CONFIG.presets).forEach(([cat,list])=>{
 });
 
 
-// 心情
-const mv=$("moods");
-CONFIG.moods.forEach(([e,t])=>{
-  const b=document.createElement("div");b.className="mood";
-  b.innerHTML=`<span class="e">${e}</span><span class="t">${t}</span>`;
-  const val=e+t;
-  b.onclick=()=>{mv.querySelectorAll(".mood").forEach(x=>x.classList.remove("on"));
-    if(state.mood===val){state.mood="";}else{b.classList.add("on");state.mood=val;}};
-  mv.appendChild(b);
-});
+// 心情：2026-10-31 SUNNY 說拿掉（state.mood 留著＝永遠空白，後台欄位不用動）
 
 // 星星
 // （星星已改成「聽懂了嗎」兩顆按鈕）
