@@ -804,7 +804,7 @@ window.CHALLENGES={
   "title": "整除52也整除78，最大是多少？（填充1）",
   "unit": "因數與公因數",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "一個大於 1 的整數，可以整除 24，也可以整除 36。\n這個數最大是多少？",
