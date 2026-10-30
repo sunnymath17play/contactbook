@@ -1076,7 +1076,7 @@ window.CHALLENGES={
   "title": "每個內角140度，是正幾邊形？（選擇4）",
   "unit": "多邊形",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "一個正多邊形的每一個內角都是 108 度，\n它是正幾邊形？",
