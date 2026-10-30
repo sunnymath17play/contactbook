@@ -196,6 +196,13 @@
   .proom{background:linear-gradient(175deg,#FFF8EC,#FFEBD2);}
   .vroom.proom{z-index:31;}   /* 從影片教室點寵物卡也蓋在上面 */
   #petcard3{max-width:480px;margin:0 auto 12px;}
+  /* 📲 加入主畫面教學（用平板 QR code 連結打開才有） */
+  .vhome{display:none;max-width:480px;margin:0 auto 12px;background:#FFFBEF;border:2px solid var(--gold);border-radius:16px;padding:12px 14px;}
+  .vhome h3{margin:0 0 8px;font-size:18px;color:var(--sun-deep);display:flex;align-items:center;gap:8px;line-height:1.35;}
+  .vhome h3 img{width:40px;height:40px;border-radius:10px;flex:none;}
+  .vhome .how{font-size:16px;line-height:1.8;color:var(--ink);font-weight:700;}
+  .vhome .how b{color:var(--sun-deep);}
+  .vhome .ok{display:block;margin:8px 0 0 auto;border:0;background:#FFE9CC;color:#C26A1E;font:inherit;font-size:14px;font-weight:800;border-radius:10px;padding:6px 12px;cursor:pointer;}
   .proom iframe{flex:1;width:100%;border:0;background:#fff8ec;}
   .proom .vback{background:#FFE9CC;color:#C26A1E;}
   .proom .vbar h2{color:#C26A1E;}
@@ -466,7 +473,7 @@
 <div class="vroom" id="vroom">
   <div class="vbar"><button class="vback" id="vback">← 回樹洞</button><h2 id="vroomTitle">📺 影片教室</h2></div>
   <div class="vplayer" id="vplayer"></div>
-  <div class="vbody" id="vbody"><div class="petcard" id="petcard3"></div><div class="vwrap" id="vwrap"></div></div>
+  <div class="vbody" id="vbody"><div class="vhome" id="vhome"></div><div class="petcard" id="petcard3"></div><div class="vwrap" id="vwrap"></div></div>
 </div>
 
 <!-- 📲 換平板／電腦看：QR code＋連結（只帶這個班的代號，別的年級看不到） -->
@@ -822,6 +829,22 @@ $("vshareSend").onclick=async()=>{
   try{ await navigator.clipboard.writeText(url); $("vshareSend").textContent="✅ 連結複製好了"; }
   catch(e){ prompt("複製這個連結：",url); }
 };
+// 影片教室最上面：📲 加入主畫面教學（只在平板 QR code 連結 &v=1 打開時；已從主畫面打開或按「我加好了」就不再出現）
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const isAndroid=/Android/i.test(navigator.userAgent);
+const homeTipOn=()=>qs("v")==="1" && lsGet("wh_home_ok")!=="1"
+  && !(window.matchMedia&&matchMedia("(display-mode: standalone)").matches) && !navigator.standalone;
+(function(){
+  const how = isIOS
+    ? `① 按網址列旁邊的「分享」<span style="font-size:20px">⍐</span><br>② 往下滑，按「<b>加入主畫面</b>」<br>③ 右上角按「<b>加入</b>」`
+    : isAndroid
+    ? `① 按右上角的「<b>⋮</b>」<br>② 按「<b>加到主畫面</b>」<br>③ 再按「<b>新增</b>」`
+    : `① 按鍵盤 <b>Ctrl ＋ D</b>（Mac 按 <b>⌘ ＋ D</b>）<br>② 按「<b>完成</b>」加進書籤<br>③ 下次點書籤就能看`;
+  $("vhome").innerHTML=`<h3><img src="video-icon.png" alt="">加入主畫面，不用每次掃QR code</h3>
+    <div class="how">${how}${isIOS||isAndroid?`<br>④ 之後點平板上的 <img src="video-icon.png" alt="" style="width:22px;height:22px;border-radius:5px;vertical-align:-5px"> 圖示就能看`:""}</div>
+    <button type="button" class="ok" id="vhomeOk">我加好了 ✓</button>`;
+  $("vhomeOk").onclick=()=>{ lsSet("wh_home_ok","1"); $("vhome").style.display="none"; };
+})();
 // 影片教室最上面：📲 換平板看（已經是用平板連結 &v=1 打開的就不顯示）
 // 新功能先閃亮亮兩週（2026-10-29 上線，閃到 11/12 為止，之後自動變回一般按鈕）
 const SHINE_UNTIL="2026-11-13T00:00:00+08:00";
@@ -965,6 +988,7 @@ function drawRoom(){
   }
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
   $("petcard3").style.display=VIEW==="home"?"":"none";
+  $("vhome").style.display=VIEW==="home"&&homeTipOn()?"block":"none";
   $("vroomTitle").textContent="📺 "+(CLASS_NAME||"")+"影片教室";
   $("vbody").scrollTop=0;
 }
