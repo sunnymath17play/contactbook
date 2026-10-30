@@ -1025,6 +1025,9 @@ function play(id){
     allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">▶ 正在看：${escH(v.title)}</div>`;
   $("vplayer").classList.add("show");
   markSeen(id);
+  // 觀看紀錄（SUNNY 要看每天／每週哪部影片被看幾次）
+  fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({mode:"view",classId:CH.id,name:(lsGet("wh_name")||"").trim(),id})}).catch(()=>{});
   document.querySelectorAll("#vroom [data-play]").forEach(b=>b.classList.toggle("playing",b.dataset.play===id));
 }
 // 手機「返回」＝回上一層：單元清單 → 影片教室首頁 → 樹洞
