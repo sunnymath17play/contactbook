@@ -194,6 +194,8 @@
   .petcard iframe{display:block;width:100%;height:104px;border:0;background:transparent;}
   .done .petcard{max-width:360px;width:100%;margin-top:18px;}
   .proom{background:linear-gradient(175deg,#FFF8EC,#FFEBD2);}
+  .vroom.proom{z-index:31;}   /* 從影片教室點寵物卡也蓋在上面 */
+  #petcard3{max-width:480px;margin:0 auto 12px;}
   .proom iframe{flex:1;width:100%;border:0;background:#fff8ec;}
   .proom .vback{background:#FFE9CC;color:#C26A1E;}
   .proom .vbar h2{color:#C26A1E;}
@@ -464,7 +466,7 @@
 <div class="vroom" id="vroom">
   <div class="vbar"><button class="vback" id="vback">← 回樹洞</button><h2 id="vroomTitle">📺 影片教室</h2></div>
   <div class="vplayer" id="vplayer"></div>
-  <div class="vbody" id="vbody"><div class="vwrap" id="vwrap"></div></div>
+  <div class="vbody" id="vbody"><div class="petcard" id="petcard3"></div><div class="vwrap" id="vwrap"></div></div>
 </div>
 
 <!-- 📲 換平板／電腦看：QR code＋連結（只帶這個班的代號，別的年級看不到） -->
@@ -838,7 +840,7 @@ function meBox(){
 document.addEventListener("submit",e=>{
   if(e.target.id!=="vme") return; e.preventDefault();
   const n=$("vmeName").value.trim(); if(!n) return;
-  lsSet("wh_name",n); $("name").value=n;
+  lsSet("wh_name",n); $("name").value=n; if(typeof drawPetCards==="function") drawPetCards();
   if(VSTATE==="needname"||VSTATE==="locked"){ VSTATE="loading"; VIEW="home"; renderVideos(); drawRoom(); loadVideos(); }
   else { drawRoom(); syncProgress(); }
 });
@@ -962,6 +964,7 @@ function drawRoom(){
       <b>${isAsk?"同學問過的題目":isSchool?"校卷複習・必考常考題":escH(VIEW)}</b><small style="color:var(--ink-soft);font-weight:700">（${vs.length} 部）</small></div>`+body;
   }
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
+  $("petcard3").style.display=VIEW==="home"?"":"none";
   $("vroomTitle").textContent="📺 "+(CLASS_NAME||"")+"影片教室";
   $("vbody").scrollTop=0;
 }
@@ -1080,9 +1083,11 @@ const PETS_ON = !!CH && PETS_CLASSES.includes(CH.id) && qs("preview")!=="1";
 const PETS_Q = CH && CH.id!=="2026" ? "c="+CH.id+"&" : "";
 function drawPetCards(){
   if(!PETS_ON) return;
-  ["petcard","petcard2"].forEach(id=>{ $(id).innerHTML=`<iframe src="pets/?${PETS_Q}card=1&t=${Date.now()}" title="我的寵物蛋" scrolling="no"></iframe>`; });
+  // 用平板 QR code 連結（&v=1）打開＝直接進影片教室 → 寵物卡也放在影片教室最上面
+  const ids=qs("v")==="1"?["petcard","petcard2","petcard3"]:["petcard","petcard2"];
+  ids.forEach(id=>{ $(id).innerHTML=`<iframe src="pets/?${PETS_Q}card=1&t=${Date.now()}" title="我的寵物蛋" scrolling="no"></iframe>`; });
 }
-function openPets(){ $("pframe").src="pets/?"+PETS_Q+"embed=1&t="+Date.now(); $("proom").classList.add("show"); history.pushState({p:1},""); }
+function openPets(){ $("pback").textContent=$("vroom").classList.contains("show")?"← 回影片教室":"← 回樹洞"; $("pframe").src="pets/?"+PETS_Q+"embed=1&t="+Date.now(); $("proom").classList.add("show"); history.pushState({p:1},""); }
 function closePets(){ $("proom").classList.remove("show"); $("pframe").src="about:blank"; drawPetCards(); }
 $("pback").onclick=()=>history.back();
 window.addEventListener("popstate",()=>{ if($("proom").classList.contains("show")) closePets(); });
