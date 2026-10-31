@@ -493,9 +493,9 @@
   .more-tog span{flex:1;}
   .more-tog small{font-size:13px;font-weight:700;color:#6A8DBF;margin-left:6px;}
   .more-tog i{width:12px;height:12px;border-right:3px solid #2B5FA8;border-bottom:3px solid #2B5FA8;transform:rotate(45deg);margin:-6px 6px 0 0;transition:transform .2s;}
-  #more{display:none;padding-top:12px;}
-  .wcard.open #more{display:block;animation:drop .3s ease;}
-  .wcard.open .more-tog i{transform:rotate(-135deg);margin-top:6px;}
+  #more{padding-top:12px;}
+  .more-tog{cursor:default;margin-top:10px;}
+  .more-tog small{display:block;margin:2px 0 0;}
   .sub-q{display:flex;align-items:center;gap:7px;font-weight:800;font-size:17px;margin:4px 0 10px;}
   .sub-q .n{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-size:15px;display:grid;place-items:center;}
   #more .help-panel,#more .understand{margin-bottom:14px;}
@@ -545,8 +545,8 @@
     <div class="q"><img class="qi" src="th/envelope.png" alt=""><span>想跟 <em>SUNNY</em> 說什麼？</span><span class="hint">可以點很多個・只有 SUNNY 看得到</span></div>
     <div id="presets"></div>
 
-    <!-- 還想多說一點：點了才打開 -->
-    <button type="button" class="more-tog" id="moreTog"><img src="th/pencil.png" alt=""><span>還想多說一點？<small>可以不填</small></span><i></i></button>
+    <!-- 還想多說一點：一直打開（收起來孩子不知道可以點開、拍照題目也會被藏起來，SUNNY 2026-10-31） -->
+    <div class="more-tog" id="moreTog"><img src="th/pencil.png" alt=""><span>還想多說一點？<small>下面都可以不填，想寫就寫</small></span></div>
     <div id="more">
       <div class="sub-q"><span class="n">1</span><span id="starQ"></span></div>
       <div class="understand">
@@ -633,7 +633,7 @@ const CONFIG = {
     toggle: "有地方沒聽懂",
     got: "我都聽懂了",
     gotPreset: "今天我有聽懂",                    // 選「我都聽懂了」時，送出的悄悄話會帶這句
-    tip: "先自己再想一想、翻翻講義上的例題 🤔<br>還是卡住的話，把題目告訴 SUNNY，下次上課我們一起解開它！",
+    tip: "先自己再想一想、翻翻講義上的例題<br>還是卡住的話，把題目告訴 SUNNY，下次上課我們一起解開它！",
     maxItems: 5,                                  // 最多填幾題
     reexplain: "想請 SUNNY 再講解一次",
   },
@@ -729,7 +729,7 @@ $("meChange").onclick=()=>{ $("meHi").style.display="none"; $("meIn").style.disp
 updateMe();
 
 /* ---------- 還想多說一點：點了才打開 ---------- */
-$("moreTog").onclick=()=>{ const o=$("presetCard").classList.toggle("open"); if(o) setTimeout(()=>$("moreTog").scrollIntoView({behavior:"smooth",block:"start"}),50); };
+// （2026-10-31 改回一直打開，不用點）
 
 // 預設句
 const pv=$("presets");
