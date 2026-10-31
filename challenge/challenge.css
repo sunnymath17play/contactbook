@@ -67,3 +67,7 @@
 .chtile.ok{color:#2E8A4A;}
 .chfig{background:#fff;border:3px solid #FFD58A;border-radius:20px;padding:8px 10px;margin-bottom:10px;}
 .chfig svg{display:block;width:100%;height:auto;}
+/* 2026-10-31：emoji 換成阿居畫的圖示（th/trophy.png、th/medal.png） */
+.chtop{font-size:18px;font-weight:900;}
+.chic{width:32px;height:32px;flex:none;margin:-4px 0;}
+.chbtn .chic{width:30px;height:30px;vertical-align:-8px;margin-right:4px;}

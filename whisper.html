@@ -578,6 +578,19 @@
   .vhulk{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px auto 4px;border:0;border-radius:999px;background:#DCEEFF;color:#2B5FA8;
     font-family:var(--font);font-size:16px;font-weight:900;padding:6px 22px 6px 8px;cursor:pointer;}
   .vhulk img{width:40px;height:40px;margin:-8px 0;}
+  .vresume{width:100%;display:flex;align-items:center;gap:10px;margin:-4px 0 14px;border:3px solid #FFC870;border-radius:20px;background:#fff;padding:7px 12px 7px 7px;
+    cursor:pointer;font-family:var(--font);box-shadow:0 4px 12px rgba(200,120,30,.18);}
+  .vresume .vimg{flex:0 0 34%;max-width:150px;border-radius:12px;position:relative;}
+  .vresume .vimg::after{display:none;}
+  .vresume .vpos{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(0,0,0,.35);}
+  .vresume .vpos i{display:block;height:100%;background:#F2611B;}
+  .vresume .vtx{flex:1;}
+  .vresume .k{color:#E0621B;font-weight:900;font-size:13px;margin:0 0 1px;}
+  .vresume .go{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-size:16px;
+    background:linear-gradient(#FF9A3C,#F2661B);box-shadow:0 3px 0 #C9480E;}
+  .vuntil{display:inline-block;align-self:flex-start;margin-top:4px;font-size:12px;font-weight:900;color:#2B5FA8;background:#E4F2FF;border-radius:999px;padding:1px 8px;}
+  .vuntil.hot{color:#fff;background:#E9546B;}
+  .vcard .vimg .vuntil{position:absolute;right:8px;top:8px;margin:0;box-shadow:0 2px 4px rgba(0,0,0,.2);}
   /* 單元頁 */
   .vuhead{display:flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:8px 12px 8px 8px;margin:2px 0 12px;box-shadow:0 4px 12px rgba(160,110,40,.14);}
   .vuhead img{width:48px;height:48px;}
@@ -612,7 +625,7 @@
     .vplayer .chnow .chgo{font-size:21px;padding:10px 22px 10px 10px;}
   }
 </style>
-<link rel="stylesheet" href="challenge/challenge.css?v=1793425139993">
+<link rel="stylesheet" href="challenge/challenge.css?v=1793449245282">
 </head>
 <body>
 <div class="wrap">
@@ -712,8 +725,8 @@
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
 <script src="v/list.js?v=1793419332288"></script>
-<script src="challenge/data.js?v=1793425139993"></script>
-<script src="challenge/challenge.js?v=1793425139993"></script>
+<script src="challenge/data.js?v=1793449245282"></script>
+<script src="challenge/challenge.js?v=1793449245282"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -1167,7 +1180,39 @@ function vTitle(v){
     : s.src.startsWith("講義") ? s.label : (part||v.unit||"");
   return {main,sub};
 }
-window.vTitle=vTitle;   // 小挑戰播放器也用
+window.vTitle=vTitle;
+/* 「上次看到一半」：播的時候每 3 秒記一次看到哪一秒（這支手機的 wh_pos），看完或剛開始就不記 */
+const posAll=()=>{try{return JSON.parse(lsGet("wh_pos")||"{}");}catch(e){return {};}};
+function savePos(id,t,d){
+  const p=posAll();
+  if(!(t>=8) || !(d>0) || d-t<15) delete p[id]; else p[id]={t:Math.floor(t),d:Math.floor(d),at:Date.now()};
+  const keep=Object.entries(p).sort((a,b)=>b[1].at-a[1].at).slice(0,20);   // 只留最近 20 支
+  lsSet("wh_pos",JSON.stringify(Object.fromEntries(keep)));
+}
+let RESUME=null;   // 按「接著看」→ 影片載入後跳到這一秒
+window.trackPos=(el,id)=>{
+  let last=0;
+  el.addEventListener("timeupdate",()=>{ const n=Date.now(); if(n-last<3000) return; last=n; savePos(id,el.currentTime,el.duration); });
+  el.addEventListener("ended",()=>savePos(id,0,0));
+  el.addEventListener("loadedmetadata",()=>{ if(RESUME&&RESUME.id===id){ try{ el.currentTime=RESUME.t; }catch(e){} RESUME=null; } },{once:true});
+};
+const mmss=t=>Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0");
+function resumeCard(){
+  const p=posAll(), hit=Object.entries(p).sort((a,b)=>b[1].at-a[1].at).find(([id])=>VIDS.some(v=>v.id===id)&&hasFile(id));
+  if(!hit) return "";
+  const [id,{t,d}]=hit, v=VIDS.find(x=>x.id===id), tt=vTitle(v);
+  return `<button class="vresume" type="button" data-resume="${escH(id)}" data-at="${t}">
+    <span class="vimg" style="background-image:url('${thumb(id)}')"><span class="vpos"><i style="width:${Math.round(t/d*100)}%"></i></span></span>
+    <span class="vtx"><small class="k">上次看到一半</small><b>${escH(tt.main)}</b><small>從 ${mmss(t)} 接著看</small></span><span class="go">▶</span></button>`;
+}
+/* 期中評量影片會自動下架 → 卡片上寫「看到 11/6」，最後 3 天變紅色 */
+function untilTag(v){
+  if(!v.until) return "";
+  const end=Date.parse(v.until+"T23:59:59+08:00"), left=Math.ceil((end-Date.now())/86400000);
+  if(!(left>=0)) return "";
+  const m=v.until.split("-");
+  return `<span class="vuntil${left<=3?" hot":""}">看到 ${+m[1]}/${+m[2]}${left===0?"（今天最後一天）":""}</span>`;
+}   // 小挑戰播放器也用
 // 每支影片的狀態小圖：過關＝金牌、看過＝綠勾、有小挑戰還沒過＝獎盃
 function statIcon(v,seen){
   const st=window.CHAL&&CHAL.stat?CHAL.stat(v.id):"";
@@ -1177,12 +1222,12 @@ function statIcon(v,seen){
 }
 const card=v=>{ const t=vTitle(v), has=window.CHAL&&CHAL.has(v.id);
   return `<button class="vcard" type="button" data-play="${escH(v.id)}">
-  <span class="vimg" style="background-image:url('${thumb(v.id)}')">${isNew(v)?'<span class="vnew">新</span>':""}</span>
+  <span class="vimg" style="background-image:url('${thumb(v.id)}')">${isNew(v)?'<span class="vnew">新</span>':""}${untilTag(v)}</span>
   <span class="vtx"><b>${escH(t.main)}</b><small>${escH(t.sub)}</small></span>${has?'<img class="vtro" src="th/trophy.png" alt="有小挑戰">':""}</button>`; };
 const line=v=>{ const t=vTitle(v);
   return `<button class="vline" type="button" data-play="${escH(v.id)}">
   <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
-  <span class="vtx"><b>${isNew(v)?'<span class="vnew">新</span>':""}${escH(t.main)}</b><small>${escH(t.sub)}</small></span>${statIcon(v,seenSet())}</button>`; };
+  <span class="vtx"><b>${isNew(v)?'<span class="vnew">新</span>':""}${escH(t.main)}</b><small>${escH(t.sub)}</small>${untilTag(v)}</span>${statIcon(v,seenSet())}</button>`; };
 // 單元進度：有小挑戰就看「過關幾支」，沒有就看「看過幾支」
 function unitProg(vs,seen){
   const st=window.CHAL&&CHAL.unitStat?CHAL.unitStat(vs):{has:0,ok:0};
@@ -1238,7 +1283,7 @@ function drawRoom(){
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
     w.innerHTML=shareBtn()+meBox()+`
-      <div class="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></div>
+      <div class="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></div>${resumeCard()}
       <div class="vh"><span class="vpill blue"><i class="pl"></i>最新影片</span>${VIDS.length>1?'<small>左右滑</small>':""}</div>
       <div class="vrow">${VIDS.filter(v=>!isHulk(v)).slice(0,6).map(card).join("")}</div>
       <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>
@@ -1342,7 +1387,7 @@ function play(id){
   if(window.CHAL&&CHAL.has(id)) CHAL.mount(id,v);   // 有小挑戰的影片：看完跳出題目
   else if(hasFile(id)){   // 有高畫質影片檔：直接播（壞掉就退回 YouTube）
     $("vplayer").innerHTML=`<video src="v/${encodeURIComponent(id)}.mp4" controls autoplay playsinline preload="auto"></video><div class="now">${nowTitle(v)}</div>`;
-    const el=$("vplayer").querySelector("video"); el.onerror=()=>{ if($("vplayer").contains(el)) ytEmbed(id,v); };
+    const el=$("vplayer").querySelector("video"); trackPos(el,id); el.onerror=()=>{ if($("vplayer").contains(el)) ytEmbed(id,v); };
   }
   else ytEmbed(id,v);
   $("vplayer").classList.add("show");
@@ -1361,11 +1406,12 @@ window.addEventListener("popstate",e=>{
 });
 $("vback").onclick=()=>history.back();
 document.addEventListener("click",e=>{
-  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key],[data-ask],[data-share]"); if(!t) return;
+  const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key],[data-ask],[data-share],[data-resume]"); if(!t) return;
   if(t.dataset.share){ openShare(); return; }
   if(t.dataset.ask){ goAsk(); return; }
   if(t.dataset.src){ FIND_SRC=t.dataset.src; drawFind(); return; }
   if(t.dataset.key){ showKey(t.dataset.key); return; }
+  if(t.dataset.resume){ RESUME={id:t.dataset.resume,t:+t.dataset.at||0}; play(t.dataset.resume); return; }
   if(t.dataset.vopen) openRoom();
   else if(t.dataset.unit){ VIEW=t.dataset.unit; drawRoom(); history.pushState({v:"unit"},""); }
   else if(t.dataset.play) play(t.dataset.play);

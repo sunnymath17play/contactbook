@@ -65,6 +65,7 @@ function mountFile(id){
   const v = $("chYT");
   yt = { seekTo: t => { v.currentTime = t; }, playVideo: () => { const p = v.play(); p && p.catch(() => {}); }, pauseVideo: () => v.pause(),
     getCurrentTime: () => v.currentTime, getPlayerState: () => v.ended ? 0 : v.paused ? 2 : 1, destroy: () => { v.pause(); v.removeAttribute("src"); v.load(); } };
+  if (window.trackPos) trackPos(v, id);   // 記住看到哪一秒（影片教室最上面「上次看到一半」）
   v.addEventListener("ended", () => { if (!seg && cur && cur.id === id && !$("vroom").classList.contains("chal-on")) intro(); });
   v.addEventListener("error", async () => {
     if (!cur || cur.id !== id || !$("vplayer").contains(v)) return;
@@ -90,9 +91,9 @@ function intro(){
   const c = cur.c, again = !!passed()[cur.id];
   try { yt && yt.pauseVideo && yt.pauseVideo(); } catch (e) {}
   cur.i = 0; cur.res = []; cur.tries = 0;
-  panel(`<div class="chtop">🏆 看完小挑戰</div>
+  panel(`<div class="chtop"><img class="chic" src="th/trophy.png" alt="">看完小挑戰</div>
     ${say("wink", `看完了嗎？<br>浩克要考你 <b>${c.qs.length} 題</b>，${again ? "你已經過關了，再來一次也可以喔！" : "全部答對就拿<b>獎狀</b>！"}`)}
-    <button type="button" class="chbtn big" id="chStart">開始挑戰 💪</button>
+    <button type="button" class="chbtn big" id="chStart">開始挑戰</button>
     <button type="button" class="chlink" id="chLater">先不要，回影片清單</button>`);
   $("chStart").onclick = ask;
   $("chLater").onclick = hide;
@@ -103,14 +104,14 @@ function ask(){
   if (!cur.tries) cur.order = q.choices ? shuffle(q.choices) : null;
   cur.wrong = cur.wrong && cur.tries ? cur.wrong : [];
   const dots = c.qs.map((_, k) => `<i class="${k < cur.i ? (cur.res[k] ? "ok" : "no") : k === cur.i ? "now" : ""}"></i>`).join("");
-  panel(`<div class="chtop">🏆 小挑戰　第 ${cur.i + 1} 題／共 ${c.qs.length} 題<span class="chdots">${dots}</span></div>
+  panel(`<div class="chtop"><img class="chic" src="th/trophy.png" alt="">小挑戰　第 ${cur.i + 1} 題／共 ${c.qs.length} 題<span class="chdots">${dots}</span></div>
     ${q.svg ? `<div class="chfig">${q.svg}</div>` : ""}
     <div class="chq">${esc(q.q).replace(/\n/g, "<br>")}</div>
     ${cur.tries ? `<div class="chagain">看完了，再答一次！</div>` : ""}
     ${q.choices
       ? `<div class="chch">${cur.order.map(t => `<button type="button" class="chopt" data-a="${esc(t)}" ${cur.wrong.includes(t) ? "disabled" : ""}>${esc(t)}</button>`).join("")}</div>`
       : `<form class="chnum" id="chNum"><input id="chIn" type="text" inputmode="decimal" autocomplete="off" placeholder="答案"><span>${esc(q.unit || "")}</span><button type="submit" class="chbtn">送出</button></form>`}
-    <button type="button" class="chlink" id="chMean">🤔 我看不懂題目意思</button>
+    <button type="button" class="chlink" id="chMean">我看不懂題目意思</button>
     <div class="chmean" id="chMeanBox" hidden>${face("hi", "sm")}<div>${esc(q.meaning)}</div></div>`);
   $("chMean").onclick = () => { $("chMeanBox").hidden = !$("chMeanBox").hidden; };
   if (q.choices) document.querySelectorAll(".chopt").forEach(b => b.onclick = () => check(b.dataset.a, b));
@@ -129,16 +130,16 @@ function check(a, btn){
 }
 function right(q){
   const last = cur.i === cur.c.qs.length - 1;
-  panel(`<div class="chtop">🏆 小挑戰　第 ${cur.i + 1} 題</div>
-    ${say("yay", `<b class="chbig">答對了！🎉</b><br>${esc(q.explain)}`)}
-    <button type="button" class="chbtn big" id="chNext">${last ? "看結果 👉" : "下一題 👉"}</button>`);
+  panel(`<div class="chtop"><img class="chic" src="th/trophy.png" alt="">小挑戰　第 ${cur.i + 1} 題</div>
+    ${say("yay", `<b class="chbig">答對了！</b><br>${esc(q.explain)}`)}
+    <button type="button" class="chbtn big" id="chNext">${last ? "看結果 ›" : "下一題 ›"}</button>`);
   $("chNext").onclick = next;
 }
 function hint(q){
   const secs = Math.round(q.back.to - q.back.from);
-  panel(`<div class="chtop">🏆 小挑戰　第 ${cur.i + 1} 題</div>
+  panel(`<div class="chtop"><img class="chic" src="th/trophy.png" alt="">小挑戰　第 ${cur.i + 1} 題</div>
     ${say("think", `<b class="chbig">差一點點！</b><br>${esc(q.hint)}`)}
-    <button type="button" class="chbtn big" id="chBack">🎬 回去看這一段（約 ${secs} 秒）</button>
+    <button type="button" class="chbtn big" id="chBack">回去看這一段（約 ${secs} 秒）</button>
     <button type="button" class="chlink" id="chRetry">我再想一次</button>`);
   $("chBack").onclick = () => replay(q);
   $("chRetry").onclick = ask;
@@ -146,9 +147,9 @@ function hint(q){
 function reveal(q){
   cur.res[cur.i] = false;
   const last = cur.i === cur.c.qs.length - 1;
-  panel(`<div class="chtop">🏆 小挑戰　第 ${cur.i + 1} 題</div>
+  panel(`<div class="chtop"><img class="chic" src="th/trophy.png" alt="">小挑戰　第 ${cur.i + 1} 題</div>
     ${say("oh", `答案是「<b>${esc(q.answer)}</b>」<br>${esc(q.explain)}`)}
-    <button type="button" class="chbtn big" id="chNext">${last ? "看結果 👉" : "下一題 👉"}</button>`);
+    <button type="button" class="chbtn big" id="chNext">${last ? "看結果 ›" : "下一題 ›"}</button>`);
   $("chNext").onclick = next;
 }
 function next(){
@@ -160,8 +161,8 @@ function next(){
 // ---------- 答錯 → 回去看那一段，播完自動回到題目 ----------
 function replay(q){
   seg = q;
-  panel(`<div class="chtop">🎬 重看這一段</div>
-    ${say("hi", "👆 專心看上面的影片！<br>看完會自動回到題目。")}
+  panel(`<div class="chtop">重看這一段</div>
+    ${say("hi", "專心看上面的影片！<br>看完會自動回到題目。")}
     <button type="button" class="chlink" id="chSegDone">看完了，回去答題</button>`);
   $("chSegDone").onclick = endSeg;
   try { yt.seekTo(q.back.from, true); yt.playVideo(); } catch (e) {}
@@ -176,9 +177,9 @@ function endSeg(){ stopSeg(); try { yt.pauseVideo(); } catch (e) {} ask(); }
 function finish(){
   const ok = cur.res.every(Boolean);
   if (!ok) {
-    panel(`<div class="chtop">🏆 小挑戰結果</div>
+    panel(`<div class="chtop"><img class="chic" src="th/trophy.png" alt="">小挑戰結果</div>
       ${say("hi", `答對 <b>${cur.res.filter(Boolean).length}</b> 題／共 ${cur.res.length} 題<br>再看一次影片，再挑戰一次，全對就能拿<b>獎狀</b>！`)}
-      <button type="button" class="chbtn big" id="chAgain">再挑戰一次 💪</button>
+      <button type="button" class="chbtn big" id="chAgain">再挑戰一次</button>
       <button type="button" class="chlink" id="chWatch">重看整支影片</button>`);
     $("chAgain").onclick = intro;
     $("chWatch").onclick = () => { hide(); try { yt.seekTo(0, true); yt.playVideo(); } catch (e) {} };
@@ -191,7 +192,7 @@ function finish(){
   showCert(name);
 }
 function askName(){
-  panel(`<div class="chtop">🏅 全部答對！</div>
+  panel(`<div class="chtop"><img class="chic" src="th/medal.png" alt="">全部答對！</div>
     ${say("yay", "太厲害了！獎狀上要寫什麼名字？")}
     <form class="chnum" id="chName"><input id="chNm" type="text" maxlength="12" placeholder="你的名字"><button type="submit" class="chbtn">拿獎狀</button></form>`);
   $("chName").onsubmit = e => { e.preventDefault(); const n = $("chNm").value.trim(); if (!n) return; lsSet("wh_name", n); const f = document.getElementById("name"); if (f) f.value = n; sync(); showCert(n); };
@@ -245,25 +246,25 @@ function unitDone(unit){
 async function showCert(name){
   try { yt && yt.pauseVideo && yt.pauseVideo(); } catch (e) {}
   const c = cur.c;
-  panel(`<div class="chtop">🏅 全部答對！拿到獎狀了</div><div class="chcert"><div class="chload">獎狀製作中…</div></div>`, true);
+  panel(`<div class="chtop"><img class="chic" src="th/medal.png" alt="">全部答對！拿到獎狀了</div><div class="chcert"><div class="chload">獎狀製作中…</div></div>`, true);
   const url = await drawCert({ name, line1: `看完「${c.title}」`, line2: "小挑戰全部答對" });
   const grand = unitDone(c.unit) && !passed()["__grand_" + c.unit];
-  panel(`<div class="chtop">🏅 全部答對！拿到獎狀了</div>
+  panel(`<div class="chtop"><img class="chic" src="th/medal.png" alt="">全部答對！拿到獎狀了</div>
     <div class="chcert"><img src="${url}" alt="獎狀"></div>
-    <div class="chtip">👆 長按獎狀可以存到手機，拿給爸爸媽媽看！</div>
-    ${grand ? `<button type="button" class="chbtn big gold" id="chGrand">🎉 「${esc(c.unit)}」全部過關！領大獎狀</button>` : ""}
+    <div class="chtip">長按獎狀可以存到手機，拿給爸爸媽媽看！</div>
+    ${grand ? `<button type="button" class="chbtn big gold" id="chGrand"><img class="chic" src="th/medal.png" alt="">「${esc(c.unit)}」全部過關！領大獎狀</button>` : ""}
     <button type="button" class="chlink" id="chDone">回影片清單</button>`, true);
   if (grand) $("chGrand").onclick = () => showGrand(name, c.unit);
   $("chDone").onclick = done;
 }
 async function showGrand(name, unit){
   const p = passed(); p["__grand_" + unit] = p["__grand_" + unit] || new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p)); sync();
-  panel(`<div class="chtop">🎉 單元全部過關！</div><div class="chcert"><div class="chload">大獎狀製作中…</div></div>`, true);
+  panel(`<div class="chtop"><img class="chic" src="th/medal.png" alt="">單元全部過關！</div><div class="chcert"><div class="chload">大獎狀製作中…</div></div>`, true);
   const n = allVids().filter(v => (v.unit || "") === unit).length;
   const url = await drawCert({ grand: true, unit, name, line1: `「${unit}」${n} 支影片`, line2: "小挑戰全部過關" });
-  panel(`<div class="chtop">🎉 單元全部過關！</div>
+  panel(`<div class="chtop"><img class="chic" src="th/medal.png" alt="">單元全部過關！</div>
     <div class="chcert"><img src="${url}" alt="大獎狀"></div>
-    <div class="chtip">👆 長按大獎狀可以存到手機，拿給 SUNNY 看！</div>
+    <div class="chtip">長按大獎狀可以存到手機，拿給 SUNNY 看！</div>
     <button type="button" class="chlink" id="chDone">回影片清單</button>`, true);
   $("chDone").onclick = done;
 }
