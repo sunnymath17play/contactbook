@@ -10,52 +10,77 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* 2026-10-31 改版：浩克先擬草稿、同一個孩子合成一張、孩子近況、說不懂的題目有沒有影片；圖示用阿居畫的（th/*.png） */
   :root{
-    --cream:#FFF6E9; --peach:#FFE9CC; --sun:#FF9E4A; --sun-deep:#F57C3A;
-    --gold:#FFD36B; --sky:#7FA9D6; --ink:#5A4632; --ink-soft:#8A7355; --warn:#D9534F;
+    --sun:#FF9A3C; --sun-deep:#F2611B; --ink:#3B2A1A; --ink-soft:#8A7355; --line:#F6D9A8; --warn:#E5484D;
     --font:"Baloo 2",-apple-system,BlinkMacSystemFont,"PingFang TC","Heiti TC","Microsoft JhengHei",sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{font-family:var(--font);color:var(--ink);background:linear-gradient(175deg,var(--cream),var(--peach));
-    padding:calc(16px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom));min-height:100vh;}
-  .wrap{max-width:520px;margin:0 auto;}
+  body{font-family:var(--font);color:var(--ink);background:linear-gradient(180deg,#FFF3D6,#FFE7B8);
+    padding:calc(14px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom));min-height:100vh;}
+  .wrap{max-width:560px;margin:0 auto;}
+  [hidden]{display:none!important;}
 
-  .head{text-align:center;margin-bottom:12px;}
-  .title{font-weight:800;font-size:22px;color:var(--sun-deep);}
-  .hint{font-size:13px;color:var(--ink-soft);font-weight:700;margin-top:4px;line-height:1.5;}
-  .remind{background:#FFF3D6;border-radius:14px;padding:9px 12px;font-size:13px;font-weight:700;margin-top:10px;line-height:1.5;}
-
-  .card{background:#fff;border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 5px 16px rgba(180,120,60,.12);}
-  .card.alert{border:2.5px solid var(--warn);background:#FFF7F6;}
-  .card.done{opacity:.72;}
-  .who{font-weight:800;font-size:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-  .tag{font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 8px;background:var(--peach);color:var(--ink-soft);}
-  .tag.red{background:var(--warn);color:#fff;}
-  .tag.ok{background:#DFF0D8;color:#4A7C3F;}
-  .meta{font-size:13px;color:var(--ink-soft);font-weight:700;margin:7px 0 0;line-height:1.6;}
-  .said{font-size:15px;font-weight:700;line-height:1.55;margin-top:6px;white-space:pre-wrap;}
-  .said .q{color:var(--sky);}
-  textarea,input{width:100%;border:2.5px solid var(--peach);border-radius:14px;padding:11px 13px;
-    font-family:var(--font);font-size:16px;color:var(--ink);background:#FFFDF8;}
-  textarea{resize:none;min-height:70px;margin-top:10px;}
-  textarea:focus,input:focus{outline:none;border-color:var(--sun);}
-  .row{display:flex;gap:8px;align-items:center;margin-top:8px;}
-  .btn{border:none;border-radius:14px;padding:12px 16px;font-family:var(--font);font-weight:800;font-size:15px;
-    color:#fff;background:linear-gradient(180deg,var(--gold),var(--sun));box-shadow:0 4px 0 var(--sun-deep);cursor:pointer;}
-  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sun-deep);}
-  .btn:disabled{opacity:.6;}
-  .btn.ghost{background:transparent;border:2px solid var(--peach);color:var(--ink-soft);box-shadow:none;}
-  .said.reply{background:#F4F9FF;border-radius:12px;padding:9px 11px;margin-top:8px;color:#3C5A7A;}
+  .head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .head img{width:54px;height:54px;border-radius:14px;box-shadow:0 3px 8px rgba(0,0,0,.15);}
+  .title{font-weight:900;font-size:24px;color:var(--sun-deep);}
+  .count{font-size:15px;font-weight:800;color:var(--ink-soft);}
+  .count b{color:var(--sun-deep);font-size:19px;}
+  .remind{background:#fff;border:2px dashed var(--line);border-radius:16px;padding:9px 12px;font-size:14px;font-weight:700;line-height:1.55;margin-bottom:10px;color:#6B5030;}
   .bar{display:flex;gap:8px;margin-bottom:12px;}
-  .bar .btn{flex:1;font-size:14px;padding:10px;}
-  .note{text-align:center;font-size:13.5px;font-weight:700;color:var(--ink-soft);margin:14px 0;}
+  .bar button{flex:1;border:2px solid var(--line);background:#fff;color:#6B5030;border-radius:999px;padding:9px;font-family:var(--font);font-weight:800;font-size:15px;cursor:pointer;}
+  .bar button.on{background:#FFE7C2;border-color:var(--sun);color:#B83F0E;}
+
+  .card{background:#fff;border-radius:22px;padding:14px;margin-bottom:14px;box-shadow:0 6px 18px rgba(180,120,60,.14);border:3px solid transparent;}
+  .card.alert{border-color:var(--warn);background:#FFF7F6;}
+  .card.done{opacity:.75;}
+  .who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .who .nm{font-size:22px;font-weight:900;}
+  .tag{font-size:13px;font-weight:800;border-radius:999px;padding:2px 10px;background:#FFF0DC;color:#B0702C;}
+  .tag.red{background:var(--warn);color:#fff;}
+  .tag.ok{background:#E4F6E1;color:#2F7A3A;}
+  .ctx{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:14px;font-weight:800;color:#6B5030;}
+  .ctx span{display:inline-flex;align-items:center;gap:3px;}
+  .ctx img{width:24px;height:24px;}
+  .ctx em{font-style:normal;color:var(--sun-deep);font-size:16px;}
+  .ctx .none{color:#A99476;font-weight:700;}
+
+  .msg{background:#FFFBF2;border-radius:16px;padding:10px 12px;margin-top:10px;}
+  .msg .when{font-size:13px;font-weight:800;color:var(--ink-soft);}
+  .msg .said{font-size:16px;font-weight:700;line-height:1.6;margin-top:3px;white-space:pre-wrap;word-break:break-word;}
+  .msg .typed{display:block;margin-top:4px;font-size:17px;font-weight:800;color:#3B2A1A;}
+  .msg .ask{display:block;margin-top:6px;color:#2B5FA8;font-weight:800;}
+  .vids{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+  .vhit{display:flex;align-items:center;gap:8px;border:2px solid #BFE0FF;background:#E9F4FF;border-radius:14px;padding:6px 10px 6px 6px;
+    font-family:var(--font);font-size:14.5px;font-weight:800;color:#2B5FA8;text-align:left;cursor:pointer;}
+  .vhit img{width:30px;height:30px;flex:none;}
+  .vhit small{display:block;font-size:12.5px;font-weight:700;color:#5A7BA8;}
+  .vhit.added{background:#E4F6E1;border-color:#9FD49A;color:#2F7A3A;}
+  .vmiss{font-size:13.5px;font-weight:700;color:#A06A2A;background:#FFF3D6;border-radius:12px;padding:6px 10px;}
+  .reply{background:#EEF6FF;border-radius:14px;padding:9px 12px;margin-top:10px;font-size:16px;font-weight:700;color:#2B4F7A;white-space:pre-wrap;}
+  .reply small{display:block;font-size:12.5px;color:#6A8DBF;margin-bottom:2px;}
+
+  .draftlbl{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:13.5px;font-weight:800;color:#2F7A3A;}
+  .draftlbl img{width:28px;height:28px;}
+  textarea{width:100%;border:3px solid var(--line);border-radius:16px;padding:11px 13px;margin-top:6px;resize:vertical;min-height:110px;
+    font-family:var(--font);font-size:17px;line-height:1.55;color:var(--ink);background:#FFFDF8;}
+  textarea.drafted{border-color:#9FD49A;background:#F6FCF5;}
+  textarea:focus{outline:none;border-color:var(--sun);}
+  .row{display:flex;justify-content:flex-end;margin-top:8px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:999px;padding:11px 22px 11px 14px;font-family:var(--font);font-weight:900;font-size:17px;
+    color:#fff;background:linear-gradient(#FF9A3C,#F2611B);box-shadow:0 4px 0 #C9480E;cursor:pointer;}
+  .btn img{width:30px;height:30px;margin:-6px 0;}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #C9480E;}
+  .btn:disabled{opacity:.6;}
+  .note{text-align:center;font-size:15px;font-weight:800;color:var(--ink-soft);margin:18px 0;}
   .err{color:var(--warn);}
   #gate{max-width:340px;margin:60px auto;text-align:center;}
-  #gate .btn{width:100%;margin-top:12px;padding:14px;font-size:17px;}
-  [hidden]{display:none!important;}
+  #gate img{width:84px;height:84px;border-radius:20px;}
+  #gate input{width:100%;border:3px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:14px;font-family:var(--font);font-size:18px;text-align:center;background:#fff;}
+  #gate .btn{width:100%;justify-content:center;margin-top:12px;padding:14px;}
   .phs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .ph{display:block;max-width:100%;border-radius:10px;border:2px solid #E9D8BB;cursor:zoom-in}
-  .phwait{font-size:14px;color:#9a8a7a;padding:10px;border:2px dashed #E9D8BB;border-radius:10px}
+  .ph{display:block;max-width:100%;border-radius:12px;border:2px solid #E9D8BB;cursor:zoom-in}
+  .phwait{font-size:14px;color:#9a8a7a;padding:10px;border:2px dashed #E9D8BB;border-radius:12px}
   .phbig{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99;display:flex;align-items:center;justify-content:center;padding:10px}
   .phbig img{max-width:100%;max-height:100%}
 </style>
@@ -63,22 +88,20 @@
 <body>
 <div class="wrap">
   <div id="gate">
-    <div class="title">🌳 樹洞回信</div>
-    <div class="hint" style="margin-bottom:14px;">輸入管理密碼</div>
+    <img src="tree-icon.png" alt="">
+    <div class="title" style="margin-top:8px">樹洞回信</div>
     <input id="pw" type="password" inputmode="numeric" placeholder="管理密碼" autocomplete="off">
     <button class="btn" id="enter">進入</button>
     <div class="note err" id="gateMsg"></div>
   </div>
 
   <div id="app" hidden>
-    <div class="head">
-      <div class="title">🌳 樹洞回信</div>
-      <div class="hint" id="count"></div>
-      <div class="remind">孩子多半用家長的手機，回信請寫<b>家長看到也沒關係</b>的話 💛<br>需要私下講的，當面跟孩子談或直接聯絡家長。</div>
-    </div>
+    <div class="head"><img src="tree-icon.png" alt=""><div><div class="title">樹洞回信</div><div class="count" id="count"></div></div></div>
+    <div class="remind">孩子多半用家長的手機，回信請寫<b>家長看到也沒關係</b>的話。需要私下講的，當面跟孩子談或直接聯絡家長。</div>
     <div class="bar">
-      <button class="btn ghost" id="tab">只看還沒回</button>
-      <button class="btn ghost" id="refresh">重新整理</button>
+      <button id="tabTodo" class="on">還沒回</button>
+      <button id="tabAll">全部（14 天）</button>
+      <button id="refresh">重新整理</button>
     </div>
     <div id="list"></div>
     <div class="note" id="listMsg"></div>
@@ -93,12 +116,14 @@ const ENDPOINT = "https://script.google.com/macros/s/AKfycbxzTq_cMJsTW5a-FTGWnJF
 const $=id=>document.getElementById(id);
 const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
-const lsDel=k=>{try{localStorage.removeItem(k);}catch(e){}};
-const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clean=s=>String(s==null?"":s).replace(/^'/,"").trim();
 const when=iso=>{const d=new Date(iso);const w="日一二三四五六"[d.getDay()];
   return `${d.getMonth()+1}/${d.getDate()}（${w}）${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;};
+const md=iso=>{const d=new Date(iso);return `${d.getMonth()+1}/${d.getDate()}`;};
 
-let KEY=lsGet("wh_admin")||"", rows=[], onlyTodo=true;
+let KEY=lsGet("wh_admin")||"", rows=[], VIDEOS=[], CTX={}, onlyTodo=true;
+const DRAFTING={};   // 改到一半的回信先記著（重新整理清單時不會不見）
 
 async function api(q){
   const r=await fetch(ENDPOINT+"?mode=admin&key="+encodeURIComponent(KEY)+(q||""));
@@ -109,32 +134,23 @@ async function sendReply(row,text){
     body:JSON.stringify({mode:"reply",key:KEY,row,text})});
   return await r.json();
 }
+function take(j){ rows=j.rows||[]; VIDEOS=j.videos||[]; CTX=j.ctx||{}; }
 
 /* ---------- 密碼關卡 ---------- */
 $("enter").onclick=async()=>{
-  KEY=$("pw").value.trim();
+  KEY=$("pw").value.trim()||KEY;
   if(!KEY){ $("gateMsg").textContent="請輸入密碼"; return; }
   $("enter").disabled=true; $("gateMsg").textContent="確認中…";
   try{
     const j=await api("");
     if(!j||!j.ok){ $("gateMsg").textContent="密碼不對喔"; $("enter").disabled=false; return; }
-    lsSet("wh_admin",KEY); rows=j.rows||[];
+    lsSet("wh_admin",KEY); take(j);
     $("gate").hidden=true; $("app").hidden=false; render();
   }catch(e){ $("gateMsg").textContent="連不上，檢查一下網路"; $("enter").disabled=false; }
 };
 $("pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("enter").click(); });
 
-/* ---------- 清單 ---------- */
-function said(r){
-  const p=[];
-  if(r["悄悄話"]) p.push(esc(r["悄悄話"]));
-  if(r["心情"]) p.push("心情"+esc(r["心情"]));
-  if(r["星星"]) p.push("★".repeat(+r["星星"]));
-  if(r["聽不懂"]) p.push(`<span class="q">🙋不懂：${esc(String(r["第幾頁題"]||r["聽不懂"]).replace(/考卷p0#0/g,"考卷📷").replace(/考卷p0#(\d+)/g,"考卷📷第$1題"))}${r["想再講解"]?"，想再講解":""}</span>`);
-  const txt=String(r["打字內容"]||"").replace(PH_RE,"").trim();
-  if(txt) p.push("「"+esc(txt)+"」");
-  return p.join("　");
-}
+/* ---------- 孩子說了什麼 ---------- */
 // 考卷照片：存在寵物蛋後端，用同一組管理密碼讀
 const PHOTO_EP="https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec";
 const PH_RE=/［考卷照片(第\d+題)?\s*(P[0-9A-Z]+)］/g;
@@ -148,55 +164,135 @@ async function loadPhoto(el,id){
     el.replaceWith(im);
   }catch(e){ el.textContent="照片讀不到（"+id+"）"; }
 }
+const askText=r=>clean(r["第幾頁題"]||r["聽不懂"]).replace(/考卷p0#0/g,"考卷照片").replace(/考卷p0#(\d+)/g,"考卷照片第$1題");
+function saidHTML(r){
+  const p=[];
+  if(r["悄悄話"]) p.push(esc(clean(r["悄悄話"])));
+  if(r["星星"]) p.push("★".repeat(+r["星星"]));
+  const txt=String(r["打字內容"]||"").replace(PH_RE,"").replace(/^'/,"").trim();
+  let h=p.join("　");
+  if(r["聽不懂"]) h+=`<span class="ask">有地方沒聽懂：${esc(askText(r))}${r["想再講解"]?"（想請 SUNNY 再講解）":""}</span>`;
+  if(txt) h+=`<span class="typed">「${esc(txt)}」</span>`;
+  return h||"（只按了送出）";
+}
+
+/* ---------- 孩子說不懂的題目，影片教室有沒有影片 ---------- */
+const GRADE={三:3,四:4,五:5,六:6};
+const gradeOf=r=>GRADE[(clean(r["班級"]).match(/^([三四五六])年級/)||[])[1]]||0;
+function videoHits(r){
+  if(!r["聽不懂"]) return [];
+  const g=gradeOf(r), items=askText(r).split(/、/).map(s=>s.trim()).filter(Boolean);
+  return items.map(it=>{
+    const m=/^講義([AB])\s*p(\d+)(?:#(\d+))?/.exec(it);
+    if(!m) return {item:it,vids:null};   // 考卷照片、上課內容：沒辦法自動對
+    const book="講義"+m[1], page=+m[2], q=+m[3]||0;
+    const vids=VIDEOS.filter(v=>v.grade===g).filter(v=>{const x=/^講義([AB])\s*p(\d+)(?:#(\d+))?/.exec(v.q||"");
+      return x&&("講義"+x[1])===book&&+x[2]===page&&(!q||!x[3]||+x[3]===q);});
+    return {item:it,vids};
+  });
+}
+
+/* ---------- 清單：同一個孩子還沒回的合成一張 ---------- */
+const done=r=>clean(r["SUNNY 回覆"]);
+const merged=r=>/^＃併回/.test(done(r));
+const kidKey=r=>clean(r["班級代號"])+"|"+clean(r["名字"]).replace(/\s/g,"");
+function groups(){
+  const out=[], map={};
+  rows.slice().sort((a,b)=>new Date(b["收到時間"])-new Date(a["收到時間"])).forEach(r=>{
+    if(merged(r)) return;   // 跟別則一起回過了，不另外顯示
+    if(done(r)){ if(!onlyTodo) out.push({rs:[r]}); return; }
+    const k=kidKey(r);
+    if(!map[k]){ map[k]={rs:[]}; out.push(map[k]); }
+    map[k].rs.push(r);
+  });
+  out.forEach(g=>g.rs.sort((a,b)=>new Date(a["收到時間"])-new Date(b["收到時間"])));
+  // 需要關心的排最前面
+  return out.sort((a,b)=>(b.rs.some(r=>r["需要關心"])?1:0)-(a.rs.some(r=>r["需要關心"])?1:0));
+}
+function ctxHTML(r){
+  const x=CTX[kidKey(r)];
+  if(!x||(!x.views&&!x.pass)) return `<div class="ctx"><span class="none">近 7 天沒有看影片紀錄</span></div>`;
+  return `<div class="ctx"><span><img src="th/tv.png" alt="">近 7 天看了 <em>${x.views}</em> 支影片</span>${x.pass?`<span><img src="th/medal.png" alt="">過關 <em>${x.pass}</em> 個小挑戰</span>`:""}</div>`;
+}
+
 function render(){
   const list=$("list"); list.innerHTML="";
-  const done=r=>String(r["SUNNY 回覆"]||"").trim();
-  const show=rows.slice().reverse()
-    .sort((a,b)=>(b["需要關心"]?1:0)-(a["需要關心"]?1:0))
-    .filter(r=>onlyTodo?!done(r):true);
-  $("tab").textContent=onlyTodo?"只看還沒回 ✓":"全部（14 天）";
-  const todo=rows.filter(r=>!done(r)).length;
-  $("count").textContent=`近 14 天 ${rows.length} 則，還沒回 ${todo} 則`;
-  $("listMsg").textContent=show.length?"":"沒有了 🌳";
-  show.forEach(r=>{
+  $("tabTodo").classList.toggle("on",onlyTodo); $("tabAll").classList.toggle("on",!onlyTodo);
+  const todoKids=new Set(rows.filter(r=>!done(r)).map(kidKey)).size;
+  $("count").innerHTML=`近 14 天 ${rows.filter(r=>!merged(r)).length} 則・還沒回 <b>${todoKids}</b> 位孩子`;
+  const gs=groups();
+  $("listMsg").textContent=gs.length?"":"都回完了，辛苦了！";
+  gs.forEach(g=>{
+    const last=g.rs[g.rs.length-1], isDone=!!done(last), alert=g.rs.find(r=>r["需要關心"]);
     const c=document.createElement("div");
-    c.className="card"+(r["需要關心"]?" alert":"")+(done(r)?" done":"");
-    c.innerHTML=`<div class="who">${esc(r["名字"])}
-        <span class="tag">${esc(r["班級"]||"班級不明")}</span>
-        ${r["需要關心"]?`<span class="tag red">⚠ ${esc(r["需要關心"])}</span>`:""}
-        ${done(r)?'<span class="tag ok">已回 ✓</span>':""}</div>
-      <div class="meta">${when(r["收到時間"])}</div>
-      <div class="said">${said(r)||"（只按了送出）"}</div>
-      ${photosOf(r).length?`<div class="phs">${photosOf(r).map(p=>done(r)?`<div class="phwait">📷 考卷照片${esc(p.q)}（回信後已刪除）</div>`:`<div class="phwait" data-ph="${esc(p.id)}">📷 考卷照片${esc(p.q)} 載入中…</div>`).join("")}</div>`:""}
-      ${done(r)?`<div class="said reply">💌 ${esc(r["SUNNY 回覆"])}</div>`:""}`;
+    c.className="card"+(alert?" alert":"")+(isDone?" done":"");
+    c.innerHTML=`<div class="who"><span class="nm">${esc(clean(last["名字"]))}</span>
+        <span class="tag">${esc(clean(last["班級"])||"班級不明")}</span>
+        ${g.rs.length>1?`<span class="tag">${g.rs.length} 則</span>`:""}
+        ${alert?`<span class="tag red">需要關心：${esc(alert["需要關心"])}</span>`:""}
+        ${isDone?'<span class="tag ok">已回</span>':""}</div>
+      ${ctxHTML(last)}
+      ${g.rs.map(r=>{
+        const hits=videoHits(r), ph=photosOf(r);
+        return `<div class="msg"><div class="when">${when(r["收到時間"])}</div><div class="said">${saidHTML(r)}</div>
+          ${hits.length?`<div class="vids">${hits.map(h=>h.vids===null?"":h.vids.length
+              ?h.vids.map(v=>`<button type="button" class="vhit" data-title="${esc(v.title)}"><img src="th/tv.png" alt=""><span>有影片：${esc(v.title)}<small>點一下，把「去影片教室看」加進回信</small></span></button>`).join("")
+              :`<div class="vmiss">${esc(h.item)}：這題還沒有影片</div>`).join("")}</div>`:""}
+          ${ph.length?`<div class="phs">${ph.map(p=>isDone?`<div class="phwait">考卷照片${esc(p.q)}（回信後已刪除）</div>`:`<div class="phwait" data-ph="${esc(p.id)}">考卷照片${esc(p.q)} 載入中…</div>`).join("")}</div>`:""}
+        </div>`;}).join("")}
+      ${isDone?`<div class="reply"><small>SUNNY 回（${md(last["回覆時間"]||last["收到時間"])}）</small>${esc(done(last))}</div>`:""}`;
+    const draft=clean(last["浩克草稿"]);
+    if(!isDone && draft) c.insertAdjacentHTML("beforeend",`<div class="draftlbl"><img src="th/hulkwave.png" alt="">浩克先擬好了，看過、改一改再送（可以補一句這週看到他的事）</div>`);
     const ta=document.createElement("textarea");
-    ta.maxLength=300; ta.placeholder=done(r)?"想改回信就在這裡重打":"回一句話給孩子…";
+    ta.maxLength=300; ta.placeholder=isDone?"想改回信就在這裡重打":"回一句話給孩子…";
+    const key=g.rs.map(r=>r.row).join(",");
+    ta.value=DRAFTING[key]!=null?DRAFTING[key]:(!isDone?draft:"");
+    if(!isDone&&draft&&ta.value===draft) ta.classList.add("drafted");
+    ta.oninput=()=>{ DRAFTING[key]=ta.value; ta.classList.remove("drafted"); };
     const row2=document.createElement("div"); row2.className="row";
-    const btn=document.createElement("button"); btn.className="btn"; btn.textContent=done(r)?"改成這句":"送出回信";
+    const btn=document.createElement("button"); btn.className="btn";
+    btn.innerHTML=`<img src="th/plane.png" alt="">${isDone?"改成這句":g.rs.length>1?`回信（${g.rs.length} 則一起回）`:"送出回信"}`;
     btn.onclick=async()=>{
       const text=ta.value.trim();
       if(!text){ ta.focus(); return; }
-      btn.disabled=true; btn.textContent="送出中…";
+      btn.disabled=true; const h0=btn.innerHTML; btn.textContent="送出中…";
       try{
-        const j=await sendReply(r.row,text);
-        if(j&&j.ok){ r["SUNNY 回覆"]=text; r["回覆時間"]=new Date().toISOString();
-          const ids=photosOf(r).map(p=>p.id);   // 回信了 → 考卷照片刪掉
-          if(ids.length) fetch(PHOTO_EP,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode:"delPhoto",key:KEY,ids})}).catch(()=>{});
-          ids.forEach(id=>delete PH_CACHE[id]);
-          render(); }
-        else { btn.textContent="沒送出去，再按一次"; btn.disabled=false; }
-      }catch(e){ btn.textContent="沒送出去，再按一次"; btn.disabled=false; }
+        // 真正的回信寫在最新那一則；其他幾則標「＃併回」（孩子那邊不會多出好幾封一樣的信）
+        const j=await sendReply(last.row,text);
+        if(!(j&&j.ok)) throw 0;
+        last["SUNNY 回覆"]=text; last["回覆時間"]=new Date().toISOString();
+        for(const r of g.rs) if(r!==last){
+          const m="＃併回 "+md(last["收到時間"])+" 那封";
+          const k=await sendReply(r.row,m); if(k&&k.ok){ r["SUNNY 回覆"]=m; r["回覆時間"]=last["回覆時間"]; }
+        }
+        const ids=g.rs.flatMap(r=>photosOf(r).map(p=>p.id));   // 回信了 → 考卷照片刪掉
+        if(ids.length) fetch(PHOTO_EP,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode:"delPhoto",key:KEY,ids})}).catch(()=>{});
+        ids.forEach(id=>delete PH_CACHE[id]);
+        delete DRAFTING[key];
+        render();
+      }catch(e){ btn.innerHTML=h0; btn.disabled=false; btn.insertAdjacentHTML("beforeend"," ・沒送出去，再按一次"); }
     };
     row2.appendChild(btn);
     c.appendChild(ta); c.appendChild(row2);
     list.appendChild(c);
     c.querySelectorAll("[data-ph]").forEach(el=>loadPhoto(el,el.dataset.ph));
+    c.querySelectorAll(".vhit").forEach(b=>b.onclick=()=>{
+      const line=`可以到樹洞的影片教室看「${b.dataset.title}」喔～`;
+      if(!ta.value.includes(line)){
+        // 加在署名「SUNNY」上面（最後一行是署名的話）
+        const ls=ta.value.replace(/\s*$/,"").split("\n");
+        if(ta.value.trim()&&/^\s*SUNNY\s*$/.test(ls[ls.length-1])) ls.splice(ls.length-1,0,line);
+        else if(ta.value.trim()) ls.push(line); else ls.splice(0,ls.length,line);
+        ta.value=ls.join("\n"); DRAFTING[key]=ta.value; ta.classList.remove("drafted"); }
+      b.classList.add("added"); b.querySelector("small").textContent="已加進回信";
+    });
   });
 }
-$("tab").onclick=()=>{ onlyTodo=!onlyTodo; render(); };
+$("tabTodo").onclick=()=>{ onlyTodo=true; render(); };
+$("tabAll").onclick=()=>{ onlyTodo=false; render(); };
 $("refresh").onclick=async()=>{
   $("refresh").disabled=true; $("refresh").textContent="更新中…";
-  try{ const j=await api(""); if(j&&j.ok){ rows=j.rows||[]; render(); } }catch(e){}
+  try{ const j=await api(""); if(j&&j.ok){ take(j); render(); } }catch(e){}
   $("refresh").disabled=false; $("refresh").textContent="重新整理";
 };
 
