@@ -41,9 +41,10 @@ function loadAPI(){
 async function mount(id, v){
   stopSeg(); hide();
   cur = { id, c: D[id], v };
+  // 2026-10-31 改版：題目＋出處兩行（whisper.html 的 nowTitle），右邊一顆大大的「看完小挑戰」
   $("vplayer").innerHTML = `<div id="chYT"></div>
-    <div class="now chnow"><span>▶ 正在看：${esc(v.title)}</span>
-      <button type="button" class="chgo" id="chGo">${passed()[id] ? "🏅 再挑戰" : "🏆 小挑戰"}</button></div>`;
+    <div class="now chnow">${window.nowTitle ? nowTitle(v) : `<span class="nt"><b>${esc(v.title)}</b></span>`}
+      <button type="button" class="chgo" id="chGo"><img src="th/trophy.png" alt="">${passed()[id] ? "再挑戰一次" : "看完小挑戰"}</button></div>`;
   $("chGo").onclick = () => intro();
   if (window.LOCAL_VIDS && LOCAL_VIDS.includes(id)) return mountFile(id);
   await loadAPI();
@@ -184,7 +185,7 @@ function finish(){
     return;
   }
   savePass(cur.id);
-  const btn = $("chGo"); if (btn) btn.textContent = "🏅 再挑戰";
+  const btn = $("chGo"); if (btn) btn.innerHTML = '<img src="th/trophy.png" alt="">再挑戰一次';
   const name = (lsGet("wh_name") || "").trim();
   if (!name) return askName();
   showCert(name);
@@ -284,5 +285,9 @@ function close(){ stopSeg(); hide(); cur = null; try { yt && yt.destroy && yt.de
 
 // TRIAL＝整個功能試用（目前已正式開放＝false）；單支影片還沒審用題目檔的 draft
 const TRIAL = false;
-if (!TRIAL || TESTER) window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close };
+// stat：這支影片的小挑戰狀態（pass 過關／todo 還沒過／"" 沒有小挑戰）；unitStat：一個單元有幾支有小挑戰、過關幾支；certs：拿到幾張獎狀（含大獎狀）
+const stat = id => !D[id] ? "" : passed()[id] ? "pass" : "todo";
+const unitStat = vs => { const has = vs.filter(v => D[v.id]); return { has: has.length, ok: has.filter(v => passed()[v.id]).length }; };
+const certs = () => Object.keys(passed()).length;
+if (!TRIAL || TESTER) window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close, stat, unitStat, certs };
 })();

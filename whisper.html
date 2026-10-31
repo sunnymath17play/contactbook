@@ -512,8 +512,107 @@
     .wrap{zoom:1.3;}
     .hero{margin:0;border-radius:0 0 28px 28px;overflow:hidden;}
   }
+
+  /* ===================== 2026-10-31 影片教室內部改版：照阿居設計稿（浩克截圖\影片教室首頁／播放頁_設計稿_阿居.png）=====================
+     圖示都是阿居畫的（th/*.png、th/u/*.png），不用 emoji；分段一律一直打開，不做收合（樹洞踩過：孩子不知道要點開） */
+  .vroom:not(.gate):not(.proom){background:linear-gradient(180deg,#FFF3D6,#FFE7B8);}
+  .vbar h2{display:flex;align-items:center;justify-content:center;gap:6px;color:#E0621B;font-weight:900;}
+  .vbar h2 img{width:30px;height:30px;}
+  .vmine{display:flex;align-items:center;gap:10px;margin:2px 0 14px;padding:8px 12px 8px 6px;border-radius:22px;
+    background:linear-gradient(90deg,#FFE7A6,#FFF6DC);box-shadow:0 4px 12px rgba(200,140,40,.18);}
+  .vmine .hk{width:58px;height:58px;margin:-10px 0 -6px;}
+  .vmine .tx{flex:1;display:flex;flex-direction:column;}
+  .vmine b{font-size:17px;font-weight:900;color:#6B3B14;}
+  .vmine .tx span{font-size:15px;font-weight:800;color:#6B5030;}
+  .vmine em{font-style:normal;font-size:20px;color:#F2611B;margin:0 1px;}
+  .vmine .md{width:46px;height:46px;}
+  .vh{display:flex;align-items:center;gap:8px;margin:6px 0 8px;}
+  .vh small{margin-left:auto;font-size:13px;font-weight:700;color:#8A7355;}
+  .vpill{display:inline-flex;align-items:center;gap:6px;color:#fff;font-size:18px;font-weight:900;padding:5px 16px 5px 8px;border-radius:999px;}
+  .vpill.blue{background:linear-gradient(#4FA3F5,#2B7BE0);box-shadow:0 3px 0 #1E5FB3;}
+  .vpill.orange{background:linear-gradient(#FF9A3C,#F2661B);box-shadow:0 3px 0 #C9480E;}
+  .vpill img{width:30px;height:30px;margin:-4px 0;}
+  .vpill .pl{width:24px;height:24px;border-radius:50%;background:#fff;position:relative;}
+  .vpill .pl::after{content:"";position:absolute;left:9px;top:6px;border:6px solid transparent;border-left:9px solid #2B7BE0;border-right:0;}
+  .vrow .vcard{position:relative;border-radius:20px;box-shadow:0 5px 14px rgba(160,110,40,.18);}
+  .vcard .vnew,.vline .vnew{position:absolute;left:8px;top:8px;font-size:13px;padding:2px 9px;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+  .vline .vnew{position:static;margin-right:5px;vertical-align:2px;}
+  .vtx{display:flex;flex-direction:column;min-width:0;text-align:left;}
+  .vcard .vtx{padding:8px 44px 10px 12px;}
+  .vtx b{font-size:16.5px;font-weight:900;color:#3B2A1A;line-height:1.3;}
+  .vtx small{font-size:13px;font-weight:700;color:#8A7355;margin-top:2px;line-height:1.3;}
+  .vtro{position:absolute;right:8px;bottom:8px;width:34px;height:34px;}
+  .vunits{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+  .vunit{position:relative;display:flex;align-items:center;gap:6px;border:2px solid #fff;border-radius:18px;padding:9px 6px 9px 7px;cursor:pointer;
+    font-family:var(--font);text-align:left;box-shadow:0 4px 10px rgba(120,100,60,.12);min-height:74px;}
+  .vunit:active{transform:scale(.96);}
+  .vunit img{width:44px;height:44px;flex:none;}
+  .vunit .ut{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .vunit b{font-size:15px;font-weight:900;color:#3B2A1A;line-height:1.2;word-break:keep-all;}
+  .vunit small{font-size:11.5px;font-weight:700;color:#6B5A45;white-space:nowrap;}
+  .vunit .go{font-size:22px;font-weight:900;flex:none;}
+  .vprog{display:block;height:7px;border-radius:9px;background:rgba(255,255,255,.85);overflow:hidden;}
+  .vprog i{display:block;height:100%;border-radius:9px;min-width:4px;}
+  .vunit .vdot,.vwide .vdot{position:absolute;right:6px;top:-7px;margin:0;font-size:12px;padding:0 8px;}
+  .vwide{position:relative;width:100%;display:flex;align-items:center;gap:10px;margin-bottom:10px;border:0;border-radius:20px;padding:10px 14px 10px 8px;cursor:pointer;
+    font-family:var(--font);text-align:left;box-shadow:0 5px 12px rgba(200,120,30,.2);}
+  .vwide.school{background:linear-gradient(90deg,#FFE3A0,#FFC870);}
+  .vwide.ask{background:linear-gradient(90deg,#DCEEFF,#BFE0FF);}
+  .vwide img{width:64px;height:64px;flex:none;margin:-6px 0;}
+  .vwide .ut{flex:1;display:flex;flex-direction:column;}
+  .vwide b{font-size:18px;font-weight:900;color:#B83F0E;}
+  .vwide.ask b{color:#2B5FA8;}
+  .vwide small{font-size:13.5px;font-weight:700;color:#6B5030;margin-top:2px;}
+  .vwide .go{width:30px;height:30px;border-radius:50%;background:#fff;color:#F2611B;display:grid;place-items:center;font-size:22px;font-weight:900;}
+  .vfind2{background:#FFFBF0;border:2px solid #FFE0A8;border-radius:22px;padding:12px;margin:4px 0 12px;}
+  .vfh{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .vfh img{width:36px;height:36px;}
+  .vfh b{font-size:18px;font-weight:900;color:#3B2A1A;}
+  .vfh span{font-size:15px;font-weight:800;color:#E0621B;}
+  .vfind2 .vsrc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .vfind2 .vsrcb{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px 4px 6px;border-radius:999px;font-size:15px;border:2px solid #F6D9A8;background:#fff;}
+  .vfind2 .vsrcb img{width:26px;height:26px;}
+  .vfind2 .vsrcb.on{background:#FFE7C2;border-color:#F28C28;color:#B83F0E;box-shadow:none;}
+  .vfind2 .vfind{border:2px solid #F6D9A8;}
+  .vfind2 .vfind button{background:linear-gradient(#FF9A3C,#F2661B);box-shadow:0 3px 0 #C9480E;}
+  .vhulk{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px auto 4px;border:0;border-radius:999px;background:#DCEEFF;color:#2B5FA8;
+    font-family:var(--font);font-size:16px;font-weight:900;padding:6px 22px 6px 8px;cursor:pointer;}
+  .vhulk img{width:40px;height:40px;margin:-8px 0;}
+  /* 單元頁 */
+  .vuhead{display:flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:8px 12px 8px 8px;margin:2px 0 12px;box-shadow:0 4px 12px rgba(160,110,40,.14);}
+  .vuhead img{width:48px;height:48px;}
+  .vuhead b{font-size:21px;font-weight:900;color:#3B2A1A;}
+  .vuhead .up{flex:1;display:flex;flex-direction:column;gap:4px;margin-left:6px;background:#FFF6E6;border-radius:14px;padding:6px 10px;}
+  .vuhead .up small{font-size:13px;font-weight:800;color:#6B5030;}
+  .vuhead .up em{font-style:normal;font-size:17px;color:#F2611B;}
+  .vuhead .vprog{background:#EADFCB;}
+  .vh2{display:flex;align-items:center;gap:6px;font-size:17px;font-weight:900;color:#3B2A1A;background:#E4F2FF;border-radius:14px;padding:5px 12px 5px 6px;margin:14px 0 8px;}
+  .vh2 img{width:32px;height:32px;}
+  .vline{border-radius:18px;padding:7px;gap:10px;box-shadow:0 3px 10px rgba(160,110,40,.12);}
+  .vline .vimg{flex:0 0 33%;max-width:160px;border-radius:12px;position:relative;}
+  .vline .vtx{flex:1;}
+  .vline .vtx b{font-size:16px;}
+  .vst{width:38px;height:38px;flex:none;}
+  .vst.dim{opacity:.55;}
+  .vline.playing{outline:3px solid #F28C28;}
+  .vline.playing .vimg::before{content:"播放中";position:absolute;left:6px;bottom:6px;z-index:1;background:#F2611B;color:#fff;font-size:12px;font-weight:900;border-radius:999px;padding:1px 8px;}
+  /* 播放中的資訊列＋大大的「看完小挑戰」 */
+  .vplayer .now{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#FFFBF0;}
+  .vplayer .now .nt{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .vplayer .now .nt b{font-size:17px;font-weight:900;color:#3B2A1A;line-height:1.3;}
+  .vplayer .now .nt small{font-size:13px;font-weight:700;color:#8A7355;}
+  .vplayer .chnow .chgo{flex:none;display:inline-flex;align-items:center;gap:4px;border:0;border-radius:999px;padding:8px 16px 8px 8px;cursor:pointer;
+    background:linear-gradient(#FFE16A,#FFB61E);color:#6B3B14;font-family:var(--font);font-size:17px;font-weight:900;box-shadow:0 4px 0 #D98A0B,0 6px 14px rgba(220,150,20,.35);}
+  .vplayer .chnow .chgo:active{transform:translateY(3px);box-shadow:0 1px 0 #D98A0B;}
+  .vplayer .chnow .chgo img{width:34px;height:34px;margin:-6px 0;}
+  @media (min-width:700px){
+    .vplayer iframe,.vplayer video,.vplayer #chYT{max-height:60vh!important;}
+    .vplayer .now .nt b{font-size:21px;}
+    .vplayer .now .nt small{font-size:15px;}
+    .vplayer .chnow .chgo{font-size:21px;padding:10px 22px 10px 10px;}
+  }
 </style>
-<link rel="stylesheet" href="challenge/challenge.css?v=1793419350987">
+<link rel="stylesheet" href="challenge/challenge.css?v=1793425139993">
 </head>
 <body>
 <div class="wrap">
@@ -591,7 +690,7 @@
 
 <!-- 📺 影片教室（全螢幕） -->
 <div class="vroom" id="vroom">
-  <div class="vbar"><button class="vback" id="vback">← 回樹洞</button><h2 id="vroomTitle">📺 影片教室</h2></div>
+  <div class="vbar"><button class="vback" id="vback">← 回樹洞</button><h2 id="vroomTitle">影片教室</h2></div>
   <div class="vplayer" id="vplayer"></div>
   <div class="vbody" id="vbody"><div class="vhome" id="vhome"></div><div class="petcard" id="petcard3"></div><div class="vwrap" id="vwrap"></div></div>
 </div>
@@ -613,8 +712,8 @@
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
 <script src="v/list.js?v=1793419332288"></script>
-<script src="challenge/data.js?v=1793419350987"></script>
-<script src="challenge/challenge.js?v=1793419350987"></script>
+<script src="challenge/data.js?v=1793425139993"></script>
+<script src="challenge/challenge.js?v=1793425139993"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -1005,7 +1104,7 @@ document.addEventListener("submit",e=>{
   else { drawRoom(); syncProgress(); }
 });
 const CNUM="一二三四五六七八九十";
-const SRCS=[["講義A","📖 講義A"],["講義B","📖 講義B"],["評量","📝 評量"],["單元複習","🔁 單元複習"],["校卷複習","🏫 校卷複習・必考常考題"]];
+const SRCS=[["講義A","講義A","th/bookblue.png"],["講義B","講義B","th/bookblue.png"],["評量","評量","th/exam.png"],["單元複習","單元複習","th/books.png"],["校卷複習","校卷複習・必考常考題","th/school.png"]];
 // 題目出處（講義A p124#6／講義B p30#2／期中評量一#5／期末評量二#3／單元複習01#4）
 // → {src 哪一類, key 哪一份, page 頁, order 排序, label 給孩子看的字}
 function srcOf(v){
@@ -1023,17 +1122,19 @@ function srcOf(v){
     return {src:"單元複習",key,page:0,order:+m[1]*1000+no,label:key+(no?` 第${no}題`:"")};
   }
   // 校卷複習：學校考卷常錯、必考常考的題目（照單元排）
-  if(q==="校卷複習") return {src:"校卷複習",key:"校卷複習",page:0,order:0,label:"🏫 校卷必考・常考"+(v.unit?`（${v.unit}）`:"")};
+  if(q==="校卷複習") return {src:"校卷複習",key:"校卷複習",page:0,order:0,label:"校卷必考"+(v.unit?`・${v.unit}`:"")};
   return {src:"其他",key:"",page:0,order:1e9,label:q};
 }
 const srcRank=s=>{const i=SRCS.findIndex(x=>x[0]===s);return i<0?9:i;};
 const bySrc=(a,b)=>{const A=srcOf(a),B=srcOf(b);return srcRank(A.src)-srcRank(B.src)||A.order-B.order;};
 let FIND_SRC="講義A";
 const thumb=id=>`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
-const UNIT_ICON=[["三角","🔺"],["角","📐"],["分數","🍕"],["小數","🔢"],["時間","⏰"],["時刻","⏰"],["乘","✖️"],["除","➗"],
-  ["面積","🟩"],["體積","🧊"],["長度","📏"],["公分","📏"],["重量","⚖️"],["公斤","⚖️"],["容量","🥛"],["公升","🥛"],
-  ["圓","⭕"],["加","➕"],["減","➖"],["數","🔢"]];
-const iconOf=u=>(UNIT_ICON.find(([k])=>String(u).includes(k))||[,"📘"])[1];
+const UNIT_ICON=[["浩克","th/hulkwave.png"],["圓","th/u/circle.png"],["周長","th/u/perimeter.png"],["多邊形","th/u/polygon.png"],["三角形","th/u/triangle.png"],
+  ["三角板","th/u/setsquare.png"],["角","th/u/protractor.png"],["因數","th/u/factors.png"],["倍數","th/u/factors.png"],["分數","th/u/fraction.png"],
+  ["乘","th/u/times.png"],["除","th/u/divide.png"],["加","th/u/addsub.png"],["減","th/u/addsub.png"],["公分","th/u/ruler.png"],["毫米","th/u/ruler.png"],
+  ["長度","th/u/ruler.png"],["比","th/u/balance.png"],["時","th/u/clock.png"],["面積","th/u/area.png"],["數","th/u/numbers.png"]];
+const iconOf=u=>(UNIT_ICON.find(([k])=>String(u).includes(k))||[,"th/bookblue.png"])[1];
+const UNIT_COLORS=[["#E3F0FF","#3D8BEA"],["#FFF0DC","#F28C28"],["#E4F6E1","#46A852"],["#EFE6FF","#8A5CE6"],["#FFE6EA","#E9546B"],["#E0F4FA","#2AA3C9"]];
 const TILE_BG=["#FFE9CC","#DFF1DA","#E6E0FA","#FFE0E6","#DDEEFF","#FFF3C4"];
 
 // 樹洞頁上：只放一顆入口按鈕（影片再多高度都一樣）
@@ -1058,14 +1159,36 @@ function renderVideos(list){
 }
 
 // 一部影片：橫滑卡片／清單一行
-const card=v=>`<button class="vcard" type="button" data-play="${escH(v.id)}">
+// 「一箱共有幾顆蘋果？（應用題第3題）」→ 題目「一箱共有幾顆蘋果？」＋小字「期中評量（四）應用題第3題」
+function vTitle(v){
+  const m=/^(.*?)（([^（）]*)）\s*$/.exec(v.title||""), main=m?m[1]:(v.title||""), part=m?m[2]:"", s=srcOf(v);
+  const sub=s.src==="評量"||s.src==="單元複習" ? s.key+(part?" "+part:"")
+    : s.src==="校卷複習" ? "校卷必考"+(part?"・"+part:"")
+    : s.src.startsWith("講義") ? s.label : (part||v.unit||"");
+  return {main,sub};
+}
+window.vTitle=vTitle;   // 小挑戰播放器也用
+// 每支影片的狀態小圖：過關＝金牌、看過＝綠勾、有小挑戰還沒過＝獎盃
+function statIcon(v,seen){
+  const st=window.CHAL&&CHAL.stat?CHAL.stat(v.id):"";
+  return st==="pass"?'<img class="vst" src="th/medal.png" alt="過關">'
+    : seen.has(v.id)?'<img class="vst" src="th/check.png" alt="看過">'
+    : st?'<img class="vst dim" src="th/trophy.png" alt="有小挑戰">':"";
+}
+const card=v=>{ const t=vTitle(v), has=window.CHAL&&CHAL.has(v.id);
+  return `<button class="vcard" type="button" data-play="${escH(v.id)}">
+  <span class="vimg" style="background-image:url('${thumb(v.id)}')">${isNew(v)?'<span class="vnew">新</span>':""}</span>
+  <span class="vtx"><b>${escH(t.main)}</b><small>${escH(t.sub)}</small></span>${has?'<img class="vtro" src="th/trophy.png" alt="有小挑戰">':""}</button>`; };
+const line=v=>{ const t=vTitle(v);
+  return `<button class="vline" type="button" data-play="${escH(v.id)}">
   <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
-  <span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}${window.CHAL?CHAL.badge(v.id):""}</span></button>`;
-const line=v=>`<button class="vline" type="button" data-play="${escH(v.id)}">
-  <span class="vimg" style="background-image:url('${thumb(v.id)}')"></span>
-  <span><span class="vt">${isNew(v)?'<span class="vnew">新</span>':""}${escH(v.title)}</span>
-  <span class="vm" style="display:block">${escH(srcOf(v).label||v.unit)}${seenSet().has(v.id)?'<span class="vseen">✅ 看過</span>':""}${window.CHAL?CHAL.badge(v.id):""}</span></span></button>`;
-
+  <span class="vtx"><b>${isNew(v)?'<span class="vnew">新</span>':""}${escH(t.main)}</b><small>${escH(t.sub)}</small></span>${statIcon(v,seenSet())}</button>`; };
+// 單元進度：有小挑戰就看「過關幾支」，沒有就看「看過幾支」
+function unitProg(vs,seen){
+  const st=window.CHAL&&CHAL.unitStat?CHAL.unitStat(vs):{has:0,ok:0};
+  return st.has ? {n:st.ok,d:st.has,t:"小挑戰 過關"} : {n:vs.filter(v=>seen.has(v.id)).length,d:vs.length,t:"看過"};
+}
+const bar=(p,c)=>`<span class="vprog"><i style="width:${p.d?Math.round(p.n/p.d*100):0}%;background:${c}"></i></span>`;
 let VIEW="home";
 function units(){
   const m=new Map();
@@ -1111,21 +1234,26 @@ function drawRoom(){
             :`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY</button>`}</div>`;
   }else if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
-    const dot=vs=>{const n=vs.filter(v=>isNew(v)&&!seen.has(v.id)).length;return n?`<span class="vdot">新 ${n}</span>`:"";};
-    w.innerHTML=shareBtn()+meBox()+`<div class="vsec">🔍 卡在哪裡？先點一個</div>
-      <div class="vsrc" id="vsrc">${SRCS.map(([k,t])=>`<button type="button" class="vsrcb" data-src="${k}">${t}</button>`).join("")}</div>
-      <div id="vfindBox"></div>
-      <div class="vfind-out" id="vfindOut"></div>
-      <div class="vsec">🆕 最新影片 ${VIDS.length>1?'<span style="font-size:13px">（左右滑 👉）</span>':""}</div>
-      <div class="vrow">${VIDS.slice(0,6).map(card).join("")}</div>
-      <div class="vsec">📚 選單元</div>
-      <div class="vtiles">${units().map(([u,vs],i)=>`<button class="vtile" type="button" data-unit="${escH(u)}" style="background:${TILE_BG[i%TILE_BG.length]}">
-          ${dot(vs)}<span class="e">${iconOf(u)}</span><b>${escH(u)}</b><small>${vs.length} 部</small>${window.CHAL?CHAL.tileNote(vs):""}</button>`).join("")}
-        ${ask.length?`<button class="vtile wide" type="button" data-unit="__ask" style="background:#E3F0FF">${dot(ask)}<span class="e">🙋</span>
-          <span><b>同學問過的題目</b><br><small>${ask.length} 部，別人問的你可能也想知道</small></span></button>`:""}
-        ${school.length?`<button class="vtile wide" type="button" data-unit="__school" style="background:#FFE7C2">${dot(school)}<span class="e">🏫</span>
-          <span><b>校卷複習・必考常考題</b><br><small>${school.length} 部，考試前一定要看！</small></span></button>`:""}
-      </div>`;
+    const isHulk=v=>/浩克/.test(v.unit||""), hulk=VIDS.filter(isHulk);
+    const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
+    const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
+    w.innerHTML=shareBtn()+meBox()+`
+      <div class="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></div>
+      <div class="vh"><span class="vpill blue"><i class="pl"></i>最新影片</span>${VIDS.length>1?'<small>左右滑</small>':""}</div>
+      <div class="vrow">${VIDS.filter(v=>!isHulk(v)).slice(0,6).map(card).join("")}</div>
+      <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>
+      <div class="vunits">${units().filter(([u])=>!/浩克/.test(u)).map(([u,vs],i)=>{ const c=UNIT_COLORS[i%UNIT_COLORS.length], p=unitProg(vs,seen);
+        return `<button class="vunit" type="button" data-unit="${escH(u)}" style="background:${c[0]}">${fresh(vs)?'<span class="vdot">新</span>':""}
+          <img src="${iconOf(u)}" alt=""><span class="ut"><b>${escH(u)}</b>${bar(p,c[1])}<small>${p.t} ${p.n}/${p.d}</small></span><span class="go" style="color:${c[1]}">›</span></button>`; }).join("")}</div>
+      ${school.length?`<button class="vwide school" type="button" data-unit="__school">${fresh(school)?'<span class="vdot">新</span>':""}<img src="th/school.png" alt="">
+        <span class="ut"><b>校卷複習・必考常考題</b><small>${school.length} 部，考試前一定要看！</small></span><span class="go">›</span></button>`:""}
+      ${ask.length?`<button class="vwide ask" type="button" data-unit="__ask">${fresh(ask)?'<span class="vdot">新</span>':""}<img src="th/envelope.png" alt="">
+        <span class="ut"><b>同學問過的題目</b><small>${ask.length} 部，別人問的你可能也想知道</small></span><span class="go">›</span></button>`:""}
+      <div class="vfind2"><div class="vfh"><img src="th/search.png" alt=""><b>卡在哪裡？</b><span>找講義的頁數</span></div>
+        <div class="vsrc" id="vsrc">${SRCS.filter(([k])=>k!=="校卷複習").map(([k,t,ic])=>`<button type="button" class="vsrcb" data-src="${k}"><img src="${ic}" alt="">${t}</button>`).join("")}</div>
+        <div id="vfindBox"></div>
+        <div class="vfind-out" id="vfindOut"></div></div>
+      ${hulk.length?`<button class="vhulk" type="button" data-unit="${escH(hulk[0].unit)}"><img src="th/hulkwave.png" alt="">認識浩克 ›</button>`:""}`;
     drawFind();
   }else{
     const isAsk=VIEW==="__ask", isSchool=VIEW==="__school";
@@ -1133,18 +1261,19 @@ function drawRoom(){
       :isSchool?VIDS.filter(v=>srcOf(v).src==="校卷複習")
       :VIDS.filter(v=>(v.unit||"其他")===VIEW);
     vs.sort(isSchool?(a,b)=>String(a.unit).localeCompare(String(b.unit),"zh-Hant"):bySrc);
-    let last=null, body="";   // 依出處分段：講義A → 講義B → 評量 → 單元複習
+    let last=null, body="";   // 依出處分段：講義A → 講義B → 評量 → 單元複習（每段一直打開，不做收合）
     vs.forEach(v=>{ const s=srcOf(v).src;
-      if(s!==last){ last=s; body+=`<div class="vsec">${(SRCS.find(x=>x[0]===s)||[,"📘 其他"])[1]}</div>`; }
+      if(s!==last){ last=s; const S=SRCS.find(x=>x[0]===s); body+=`<div class="vh2"><img src="${S?S[2]:"th/bookblue.png"}" alt="">${S?S[1]:"其他"}</div>`; }
       body+=line(v); });
     if(isSchool) body=vs.map(line).join("");   // 校卷複習本身就一類，不用再分段
-    w.innerHTML=`<div class="vlist-head"><span style="font-size:30px">${isAsk?"🙋":isSchool?"🏫":iconOf(VIEW)}</span>
-      <b>${isAsk?"同學問過的題目":isSchool?"校卷複習・必考常考題":escH(VIEW)}</b><small style="color:var(--ink-soft);font-weight:700">（${vs.length} 部）</small></div>`+body;
+    const c=UNIT_COLORS[Math.max(0,units().findIndex(([u])=>u===VIEW))%UNIT_COLORS.length], p=unitProg(vs,seen);
+    w.innerHTML=`<div class="vuhead"><img src="${isAsk?"th/envelope.png":isSchool?"th/school.png":iconOf(VIEW)}" alt="">
+      <b>${isAsk?"同學問過的題目":isSchool?"校卷複習":escH(VIEW)}</b><span class="up"><small>${p.t} <em>${p.n}</em>/${p.d}</small>${bar(p,c[1])}</span></div>`+body;
   }
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
   $("petcard3").style.display=VIEW==="home"?"":"none";
   $("vhome").style.display=VIEW==="home"&&homeTipOn()?"block":"none";
-  $("vroomTitle").textContent="📺 "+(CLASS_NAME||"")+"影片教室";
+  $("vroomTitle").innerHTML=VIEW==="home"||VIEW.startsWith("__")?escH((CLASS_NAME||"")+"影片教室"):`<img src="${iconOf(VIEW)}" alt="">${escH(VIEW)}`;
   $("vbody").scrollTop=0;
 }
 // 找不到影片＝還沒有人問過這題 → 邀請孩子自己問（今天送過的，請他明天再來）
@@ -1200,17 +1329,19 @@ function showKey(k){
   $("vfindOut").innerHTML=VIDS.filter(v=>srcOf(v).key===k).sort(bySrc).map(line).join("");
 }
 // 平板看 YouTube 嵌入很糊（2026-10-31 SUNNY）→ 有影片檔的直接播檔案；沒有的用 YouTube，旁邊給「用 YouTube 看」按鈕
+const nowTitle=v=>{ const t=vTitle(v); return `<span class="nt"><b>${escH(t.main)}</b><small>${escH(t.sub)}</small></span>`; };
+window.nowTitle=nowTitle;
 function hasFile(id){ return !!(window.LOCAL_VIDS&&LOCAL_VIDS.includes(id)); }
 function ytEmbed(id,v){
   $("vplayer").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1"
-    allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">▶ 正在看：${escH(v.title)}<a class="ytout" href="https://youtu.be/${encodeURIComponent(id)}" target="_blank" rel="noopener">📺 畫面不清楚？用 YouTube 看</a></div>`;
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">${nowTitle(v)}<a class="ytout" href="https://youtu.be/${encodeURIComponent(id)}" target="_blank" rel="noopener">📺 畫面不清楚？用 YouTube 看</a></div>`;
 }
 function play(id){
   const v=VIDS.find(x=>x.id===id); if(!v) return;
   if(window.CHAL) CHAL.close();
   if(window.CHAL&&CHAL.has(id)) CHAL.mount(id,v);   // 有小挑戰的影片：看完跳出題目
   else if(hasFile(id)){   // 有高畫質影片檔：直接播（壞掉就退回 YouTube）
-    $("vplayer").innerHTML=`<video src="v/${encodeURIComponent(id)}.mp4" controls autoplay playsinline preload="auto"></video><div class="now">▶ 正在看：${escH(v.title)}</div>`;
+    $("vplayer").innerHTML=`<video src="v/${encodeURIComponent(id)}.mp4" controls autoplay playsinline preload="auto"></video><div class="now">${nowTitle(v)}</div>`;
     const el=$("vplayer").querySelector("video"); el.onerror=()=>{ if($("vplayer").contains(el)) ytEmbed(id,v); };
   }
   else ytEmbed(id,v);
