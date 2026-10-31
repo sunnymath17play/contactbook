@@ -418,6 +418,100 @@
     .tree{width:116px;height:116px;}
     .title{font-size:22px;}
   }
+
+  /* ===================== 2026-10-31 樹洞改版：照阿居設計稿（浩克截圖\樹洞首頁_設計稿A_阿居.png） =====================
+     主視覺 th/hero.jpg＋程式寫的木牌標題／年級／今日一句；名字只問一次；影片教室＋寵物蛋兩個方塊；悄悄話卡片是主角；
+     「還想多說一點」點了才打開；小圖示都是阿居畫的（th/*.png），不用 emoji */
+  body{background:linear-gradient(180deg,#FFF3D6,#FFE7B8);padding-top:0;}
+  .wrap{max-width:480px;}
+  .corner-logo{left:4px;right:auto;top:calc(8px + env(safe-area-inset-top));width:50px;height:50px;background:rgba(255,255,255,.9);border-radius:50%;padding:4px;}
+  .hero{position:relative;margin:0 -16px;aspect-ratio:1536/900;background:url(th/hero.jpg) center top/cover no-repeat;}
+  .sign{position:absolute;right:5%;top:calc(14% + env(safe-area-inset-top));width:50%;text-align:center;
+    background:linear-gradient(#C98B4E,#A86A35);border-radius:18px;padding:6px 8px 14px;box-shadow:0 5px 0 #7E4C22,0 8px 16px rgba(80,40,0,.25);transform:rotate(-2deg);}
+  .sign b{display:block;font-weight:900;line-height:1.12;color:#FFF;-webkit-text-stroke:.14em #6B3B14;paint-order:stroke fill;}
+  .sign .s1{font-size:clamp(17px,5vw,26px);color:#FFC23A;}
+  .sign .s2{font-size:clamp(20px,6.2vw,32px);}
+  .sign .badge{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);margin:0;white-space:nowrap;
+    background:linear-gradient(#FF8A3C,#F2611B);font-size:clamp(13px,3.6vw,17px);padding:2px 14px;border:2px solid #fff;box-shadow:0 3px 6px rgba(160,60,0,.25);}
+  .hero .today{position:absolute;right:3%;bottom:5%;width:56%;margin:0;border:0;border-radius:18px;padding:7px 10px 7px 12px;text-align:left;
+    font-size:clamp(13px,3.6vw,17px);line-height:1.4;background:rgba(255,255,255,.95);box-shadow:0 4px 12px rgba(60,90,120,.2);}
+  .hero .today::before{content:"";position:absolute;left:-9px;top:42%;border:9px solid transparent;border-right-color:rgba(255,255,255,.95);border-left:0;}
+  .today small{display:flex;align-items:center;gap:4px;color:#8A6D4B;font-size:.85em;margin-bottom:0;}
+  .today small img{width:1.5em;height:1.5em;}
+  .done .today small{justify-content:center;}
+
+  .me{position:relative;z-index:2;margin:-6px 0 14px;background:#fff;border-radius:22px;padding:10px 10px 10px 12px;box-shadow:0 6px 18px rgba(180,120,60,.16);}
+  .me-in,.me-hi{display:flex;align-items:center;gap:8px;}
+  .me img{width:34px;height:34px;flex:none;}
+  .me label{font-size:20px;font-weight:900;color:#3B2A1A;flex:none;}
+  .me #name{flex:1;min-width:0;text-align:left;padding:10px 12px;font-size:18px;border:2.5px solid #F6D9A8;border-radius:14px;}
+  .me #nameOk{flex:none;border:0;border-radius:16px;background:linear-gradient(#FF9A3C,#F2661B);color:#fff;font-family:var(--font);font-weight:900;font-size:19px;
+    padding:9px 16px;box-shadow:0 4px 0 #C9480E;cursor:pointer;}
+  .me #nameOk:active{transform:translateY(3px);box-shadow:0 1px 0 #C9480E;}
+  .me-hi span{flex:1;font-size:19px;font-weight:800;color:#3B2A1A;}
+  .me-hi b{color:#F2611B;}
+  .me #meChange{flex:none;border:2px solid #F6D9A8;background:#FFF8EC;color:#B0702C;border-radius:12px;font-family:var(--font);font-weight:800;font-size:14px;padding:5px 12px;cursor:pointer;}
+
+  .tiles{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;}
+  .tiles.two{grid-template-columns:1fr 1fr;}
+  .tiles .videos .vopen,.ptile{margin:0;height:100%;min-height:96px;}
+  .vopen .ic,.ptile .ic{width:58px;height:58px;flex:none;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.18));}
+  .vopen{background:linear-gradient(135deg,#4FA3F5,#2B7BE0);box-shadow:0 5px 0 #1E5FB3,0 8px 18px rgba(40,110,200,.3);border-radius:22px;}
+  .vopen:active{box-shadow:0 1px 0 #1E5FB3;}
+  .vopen .go,.ptile .go{width:28px;height:28px;border-radius:50%;background:#fff;color:#2B7BE0;display:grid;place-items:center;font-size:22px;font-weight:900;line-height:1;flex:none;}
+  .ptile{width:100%;display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;border:0;border-radius:22px;padding:14px 12px;font-family:var(--font);
+    background:linear-gradient(135deg,#FFD45C,#FFB21E);color:#5A3200;box-shadow:0 5px 0 #D98A0B,0 8px 18px rgba(220,150,20,.3);}
+  .ptile:active{transform:translateY(4px);box-shadow:0 1px 0 #D98A0B;}
+  .ptile .tx{flex:1;min-width:0;}
+  .ptile b{display:block;font-size:19px;font-weight:900;}
+  .ptile small{display:block;font-size:13.5px;font-weight:700;margin-top:2px;}
+  .ptile .go{color:#E08A00;}
+  .tiles.two .vopen,.tiles.two .ptile{flex-direction:column;align-items:flex-start;gap:4px;position:relative;padding:12px;}
+  .tiles.two .vopen .go,.tiles.two .ptile .go{position:absolute;right:10px;bottom:10px;}
+  .tiles.two .vopen .ic,.tiles.two .ptile .ic{width:52px;height:52px;}
+  .tiles.two .vopen b{font-size:19px;height:auto;line-height:1.3;}
+  .tiles.two .vopen small,.tiles.two .ptile small{white-space:normal;height:auto;line-height:1.35;padding-right:30px;font-size:13px;}
+  .tiles.two .vopen .tx,.tiles.two .ptile .tx{width:100%;}
+  #petcard{display:none;}
+  .ptile[hidden]{display:none;}
+
+  .wcard{padding:16px 14px 14px;border:3px solid #FFE0A8;}
+  .wcard .q{font-size:20px;margin-bottom:12px;padding-bottom:10px;border-bottom:2px dashed #F6D9A8;gap:6px;}
+  .wcard .q .qi{width:40px;height:40px;}
+  .wcard .q em{font-style:normal;color:#F2611B;}
+  .wcard .hint{width:100%;font-size:13.5px;margin:-4px 0 0 46px;}
+  .group{margin-bottom:12px;}
+  .glabel{display:flex;align-items:center;gap:5px;font-size:16px;color:#3B6FB8;margin:0 0 6px;line-height:1.2;}
+  .glabel img{width:28px;height:28px;flex:none;}
+  .group:nth-child(2) .glabel{color:#E0621B;}
+  .group:nth-child(3) .glabel{color:#4C9A3A;}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .chip{padding:9px 6px;font-size:15px;text-align:center;border-color:#F6D9A8;background:#FFFBF2;}
+  .more-tog{width:100%;display:flex;align-items:center;gap:8px;margin-top:6px;border:0;border-radius:16px;padding:10px 14px;cursor:pointer;
+    background:#E4F2FF;color:#2B5FA8;font-family:var(--font);font-weight:900;font-size:18px;text-align:left;}
+  .more-tog img{width:30px;height:30px;}
+  .more-tog span{flex:1;}
+  .more-tog small{font-size:13px;font-weight:700;color:#6A8DBF;margin-left:6px;}
+  .more-tog i{width:12px;height:12px;border-right:3px solid #2B5FA8;border-bottom:3px solid #2B5FA8;transform:rotate(45deg);margin:-6px 6px 0 0;transition:transform .2s;}
+  #more{display:none;padding-top:12px;}
+  .wcard.open #more{display:block;animation:drop .3s ease;}
+  .wcard.open .more-tog i{transform:rotate(-135deg);margin-top:6px;}
+  .sub-q{display:flex;align-items:center;gap:7px;font-weight:800;font-size:17px;margin:4px 0 10px;}
+  .sub-q .n{width:24px;height:24px;border-radius:50%;background:var(--gold);color:#fff;font-size:15px;display:grid;place-items:center;}
+  #more .help-panel,#more .understand{margin-bottom:14px;}
+
+  .send{margin-top:4px;border-radius:26px;font-size:24px;font-weight:900;background:linear-gradient(#FF9A3C,#F2611B);box-shadow:0 7px 0 #C9480E,0 12px 22px rgba(220,90,20,.3);}
+  .send:active{box-shadow:0 1px 0 #C9480E;}
+  .send img{width:44px;height:44px;margin:-8px 0;}
+  .foot{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 14px;margin-top:16px;}
+  .foot .ask-letter{width:auto;margin:0;display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;padding:4px;font-size:15px;color:#5A4632;font-weight:800;}
+  .foot .rule{display:inline-flex;align-items:center;gap:4px;font-size:13.5px;font-weight:700;color:#8A7355;}
+  .foot img{width:26px;height:26px;}
+  /* 平板：整頁等比例放大（字和按鈕一起變大），不要中間一條小小的 */
+  @media (min-width:700px){
+    .wrap{zoom:1.3;}
+    .hero{margin:0;border-radius:0 0 28px 28px;overflow:hidden;}
+  }
 </style>
 <link rel="stylesheet" href="challenge/challenge.css?v=1793419350987">
 </head>
@@ -479,14 +573,14 @@
 </div>
 
 <div class="done" id="done">
-  <div class="big" id="doneBig">🌳💛</div>
+  <div class="big" id="doneBig"><img src="th/plane.png" alt="" style="width:120px;height:120px"></div>
   <h2 id="doneTitle">咻～ 送到樹洞了！</h2>
-  <p id="doneText">你的悄悄話已經偷偷飛進 SUNNY 的樹洞，<br>只有 SUNNY 看得到喔！<br>明天還可以再來說一則 🌙</p>
+  <p id="doneText">你的悄悄話已經偷偷飛進 SUNNY 的樹洞，<br>只有 SUNNY 看得到喔！<br>明天還可以再來說一則</p>
   <div class="letter" id="letter2"></div>
   <div class="today" id="today2"></div>
   <div class="videos" id="videos2"><button class="vopen" type="button" data-vopen="1"><img class="ic" src="th/tv.png" alt=""><span class="tx"><b>影片教室</b><small>點我進去看講解影片</small></span><span class="go">›</span></button></div>
   <div class="petcard" id="petcard2"></div>
-  <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔 💛</div>
+  <div class="safe">很急的事，記得直接告訴 SUNNY 或爸媽喔</div>
 </div>
 
 <!-- 🐣 寵物房（全螢幕，有寵物蛋的班級才有：PETS_CLASSES） -->
@@ -536,12 +630,12 @@ const CONFIG = {
   presetIcons: {"學習":"th/book.png","想對 SUNNY 說":"th/heart.png","心情":"th/star.png"},   // 分類前面的小圖（阿居畫）
   starQuestion: "今天上課我聽懂了嗎？",
   help: {
-    toggle: "🙋 有地方沒聽懂",
-    got: "😊 我都聽懂了",
+    toggle: "有地方沒聽懂",
+    got: "我都聽懂了",
     gotPreset: "今天我有聽懂",                    // 選「我都聽懂了」時，送出的悄悄話會帶這句
     tip: "先自己再想一想、翻翻講義上的例題 🤔<br>還是卡住的話，把題目告訴 SUNNY，下次上課我們一起解開它！",
     maxItems: 5,                                  // 最多填幾題
-    reexplain: "🔁 想請 SUNNY 再講解一次",
+    reexplain: "想請 SUNNY 再講解一次",
   },
   // 每日一句鼓勵：每天自動換一句（全班同一句）。
   // ⚠ 只放 SUNNY 審過的句子。新句子先寫進「鼓勵句草稿.md」，審過再搬進來。
@@ -665,7 +759,7 @@ helpToggle.textContent=CONFIG.help.toggle;
 $("helpTip").innerHTML=CONFIG.help.tip;
 $("reexplainChip").textContent=CONFIG.help.reexplain;
 // 講義分 A、B 本；這支手機上次點哪一本就先幫他選好（點一次之後就不用再點）
-const TYPES=[["講義A","📖 講義A"],["講義B","📖 講義B"],["考卷","📝 考卷"],["上課內容","🧑‍🏫 上課內容"]];
+const TYPES=[["講義A","講義A"],["講義B","講義B"],["考卷","考卷"],["上課內容","上課內容"]];
 let items=[];   // {type, page, q, text}
 
 function renderItems(){
@@ -689,10 +783,10 @@ function renderItems(){
       const row=document.createElement("div");row.className="photo-row";
       const file=document.createElement("input");file.type="file";file.accept="image/*";file.style.display="none";
       const btn=document.createElement("button");btn.className="photo-btn";btn.type="button";
-      btn.textContent=it.photo?"📷 重拍一張":"📷 拍下不會的題目";
+      btn.textContent=it.photo?"重拍一張":"拍下不會的題目";
       btn.onclick=()=>file.click();
       file.onchange=async()=>{ const f=file.files&&file.files[0]; if(!f) return;
-        btn.textContent="📷 處理中…";
+        btn.textContent="處理中…";
         try{ it.photo=await shrink(f); box.classList.remove("bad"); }catch(e){ showMsg("照片讀不出來，換一張試試"); }
         renderItems(); };
       row.append(btn,file);
@@ -702,7 +796,7 @@ function renderItems(){
       qi.oninput=()=>{qi.value=qi.value.replace(/\D/g,"");it.q=qi.value;};
       q.append("第",qi,"題（可不填）");
       box.appendChild(row);box.appendChild(q);
-      box.insertAdjacentHTML("beforeend",`<div class="eg"><b>怎麼拍？</b>①按「📷 拍下不會的題目」②對準<b>那一題</b>拍，題目要整題拍進去、字要清楚 ③會的話寫第幾題 ④按最下面「偷偷送出去」<br>這樣 SUNNY 就知道是哪一份考卷的哪一題囉！</div>`);
+      box.insertAdjacentHTML("beforeend",`<div class="eg"><b>怎麼拍？</b>①按「拍下不會的題目」②對準<b>那一題</b>拍，題目要整題拍進去、字要清楚 ③會的話寫第幾題 ④按最下面「偷偷送出去」<br>這樣 SUNNY 就知道是哪一份考卷的哪一題囉！</div>`);
     }else if(it.type==="上課內容"){
       const t=document.createElement("input");t.className="txt";t.type="text";t.maxLength=40;
       t.placeholder="哪個地方聽不懂？寫清楚一點";t.value=it.text||"";
@@ -820,7 +914,7 @@ $("askLetter").onclick=async()=>{
   const rows=await fetchLetters("name="+encodeURIComponent(nm)+"&class="+encodeURIComponent(CH?CH.id:""));
   btn.disabled=false; bt.textContent="看 SUNNY 的回信";
   if(showLetters(rows)){ showMsg(""); $("letter").scrollIntoView({behavior:"smooth",block:"center"}); }
-  else showMsg("還沒有回信喔～SUNNY 看到會回你的 💛");
+  else showMsg("還沒有回信喔～SUNNY 看到會回你的");
 };
 
 /* ---------- 📺 影片教室（後端只回傳這個班「現在年級」的影片） ---------- */
@@ -1013,7 +1107,7 @@ function drawRoom(){
       ? `<div class="vnone" style="margin-top:20px">影片教室現在連不上 😢<br>等一下再試試看喔！</div>`
       : `<div class="vnone" style="margin-top:20px">${escH(CLASS_NAME)}的影片陸續上架中 🎬<br>
           還沒有影片，代表<b>還沒有人問過</b>！<br>卡住的題目，你要不要當第一個問 SUNNY 的人？ 🙋
-          ${sentToday?`<br><small>（今天的悄悄話送過了，明天再來樹洞問喔 🌙）</small>`
+          ${sentToday?`<br><small>（今天的悄悄話送過了，明天再來樹洞問喔）</small>`
             :`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY</button>`}</div>`;
   }else if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
@@ -1059,7 +1153,7 @@ const NONE=t=>{
   const sentToday=$("done").classList.contains("show");
   return `<div class="vnone">${escH(t)}還沒有影片喔～<br>
     找不到影片，代表<b>還沒有人問過這題</b>！<br>你要不要當第一個問 SUNNY 的人？ 🙋
-    ${sentToday?`<br><small>（今天的悄悄話送過了，明天再來樹洞問喔 🌙）</small>`
+    ${sentToday?`<br><small>（今天的悄悄話送過了，明天再來樹洞問喔）</small>`
       :`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY 這題</button>`}</div>`;
 };
 // 回樹洞，直接打開「有地方沒聽懂」，講義的頁數先幫他填好
@@ -1203,9 +1297,9 @@ const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth
 const SENT_KEY="wh_sent_"+(CH?CH.id:"x");
 function showDone(already){
   if(already){
-    $("doneBig").textContent="🌙💛";
+    $("doneBig").innerHTML="<img src=\"th/envelope.png\" alt=\"\" style=\"width:120px;height:120px\">";
     $("doneTitle").textContent="今天已經跟 SUNNY 說過囉！";
-    $("doneText").innerHTML="樹洞每天收一則悄悄話，<br>明天再來說給 SUNNY 聽喔 🌳";
+    $("doneText").innerHTML="樹洞每天收一則悄悄話，<br>明天再來說給 SUNNY 聽喔";
   }
   $("done").classList.add("show");
 }
