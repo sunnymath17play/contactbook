@@ -204,17 +204,21 @@ function groups(){
   rows.slice().sort((a,b)=>new Date(b["收到時間"])-new Date(a["收到時間"])).forEach(r=>{
     if(merged(r)) return;   // 跟別則一起回過了，不另外顯示
     if(done(r)){ if(!onlyTodo) out.push({rs:[r]}); return; }
-    const k=kidKey(r);
-    if(!map[k]){ map[k]={rs:[]}; out.push(map[k]); }
-    map[k].rs.push(r);
+    // 同班、名字一個包含另一個（「寶儀」和「王寶儀」）也算同一個孩子
+    const k=kidKey(r), [c,n]=k.split("|");
+    const hit=Object.keys(map).find(x=>{ const [c2,n2]=x.split("|"); return c2===c&&(n2===n||(Math.min(n.length,n2.length)>=2&&(n2.endsWith(n)||n.endsWith(n2)))); });
+    if(hit){ map[hit].rs.push(r); return; }
+    map[k]={rs:[r]}; out.push(map[k]);
   });
   out.forEach(g=>g.rs.sort((a,b)=>new Date(a["收到時間"])-new Date(b["收到時間"])));
   // 需要關心的排最前面
   return out.sort((a,b)=>(b.rs.some(r=>r["需要關心"])?1:0)-(a.rs.some(r=>r["需要關心"])?1:0));
 }
-function ctxHTML(r){
-  const x=CTX[kidKey(r)];
-  if(!x||(!x.views&&!x.pass)) return `<div class="ctx"><span class="none">近 7 天沒有看影片紀錄</span></div>`;
+function ctxHTML(rs){
+  // 同一個孩子用不同名字看影片（寶儀／王寶儀）→ 加起來
+  const ks=[...new Set(rs.map(kidKey))], x={views:0,pass:0};
+  ks.forEach(k=>{ const o=CTX[k]; if(o){ x.views+=o.views||0; x.pass+=o.pass||0; } });
+  if(!x.views&&!x.pass) return `<div class="ctx"><span class="none">近 7 天沒有看影片紀錄</span></div>`;
   return `<div class="ctx"><span><img src="th/tv.png" alt="">近 7 天看了 <em>${x.views}</em> 支影片</span>${x.pass?`<span><img src="th/medal.png" alt="">過關 <em>${x.pass}</em> 個小挑戰</span>`:""}</div>`;
 }
 
@@ -234,7 +238,7 @@ function render(){
         ${g.rs.length>1?`<span class="tag">${g.rs.length} 則</span>`:""}
         ${alert?`<span class="tag red">需要關心：${esc(alert["需要關心"])}</span>`:""}
         ${isDone?'<span class="tag ok">已回</span>':""}</div>
-      ${ctxHTML(last)}
+      ${ctxHTML(g.rs)}
       ${g.rs.map(r=>{
         const hits=videoHits(r), ph=photosOf(r);
         return `<div class="msg"><div class="when">${when(r["收到時間"])}</div><div class="said">${saidHTML(r)}</div>
