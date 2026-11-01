@@ -64,6 +64,8 @@
   .draftlbl img{width:28px;height:28px;}
   .vers{display:flex;gap:8px;margin-top:8px;}
   .ver{flex:1;border:2.5px solid #CFE8CB;background:#fff;color:#2F7A3A;border-radius:999px;padding:8px;font-family:var(--font);font-weight:900;font-size:16px;cursor:pointer;}
+  .ver.blank{flex:.9;border-color:#E3D3B8;color:#8A7355;}
+  .ver.blank.on{background:#8A7355;border-color:#8A7355;color:#fff;box-shadow:0 3px 0 #5E4B33;}
   .ver.on{background:#2F9E44;border-color:#2F9E44;color:#fff;box-shadow:0 3px 0 #217A33;}
   textarea{width:100%;border:3px solid var(--line);border-radius:16px;padding:11px 13px;margin-top:6px;resize:vertical;min-height:110px;
     font-family:var(--font);font-size:17px;line-height:1.55;color:var(--ink);background:#FFFDF8;}
@@ -132,9 +134,9 @@ async function api(q){
   const r=await fetch(ENDPOINT+"?mode=admin&key="+encodeURIComponent(KEY)+(q||""));
   return await r.json();
 }
-async function sendReply(row,text){
+async function sendReply(row,text,src){
   const r=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify({mode:"reply",key:KEY,row,text})});
+    body:JSON.stringify({mode:"reply",key:KEY,row,text,src:src||""})});
   return await r.json();
 }
 function take(j){ rows=j.rows||[]; VIDEOS=j.videos||[]; CTX=j.ctx||{}; }
@@ -249,11 +251,15 @@ function render(){
         </div>`;}).join("")}
       ${isDone?`<div class="reply"><small>SUNNY 回（${md(last["回覆時間"]||last["收到時間"])}）</small>${esc(done(last))}</div>`:""}`;
     // 浩克草稿：兩版（幽默／溫暖鼓勵）存成 JSON，點上面的按鈕切換；舊的只有一版就直接放
+    // 第三個「空白（自己寫）」：SUNNY 親手寫的回信，浩克之後拿來學（2026-11-01）
     const raw=clean(last["浩克草稿"]); let vers=null;
-    try{ const j=JSON.parse(raw); if(j&&(j.humor||j.warm)) vers=[["幽默版",j.humor||""],["溫暖鼓勵版",j.warm||""]].filter(v=>v[1]); }catch(e){}
-    const draft=vers?vers[0][1]:raw;
-    if(!isDone && draft) c.insertAdjacentHTML("beforeend",`<div class="draftlbl"><img src="th/hulkwave.png" alt="">浩克先擬好了${vers&&vers.length>1?"兩版，點一下換版本":""}，看過、改一改再送（可以補一句這週看到他的事）</div>
-      ${vers&&vers.length>1?`<div class="vers">${vers.map((v,i)=>`<button type="button" class="ver${i?"":" on"}" data-i="${i}">${v[0]}</button>`).join("")}</div>`:""}`);
+    try{ const j=JSON.parse(raw); if(j&&(j.humor||j.warm)) vers=[["幽默版",j.humor||""],["溫暖版",j.warm||""]].filter(v=>v[1]); }catch(e){}
+    if(!vers&&raw) vers=[["草稿",raw]];
+    if(vers) vers.push(["空白",""]);
+    let sel=0;
+    const draft=vers?vers[0][1]:"";
+    if(!isDone && draft) c.insertAdjacentHTML("beforeend",`<div class="draftlbl"><img src="th/hulkwave.png" alt="">浩克先擬好了，點一下換版本；想自己寫就選「空白」（浩克會學你寫的）</div>
+      <div class="vers">${vers.map((v,i)=>`<button type="button" class="ver${i?"":" on"}${v[0]==="空白"?" blank":""}" data-i="${i}">${v[0]==="空白"?"空白（自己寫）":v[0]==="溫暖版"?"溫暖鼓勵版":v[0]}</button>`).join("")}</div>`);
     const ta=document.createElement("textarea");
     ta.maxLength=300; ta.placeholder=isDone?"想改回信就在這裡重打":"回一句話給孩子…";
     const key=g.rs.map(r=>r.row).join(",");
@@ -261,7 +267,8 @@ function render(){
     if(!isDone&&draft&&ta.value===draft) ta.classList.add("drafted");
     ta.oninput=()=>{ DRAFTING[key]=ta.value; ta.classList.remove("drafted"); };
     c.querySelectorAll(".ver").forEach(b=>b.onclick=()=>{
-      ta.value=vers[+b.dataset.i][1]; delete DRAFTING[key]; ta.classList.add("drafted");
+      sel=+b.dataset.i; ta.value=vers[sel][1]; delete DRAFTING[key]; ta.classList.toggle("drafted",!!ta.value);
+      if(!ta.value) ta.focus();
       c.querySelectorAll(".ver").forEach(x=>x.classList.toggle("on",x===b));
       c.querySelectorAll(".vhit.added").forEach(x=>{ x.classList.remove("added"); x.querySelector("small").textContent="點一下，把「去影片教室看」加進回信"; });   // 換版本＝影片那句要重加
     });
@@ -274,7 +281,9 @@ function render(){
       btn.disabled=true; const h0=btn.innerHTML; btn.textContent="送出中…";
       try{
         // 真正的回信寫在最新那一則；其他幾則標「＃併回」（孩子那邊不會多出好幾封一樣的信）
-        const j=await sendReply(last.row,text);
+        // 記下這封用的是哪一版：照草稿送／改過／自己寫（浩克學習用）
+        const src=!vers||vers[sel][0]==="空白" ? "自己寫" : text===vers[sel][1].trim() ? vers[sel][0] : "改過"+vers[sel][0];
+        const j=await sendReply(last.row,text,isDone?"":src);
         if(!(j&&j.ok)) throw 0;
         last["SUNNY 回覆"]=text; last["回覆時間"]=new Date().toISOString();
         for(const r of g.rs) if(r!==last){
