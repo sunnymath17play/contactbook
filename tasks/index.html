@@ -353,6 +353,18 @@ async function login(given) {
 }
 function loginPrompt() { const k = prompt('管理密碼'); if (k) login(k); }
 if (S.key) { load(); loadWatch(); } else render();
+// 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
+const VER = '202611021613';
+async function checkNew() {
+  if (VER.startsWith('__')) return;
+  try {
+    const t = await (await fetch('./?nocache=' + Date.now(), { cache: 'no-store' })).text();
+    const m = t.match(/const VER = '([^']+)'/);
+    if (m && m[1] !== VER && !m[1].startsWith('__')) location.replace('./?v=' + m[1]);
+  } catch (e) {}
+}
+checkNew();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNew(); });
 </script>
 </body>
 </html>
