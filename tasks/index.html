@@ -87,6 +87,12 @@ td.name .tag { font-size: 11px; background: #FFB547; color: #fff; border-radius:
 .presets button.on { background: var(--main); border-color: var(--main); color: #fff; }
 .step { display: flex; align-items: center; gap: 12px; font-size: 16px; }
 .step button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: #fff; font-size: 20px; color: var(--main); }
+.kind { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.kind .kn { width: 72px; font-weight: 700; font-size: 16px; }
+.kind input { flex: 1; font-size: 15px; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; outline: none; }
+.tg { border: 2px solid var(--line); background: #fff; border-radius: 12px; padding: 8px 14px; font-size: 16px; font-weight: 700; color: var(--text); }
+.tg.on { border-color: var(--main); }
+.preview { margin-top: 10px; font-size: 13px; background: #F5F8FB; border-radius: 10px; padding: 8px 10px; }
 .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 .row .grow { flex: 1; }
 
@@ -127,7 +133,6 @@ const LS = { get: (k, d) => { try { const v = localStorage.getItem('dz_' + k); r
 const S = { key: LS.get('key', ''), cls: LS.get('cls', 'g3'), unit: null, data: null, loading: false, modal: null, busy: {}, watch: [] };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const items = n => Array.from({ length: n }, (_, i) => '單元複習' + String(i + 1).padStart(2, '0'));
 
 async function post(url, body) {
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: S.key }, body)) });
@@ -204,16 +209,38 @@ async function toggle(full, item) {
   delete S.busy[k]; render(); loadWatch();
 }
 
+// 2026-11-02 SUNNY：要記的有「講義、單元複習、考卷，以及其他」→ 每個單元自己勾要哪幾種
+const nums = (pre, n) => Array.from({ length: n }, (_, i) => pre + String(i + 1).padStart(2, '0'));
+function kinds(list) {
+  const k = { jy: false, fx: 0, kj: 0, other: [] };
+  list.forEach(it => {
+    if (it === '講義') k.jy = true;
+    else if (/^單元複習\d+$/.test(it)) k.fx = Math.max(k.fx, +it.slice(4));
+    else if (/^考卷\d+$/.test(it)) k.kj = Math.max(k.kj, +it.slice(2));
+    else k.other.push(it);
+  });
+  return k;
+}
+const itemList = m => [].concat(m.jy ? ['講義'] : [], nums('單元複習', m.fx), nums('考卷', m.kj),
+  String(m.other || '').split(/[、,，\s]+/).filter(Boolean));
 function openUnit(edit) {
   const u = edit && S.data.units.find(x => x.id === S.unit);
-  S.modal = u ? { edit: u.id, name: u.name, n: u.items.length, custom: u.items.join('、') } : { name: '', n: 2, custom: '' };
+  if (u) { const k = kinds(u.items); S.modal = { edit: u.id, name: u.name, jy: k.jy, fx: k.fx, kj: k.kj, other: k.other.join('、') }; }
+  else S.modal = { name: '', jy: false, fx: 2, kj: 0, other: '' };
   render(); setTimeout(() => { const i = $('#uname'); if (i && !u) i.focus(); }, 50);
 }
 async function saveUnit() {
   const m = S.modal, name = $('#uname').value.trim();
   if (!name) return toast('請選或輸入單元');
-  const custom = $('#ucustom') ? $('#ucustom').value.trim() : '';
-  const list = custom ? custom.split(/[、,，\s]+/).filter(Boolean) : items(m.n);
+  m.other = $('#uother').value;
+  const list = itemList(m);
+  if (!list.length) return toast('至少要選一種（講義／單元複習／考卷／其他）');
+  if (list.length > 12) return toast('一個單元最多 12 項');
+  if (m.edit) {
+    const old = S.data.units.find(x => x.id === m.edit).items, gone = old.filter(it => list.indexOf(it) < 0);
+    if (gone.some(it => S.data.roster.some(r => S.data.done[m.edit + '|' + it + '|' + r.full])) &&
+      !confirm('拿掉的「' + gone.join('、') + '」已經有打勾，拿掉後就看不到那些勾了。確定？')) return;
+  }
   try {
     if (m.edit) { await api({ mode: 'editUnit', id: m.edit, name, items: list }); }
     else { const r = await api({ mode: 'addUnit', cls: S.cls, name, items: list }); LS.set('unit_' + S.cls, r.id); }
@@ -289,12 +316,15 @@ function modal() {
   return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
     <h3>${m.edit ? '修改單元' : '新增單元'}</h3>
     <label>講義單元（點一下帶入，也可以自己打）</label>
-    <div class="presets">${pre.map(p => `<button class="${p === m.name ? 'on' : ''}" onclick="S.modal.name=${esc(JSON.stringify(p))};$('#uname').value=S.modal.name;render()">${esc(p)}</button>`).join('')}</div>
-    <label>單元名稱</label><input id="uname" type="text" value="${esc(m.name)}" oninput="S.modal.name=this.value">
-    <label>單元複習幾張</label>
-    <div class="step"><button onclick="S.modal.n=Math.max(1,S.modal.n-1);S.modal.custom='';render()">－</button>
-      <b>${items(m.n).join('、')}</b><button onclick="S.modal.n=Math.min(8,S.modal.n+1);S.modal.custom='';render()">＋</button></div>
-    ${m.edit ? `<label>項目名稱（要改名再改，用「、」隔開；改名後舊打勾不會跟過去）</label><input id="ucustom" type="text" value="${esc(m.custom)}" oninput="S.modal.custom=this.value">` : ''}
+    <div class="presets">${pre.map(p => `<button class="${p === m.name ? 'on' : ''}" onclick="S.modal.name=${esc(JSON.stringify(p))};S.modal.other=$('#uother').value;render()">${esc(p)}</button>`).join('')}</div>
+    <label>單元名稱（各校考卷也可以自己打，例如「XX國小 期中考」）</label><input id="uname" type="text" value="${esc(m.name)}" oninput="S.modal.name=this.value">
+    <label>要記哪些</label>
+    <div class="kind"><button class="tg ${m.jy ? 'on' : ''}" onclick="S.modal.jy=!S.modal.jy;S.modal.other=$('#uother').value;render()">${m.jy ? '✅' : '⬜'} 講義</button></div>
+    ${[['fx', '單元複習'], ['kj', '考卷']].map(([k, n]) => `<div class="kind"><span class="kn">${n}</span>
+      <div class="step"><button onclick="S.modal.${k}=Math.max(0,S.modal.${k}-1);S.modal.other=$('#uother').value;render()">－</button>
+      <b>${m[k] ? m[k] + ' 張' : '不用'}</b><button onclick="S.modal.${k}=Math.min(8,S.modal.${k}+1);S.modal.other=$('#uother').value;render()">＋</button></div></div>`).join('')}
+    <div class="kind"><span class="kn">其他</span><input id="uother" type="text" value="${esc(m.other)}" placeholder="例如：學習單、作業簿（用「、」隔開）"></div>
+    <div class="preview">會出現：${esc(itemList(m).join('、')) || '（還沒選）'}</div>
     <div class="row">${m.edit ? '<button class="btn danger" onclick="delUnit()">刪除</button>' : ''}<span class="grow"></span>
       <button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="saveUnit()">${m.edit ? '儲存' : '建立'}</button></div>
   </div></div>`;
