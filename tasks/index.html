@@ -117,7 +117,7 @@ const UNITS = {
 };
 
 const LS = { get: (k, d) => { try { const v = localStorage.getItem('dz_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set: (k, v) => localStorage.setItem('dz_' + k, JSON.stringify(v)) };
+  set: (k, v) => { try { localStorage.setItem('dz_' + k, JSON.stringify(v)); } catch (e) {} } };
 const S = { key: LS.get('key', ''), cls: LS.get('cls', 'g3'), unit: null, data: null, loading: false, modal: null, busy: {}, watch: [] };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -228,11 +228,11 @@ function render() {
   theme();
   const app = $('#app');
   if (!S.key) {
-    app.innerHTML = `<div class="login"><img src="logo.png" alt=""><h2 style="margin:8px 0 0;color:var(--main)">訂正紀錄</h2>
-      <input id="pw" type="password" inputmode="numeric" placeholder="管理密碼" autofocus>
-      <button class="btn main" style="width:100%;padding:12px;font-size:17px" onclick="login()">進入</button>
-      <p style="font-size:13px;opacity:.6">跟樹洞回信、寵物蛋同一組密碼，這台記住後就不用再打</p></div>`;
-    $('#pw').onkeydown = e => e.key === 'Enter' && login();
+    app.innerHTML = `<form class="login" onsubmit="event.preventDefault();login()"><img src="logo.png" alt=""><h2 style="margin:8px 0 0;color:var(--main)">訂正紀錄</h2>
+      <input id="pw" type="password" inputmode="numeric" autocomplete="current-password" placeholder="管理密碼">
+      <button type="submit" class="btn main" style="width:100%;padding:12px;font-size:17px">進入</button>
+      <button type="button" class="btn" style="width:100%;margin-top:10px" onclick="loginPrompt()">打不進去？改用跳出視窗輸入</button>
+      <p style="font-size:13px;opacity:.6">跟樹洞回信、寵物蛋同一組密碼，這台記住後就不用再打</p><p id="msg" style="color:#E5484D;font-weight:700;min-height:1em"></p></form>`;
     return;
   }
   const d = S.data, u = d && d.units.find(x => x.id === S.unit);
@@ -289,12 +289,16 @@ function modal() {
 function pick(c) { S.cls = c; LS.set('cls', c); load(); }
 function pickUnit(id) { S.unit = id; LS.set('unit_' + S.cls, id); render(); }
 function setPet(on) { LS.set('pet_' + S.cls, on); toast(on ? '🐾 打勾會順便幫寵物蛋加點' : '打勾不加寵物點數'); }
-async function login() {
-  const pw = $('#pw').value.trim(); if (!pw) return;
+async function login(given) {
+  const pw = String(given != null ? given : ($('#pw') || {}).value || '').replace(/s+/g, '');
+  const msg = t => { const m = $('#msg'); if (m) m.textContent = t; };
+  if (!pw) return msg('請先輸入密碼');
+  msg('確認中…');
   S.key = pw;
   try { await api({ mode: 'ping' }); LS.set('key', pw); load(); loadWatch(); }
-  catch (e) { S.key = ''; render(); toast(e.message === 'bad_key' ? '密碼不對' : '連不上，請檢查網路'); }
+  catch (e) { S.key = ''; msg(e.message === 'bad_key' ? '密碼不對，請再試一次' : '連不上後台（' + e.message + '），請檢查網路再試'); }
 }
+function loginPrompt() { const k = prompt('管理密碼'); if (k) login(k); }
 if (S.key) { load(); loadWatch(); } else render();
 </script>
 </body>
