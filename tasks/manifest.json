@@ -1,0 +1,3 @@
+{ "name": "訂正紀錄・SUNNY魔法數學", "short_name": "訂正紀錄", "start_url": "./", "scope": "./", "display": "standalone",
+  "background_color": "#F2F9FF", "theme_color": "#3D9BE9",
+  "icons": [ { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" }, { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" } ] }

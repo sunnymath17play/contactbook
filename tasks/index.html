@@ -9,6 +9,7 @@
 <link rel="icon" href="icon-180.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-title" content="訂正紀錄">
+<link rel="manifest" href="manifest.json">
 <style>
 /* 2026-11-02 SUNNY：講義 B 本各單元「單元複習 01、02…」完成訂正紀錄；全部班級；三年級、五年級B 打勾順便寵物蛋加點 */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -20,6 +21,10 @@ header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 header img { width: 34px; height: 34px; object-fit: contain; opacity: .9; }
 header h1 { font-size: 20px; margin: 0; color: var(--main); letter-spacing: 1px; }
 header .sub { font-size: 12px; opacity: .6; margin-left: auto; }
+header .home { border: 2px solid var(--main); background: #fff; color: var(--main); border-radius: 18px; padding: 5px 12px; font-size: 14px; font-weight: 700; }
+.howto { display: flex; align-items: center; gap: 12px; font-size: 17px; margin: 10px 0; }
+.howto b.n { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--main); color: #fff; display: flex; align-items: center; justify-content: center; }
+.howto svg { vertical-align: middle; }
 
 .tabs, .units { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar, .units::-webkit-scrollbar { display: none; }
@@ -233,11 +238,11 @@ function render() {
       <input id="pw" type="password" inputmode="numeric" autocomplete="current-password" placeholder="管理密碼">
       <button type="submit" class="btn main" style="width:100%;padding:12px;font-size:17px">進入</button>
       <button type="button" class="btn" style="width:100%;margin-top:10px" onclick="loginPrompt()">打不進去？改用跳出視窗輸入</button>
-      <p style="font-size:13px;opacity:.6">跟樹洞回信、寵物蛋同一組密碼，這台記住後就不用再打</p><p id="msg" style="color:#E5484D;font-weight:700;min-height:1em"></p></form>`;
+      <p style="font-size:13px;opacity:.6">跟樹洞回信、寵物蛋同一組密碼，這台記住後就不用再打</p><p id="msg" style="color:#E5484D;font-weight:700;min-height:1em"></p>${standalone() ? '' : '<button type="button" class="btn" style="width:100%" onclick="addHome()">📲 加到主畫面</button>'}</form>` + modal();
     return;
   }
   const d = S.data, u = d && d.units.find(x => x.id === S.unit);
-  let h = `<div class="wrap"><header><img src="logo.png" alt=""><h1>訂正紀錄</h1><span class="sub">SUNNY魔法數學</span></header>
+  let h = `<div class="wrap"><header><img src="logo.png" alt=""><h1>訂正紀錄</h1><span class="sub">SUNNY魔法數學</span>${standalone() ? '' : '<button class="home" onclick="addHome()">📲 加到主畫面</button>'}</header>
     <div class="tabs">${CLASSES.map(([c, n]) => `<button class="tab ${c === S.cls ? 'on' : ''}" onclick="pick('${c}')">${n}</button>`).join('')}</div>`;
   if (S.watch.length) {
     h += '<div class="watch"><h3>⚠ 最後 3 位還沒訂正（要注意）</h3>' + S.watch.map(w =>
@@ -273,6 +278,13 @@ function render() {
 }
 function modal() {
   const m = S.modal; if (!m) return '';
+  if (m.home) return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet" style="text-align:left">
+    <h3><img src="icon-180.png" alt="" style="width:44px;border-radius:10px;vertical-align:middle;margin-right:8px">加到主畫面</h3>
+    <div class="howto"><b class="n">1</b><span>按 Safari 上方（iPhone 在下方）的分享鈕 ${SHARE_ICON}</span></div>
+    <div class="howto"><b class="n">2</b><span>往下滑，點「<b>加入主畫面</b>」</span></div>
+    <div class="howto"><b class="n">3</b><span>右上角按「<b>加入</b>」，主畫面就有浩克圖示了</span></div>
+    <p style="font-size:13px;opacity:.6">以前加過的話，先把主畫面舊的圖示刪掉再加，才會換成新圖示。</p>
+    <div class="row"><button class="btn main" onclick="S.modal=null;render()">知道了</button></div></div></div>`;
   const pre = UNITS[S.cls] || [];
   return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
     <h3>${m.edit ? '修改單元' : '新增單元'}</h3>
@@ -287,6 +299,16 @@ function modal() {
       <button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="saveUnit()">${m.edit ? '儲存' : '建立'}</button></div>
   </div></div>`;
 }
+// 📲 加到主畫面：Android/電腦 Chrome 直接跳安裝；iPad/iPhone 不能自動加，跳出三步驟說明
+const standalone = () => window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+async function addHome() {
+  if (installEvt) { installEvt.prompt(); installEvt = null; return; }
+  S.modal = { home: true }; render();
+}
+const SHARE_ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3D9BE9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+
 function pick(c) { S.cls = c; LS.set('cls', c); load(); }
 function pickUnit(id) { S.unit = id; LS.set('unit_' + S.cls, id); render(); }
 function setPet(on) { LS.set('pet_' + S.cls, on); toast(on ? '🐾 打勾會順便幫寵物蛋加點' : '打勾不加寵物點數'); }
