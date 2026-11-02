@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#3D9BE9">
+<title>訂正紀錄・SUNNY魔法數學</title>
+<link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<style>
+/* 2026-11-02 SUNNY：講義 B 本各單元「單元複習 01、02…」完成訂正紀錄；全部班級；三年級、五年級B 打勾順便寵物蛋加點 */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: 'PingFang TC', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; }
+button { font: inherit; cursor: pointer; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 12px 12px 90px; }
+header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+header img { width: 34px; height: 34px; object-fit: contain; opacity: .9; }
+header h1 { font-size: 20px; margin: 0; color: var(--main); letter-spacing: 1px; }
+header .sub { font-size: 12px; opacity: .6; margin-left: auto; }
+
+.tabs, .units { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar, .units::-webkit-scrollbar { display: none; }
+.tab { flex: none; border: 2px solid var(--line); background: #fff; color: var(--text); border-radius: 22px;
+  padding: 8px 16px; font-size: 16px; font-weight: 700; }
+.tab.on { background: var(--main); border-color: var(--main); color: #fff; }
+.unit { flex: none; border: 2px solid var(--line); background: #fffc; color: var(--text); border-radius: 14px;
+  padding: 6px 12px; font-size: 14px; font-weight: 600; text-align: left; line-height: 1.3; }
+.unit small { display: block; font-size: 11px; font-weight: 500; opacity: .65; }
+.unit.on { border-color: var(--main); background: #fff; box-shadow: 0 0 0 2px var(--main) inset; }
+.unit.add { border-style: dashed; color: var(--main); }
+
+.bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
+.bar h2 { font-size: 18px; margin: 0; }
+.btn { border: 2px solid var(--line); background: #fff; color: var(--text); border-radius: 10px; padding: 6px 12px; font-size: 14px; font-weight: 600; }
+.btn.main { background: var(--main); border-color: var(--main); color: #fff; }
+.btn.danger { color: #E5484D; border-color: #F5C2C4; }
+.pet { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600;
+  background: #fff; border: 2px solid var(--line); border-radius: 20px; padding: 4px 12px; }
+.pet input { width: 20px; height: 20px; accent-color: var(--main); }
+
+.card { background: #fff; border-radius: 16px; box-shadow: 0 2px 10px #0001; overflow: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border-bottom: 1px solid #EEF2F6; text-align: center; }
+th { position: sticky; top: 0; background: #fff; font-size: 14px; padding: 10px 6px; z-index: 1; }
+th .n { display: block; font-size: 12px; font-weight: 500; color: var(--main); }
+th.name, td.name { text-align: left; padding-left: 14px; white-space: nowrap; position: sticky; left: 0; background: #fff; }
+td.name { font-size: 17px; font-weight: 600; }
+td.name .no { font-size: 11px; opacity: .4; margin-right: 6px; display: inline-block; width: 16px; text-align: right; }
+td.c { height: 50px; min-width: 84px; font-size: 26px; user-select: none; }
+td.c.ok { background: #EAFBF1; }
+td.c.busy { opacity: .4; }
+tr:nth-child(even) td.name { background: #FAFCFE; }
+
+.left { margin-top: 12px; display: grid; gap: 8px; }
+.left div { background: #fffc; border-radius: 12px; padding: 8px 12px; font-size: 15px; }
+.left b { color: var(--main); }
+.left .all { color: #22A06B; font-weight: 700; }
+
+.empty { text-align: center; padding: 50px 10px; opacity: .7; font-size: 16px; line-height: 1.8; }
+
+.mask { position: fixed; inset: 0; background: #0006; display: flex; align-items: flex-end; justify-content: center; z-index: 9; }
+.sheet { background: #fff; width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  max-height: 88vh; overflow: auto; }
+@media (min-width: 700px) { .mask { align-items: center; } .sheet { border-radius: 20px; } }
+.sheet h3 { margin: 0 0 12px; color: var(--main); }
+.sheet label { display: block; font-size: 13px; font-weight: 700; margin: 12px 0 6px; opacity: .75; }
+.sheet input[type=text], .sheet input[type=password] { width: 100%; font-size: 17px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 10px; outline: none; }
+.sheet input:focus { border-color: var(--main); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button { border: 2px solid var(--line); background: #fff; border-radius: 10px; padding: 6px 10px; font-size: 14px; color: var(--text); }
+.presets button.on { background: var(--main); border-color: var(--main); color: #fff; }
+.step { display: flex; align-items: center; gap: 12px; font-size: 16px; }
+.step button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: #fff; font-size: 20px; color: var(--main); }
+.row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+.row .grow { flex: 1; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #2D3748; color: #fff;
+  padding: 10px 18px; border-radius: 22px; font-size: 15px; z-index: 20; box-shadow: 0 4px 14px #0003; max-width: 90vw; text-align: center; }
+.login { max-width: 360px; margin: 80px auto; background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px #0001; text-align: center; }
+.login img { width: 80px; }
+.login input { width: 100%; font-size: 20px; padding: 12px; border: 2px solid var(--line); border-radius: 12px; text-align: center; margin: 14px 0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbzV7KanxB2JDtmFqYjaUQP4G8-13B5Nl_r98fvbVuQrSAcgOHb4wsObIFAkJKDHP8tL/exec';
+// 有寵物蛋的班：打勾＝寵物蛋「作業」加點（點數照寵物蛋試算表「設定」）
+const PETS = {
+  g3: 'https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec',
+  g5b: 'https://script.google.com/macros/s/AKfycbxTqrjL43ZD31zvDHQxLAnpxq9FyXF87ns56Q_mVPbel4RiRj4I1A2GUCkWbN8i8dm12Q/exec',
+};
+const CLASSES = [['g3', '三年級'], ['g4', '四年級'], ['g5a', '五年級A'], ['g5b', '五年級B'], ['g6', '六年級']];
+const T_BLUE  = { '--main': '#3D9BE9', '--line': '#BFE0FA', '--text': '#2D4A66', '--bg': 'linear-gradient(160deg,#F2F9FF 0%,#E3F2FF 100%)' };
+const T_LEMON = { '--main': '#F5A524', '--line': '#FFE29A', '--text': '#5A4520', '--bg': 'linear-gradient(160deg,#FFFDF0 0%,#FFF4CF 100%)' };
+const T_MINT  = { '--main': '#22B892', '--line': '#B6EBDC', '--text': '#25504A', '--bg': 'linear-gradient(160deg,#F1FCF8 0%,#DDF6EE 100%)' };
+const T_PEACH = { '--main': '#F5874A', '--line': '#FFD3B5', '--text': '#5C3A24', '--bg': 'linear-gradient(160deg,#FFF8F1 0%,#FFE9D6 100%)' };
+const THEMES = { g3: T_BLUE, g4: T_LEMON, g5a: T_MINT, g5b: T_MINT, g6: T_PEACH };
+// 講義上學期單元（新增單元時點一下帶入；也可以自己打）
+const g5 = ['01 複雜的統計圖', '02 因數和倍數', '03 多邊形', '04 擴分、約分和通分', '05 線對稱圖形', '06 異分母分數的加減',
+  '07 整數四則運算', '08 平行四邊形、三角形、梯形面積', '09 時間的乘法與除法', '10 正方體與長方體'];
+const UNITS = {
+  g3: ['01 數到10000', '02 加與減(一)', '03 乘法(一)', '04 公分與毫米', '05 角、正方形與長方形', '06 除法(一)', '07 公升與毫公升', '08 分數(一)', '09 圓'],
+  g4: ['01 一億以內的數', '02 三位乘以兩位', '03 角度', '04 除法', '05 三角形', '06 分數(三)', '07 數量關係', '08 整數四則混合運算', '09 小數(二)', '10 公里、公尺與公分'],
+  g5a: g5, g5b: g5,
+  g6: ['01 因數與倍數(二)', '02 分數的除法', '03 小數的除法', '04 圓周率和圓面積', '05 比與比值', '06 扇形周長與面積', '07 速率', '08 間隔、方陣與規律問題'],
+};
+
+const LS = { get: (k, d) => { try { const v = localStorage.getItem('dz_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set: (k, v) => localStorage.setItem('dz_' + k, JSON.stringify(v)) };
+const S = { key: LS.get('key', ''), cls: LS.get('cls', 'g3'), unit: null, data: null, loading: false, modal: null, busy: {} };
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const items = n => Array.from({ length: n }, (_, i) => '單元複習' + String(i + 1).padStart(2, '0'));
+
+async function post(url, body) {
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: S.key }, body)) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.err || 'fail');
+  return j;
+}
+const api = b => post(API, b);
+let toastT;
+function toast(msg) {
+  let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', 2600);
+}
+function theme() {
+  const T = THEMES[S.cls] || T_BLUE;
+  Object.entries(T).forEach(([k, v]) => document.body.style.setProperty(k, v));
+  document.querySelector('meta[name=theme-color]').content = T['--main'];
+}
+const petOn = () => !!PETS[S.cls] && LS.get('pet_' + S.cls, true);
+
+async function load() {
+  S.loading = true; S.data = null; render();
+  try {
+    const d = await api({ mode: 'load', cls: S.cls });
+    d.units.sort((a, b) => b.at - a.at);
+    S.data = d;
+    const last = LS.get('unit_' + S.cls, '');
+    S.unit = (d.units.find(u => u.id === last) || d.units[0] || {}).id || null;
+  } catch (e) {
+    if (e.message === 'bad_key') { S.key = ''; LS.set('key', ''); }
+    else toast('讀取失敗，請檢查網路再試一次');
+  }
+  S.loading = false; render();
+}
+
+async function toggle(full, item) {
+  const u = S.data.units.find(x => x.id === S.unit); if (!u) return;
+  const k = u.id + '|' + item + '|' + full;
+  if (S.busy[k]) return;
+  const was = S.data.done[k];
+  const nick = (S.data.roster.find(r => r.full === full) || {}).nick || full;
+  S.busy[k] = 1;
+  if (was) delete S.data.done[k]; else S.data.done[k] = { at: Date.now(), pts: 0 };
+  render();
+  try {
+    if (!was) {
+      let pts = 0;
+      if (petOn()) {
+        try { pts = (await post(PETS[S.cls], { mode: 'add', names: [full], reason: '作業', src: '訂正紀錄' })).pts || 0; }
+        catch (e) { toast('⚠ 寵物蛋加點沒成功（' + nick + '），訂正有記到'); }
+      }
+      await api({ mode: 'mark', cls: S.cls, unit: u.id, item, full, on: true, pts });
+      S.data.done[k] = { at: Date.now(), pts };
+      if (pts) toast('🐾 ' + nick + ' 寵物蛋 +' + pts);
+    } else {
+      const r = await api({ mode: 'mark', cls: S.cls, unit: u.id, item, full, on: false });
+      if (r.pts && PETS[S.cls]) {
+        try { await post(PETS[S.cls], { mode: 'add', names: [full], reason: '訂正取消', pts: -r.pts, src: '訂正紀錄' }); toast('已取消，' + nick + ' 寵物蛋 -' + r.pts); }
+        catch (e) { toast('⚠ 已取消打勾，但寵物蛋沒扣回（' + nick + ' -' + r.pts + '），跟浩克說'); }
+      }
+    }
+  } catch (e) {
+    if (was) S.data.done[k] = was; else delete S.data.done[k];
+    toast('沒存到，請再按一次');
+  }
+  delete S.busy[k]; render();
+}
+
+function openUnit(edit) {
+  const u = edit && S.data.units.find(x => x.id === S.unit);
+  S.modal = u ? { edit: u.id, name: u.name, n: u.items.length, custom: u.items.join('、') } : { name: '', n: 2, custom: '' };
+  render(); setTimeout(() => { const i = $('#uname'); if (i && !u) i.focus(); }, 50);
+}
+async function saveUnit() {
+  const m = S.modal, name = $('#uname').value.trim();
+  if (!name) return toast('請選或輸入單元');
+  const custom = $('#ucustom') ? $('#ucustom').value.trim() : '';
+  const list = custom ? custom.split(/[、,，\s]+/).filter(Boolean) : items(m.n);
+  try {
+    if (m.edit) { await api({ mode: 'editUnit', id: m.edit, name, items: list }); }
+    else { const r = await api({ mode: 'addUnit', cls: S.cls, name, items: list }); LS.set('unit_' + S.cls, r.id); }
+    S.modal = null; await load();
+  } catch (e) { toast('沒存到，請再試一次'); }
+}
+async function delUnit() {
+  const u = S.data.units.find(x => x.id === S.modal.edit);
+  if (!confirm('確定刪掉「' + u.name + '」和它的打勾紀錄？' + (PETS[S.cls] ? '\n（加過的寵物點數會扣回）' : ''))) return;
+  try {
+    const r = await api({ mode: 'delUnit', id: u.id });
+    for (const x of r.refund || []) { try { await post(PETS[S.cls], { mode: 'add', names: [x.full], reason: '訂正取消', pts: -x.pts, src: '訂正紀錄' }); } catch (e) {} }
+    S.modal = null; await load();
+  } catch (e) { toast('刪除失敗，請再試一次'); }
+}
+
+function render() {
+  theme();
+  const app = $('#app');
+  if (!S.key) {
+    app.innerHTML = `<div class="login"><img src="logo.png" alt=""><h2 style="margin:8px 0 0;color:var(--main)">訂正紀錄</h2>
+      <input id="pw" type="password" inputmode="numeric" placeholder="管理密碼" autofocus>
+      <button class="btn main" style="width:100%;padding:12px;font-size:17px" onclick="login()">進入</button>
+      <p style="font-size:13px;opacity:.6">跟樹洞回信、寵物蛋同一組密碼，這台記住後就不用再打</p></div>`;
+    $('#pw').onkeydown = e => e.key === 'Enter' && login();
+    return;
+  }
+  const d = S.data, u = d && d.units.find(x => x.id === S.unit);
+  let h = `<div class="wrap"><header><img src="logo.png" alt=""><h1>訂正紀錄</h1><span class="sub">SUNNY魔法數學</span></header>
+    <div class="tabs">${CLASSES.map(([c, n]) => `<button class="tab ${c === S.cls ? 'on' : ''}" onclick="pick('${c}')">${n}</button>`).join('')}</div>`;
+  if (S.loading || !d) { app.innerHTML = h + '<div class="empty">讀取中…</div></div>' + modal(); return; }
+  h += `<div class="units"><button class="unit add" onclick="openUnit()">＋ 單元</button>${d.units.map(x => {
+    const tot = x.items.length * d.roster.length, ok = x.items.reduce((s, it) => s + d.roster.filter(r => d.done[x.id + '|' + it + '|' + r.full]).length, 0);
+    return `<button class="unit ${x.id === S.unit ? 'on' : ''}" onclick="pickUnit('${x.id}')">${esc(x.name)}<small>${ok === tot && tot ? '✅ 全部完成' : `完成 ${ok}/${tot}`}</small></button>`;
+  }).join('')}</div>`;
+  if (!u) { app.innerHTML = h + `<div class="empty">📋 還沒有單元<br>按「＋ 單元」選講義單元，就可以開始打勾</div></div>` + modal(); return; }
+  h += `<div class="bar"><h2>${esc(u.name)}</h2><button class="btn" onclick="openUnit(true)">✏️ 改</button>
+    ${PETS[S.cls] ? `<label class="pet"><input type="checkbox" ${petOn() ? 'checked' : ''} onchange="setPet(this.checked)">🐾 打勾＝寵物蛋加點</label>` : ''}</div>`;
+  const key = (it, r) => u.id + '|' + it + '|' + r.full;
+  h += `<div class="card"><table><thead><tr><th class="name">${d.roster.length} 人</th>${u.items.map(it =>
+    `<th>${esc(it)}<span class="n">${d.roster.filter(r => d.done[key(it, r)]).length}/${d.roster.length}</span></th>`).join('')}</tr></thead><tbody>`;
+  d.roster.forEach((r, i) => {
+    h += `<tr><td class="name"><span class="no">${i + 1}</span>${esc(r.nick)}</td>${u.items.map(it => {
+      const k = key(it, r), ok = d.done[k];
+      return `<td class="c ${ok ? 'ok' : ''} ${S.busy[k] ? 'busy' : ''}" onclick="toggle(${esc(JSON.stringify(r.full))}, ${esc(JSON.stringify(it))})">${ok ? '✅' : ''}</td>`;
+    }).join('')}</tr>`;
+  });
+  h += '</tbody></table></div><div class="left">';
+  u.items.forEach(it => {
+    const miss = d.roster.filter(r => !d.done[key(it, r)]).map(r => esc(r.nick));
+    h += `<div><b>${esc(it)}</b>　${miss.length ? `還沒訂正 ${miss.length} 人：${miss.join('、')}` : '<span class="all">全班完成 🎉</span>'}</div>`;
+  });
+  app.innerHTML = h + '</div></div>' + modal();
+}
+function modal() {
+  const m = S.modal; if (!m) return '';
+  const pre = UNITS[S.cls] || [];
+  return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
+    <h3>${m.edit ? '修改單元' : '新增單元'}</h3>
+    <label>講義單元（點一下帶入，也可以自己打）</label>
+    <div class="presets">${pre.map(p => `<button class="${p === m.name ? 'on' : ''}" onclick="S.modal.name=${esc(JSON.stringify(p))};$('#uname').value=S.modal.name;render()">${esc(p)}</button>`).join('')}</div>
+    <label>單元名稱</label><input id="uname" type="text" value="${esc(m.name)}" oninput="S.modal.name=this.value">
+    <label>單元複習幾張</label>
+    <div class="step"><button onclick="S.modal.n=Math.max(1,S.modal.n-1);S.modal.custom='';render()">－</button>
+      <b>${items(m.n).join('、')}</b><button onclick="S.modal.n=Math.min(8,S.modal.n+1);S.modal.custom='';render()">＋</button></div>
+    ${m.edit ? `<label>項目名稱（要改名再改，用「、」隔開；改名後舊打勾不會跟過去）</label><input id="ucustom" type="text" value="${esc(m.custom)}" oninput="S.modal.custom=this.value">` : ''}
+    <div class="row">${m.edit ? '<button class="btn danger" onclick="delUnit()">刪除</button>' : ''}<span class="grow"></span>
+      <button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="saveUnit()">${m.edit ? '儲存' : '建立'}</button></div>
+  </div></div>`;
+}
+function pick(c) { S.cls = c; LS.set('cls', c); load(); }
+function pickUnit(id) { S.unit = id; LS.set('unit_' + S.cls, id); render(); }
+function setPet(on) { LS.set('pet_' + S.cls, on); toast(on ? '🐾 打勾會順便幫寵物蛋加點' : '打勾不加寵物點數'); }
+async function login() {
+  const pw = $('#pw').value.trim(); if (!pw) return;
+  S.key = pw;
+  try { await api({ mode: 'ping' }); LS.set('key', pw); load(); }
+  catch (e) { S.key = ''; render(); toast(e.message === 'bad_key' ? '密碼不對' : '連不上，請檢查網路'); }
+}
+if (S.key) load(); else render();
+</script>
+</body>
+</html>
