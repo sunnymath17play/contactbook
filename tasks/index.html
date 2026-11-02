@@ -290,7 +290,7 @@ function pick(c) { S.cls = c; LS.set('cls', c); load(); }
 function pickUnit(id) { S.unit = id; LS.set('unit_' + S.cls, id); render(); }
 function setPet(on) { LS.set('pet_' + S.cls, on); toast(on ? '🐾 打勾會順便幫寵物蛋加點' : '打勾不加寵物點數'); }
 async function login(given) {
-  const pw = String(given != null ? given : ($('#pw') || {}).value || '').replace(/s+/g, '');
+  const pw = String(given != null ? given : ($('#pw') || {}).value || '').replace(/\s+/g, '');
   const msg = t => { const m = $('#msg'); if (m) m.textContent = t; };
   if (!pw) return msg('請先輸入密碼');
   msg('確認中…');
