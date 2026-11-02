@@ -58,6 +58,14 @@ tr:nth-child(even) td.name { background: #FAFCFE; }
 .left b { color: var(--main); }
 .left .all { color: #22A06B; font-weight: 700; }
 
+.watch { background: #FFF4E5; border: 2px solid #FFB547; border-radius: 14px; padding: 10px 12px; margin: 0 0 12px; }
+.watch h3 { margin: 0 0 6px; font-size: 15px; color: #C2410C; }
+.watch button { display: block; width: 100%; text-align: left; border: 0; background: #fff; border-radius: 10px; padding: 8px 10px; margin-top: 6px; font-size: 15px; color: #5A3B00; }
+.watch button small { opacity: .6; font-size: 12px; }
+.watch .hint { font-size: 12px; opacity: .7; margin-top: 6px; }
+td.c.last { background: #FFF4E5; box-shadow: inset 0 0 0 2px #FFB547; }
+td.name .tag { font-size: 11px; background: #FFB547; color: #fff; border-radius: 8px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+.left .lastline { color: #C2410C; font-weight: 700; }
 .empty { text-align: center; padding: 50px 10px; opacity: .7; font-size: 16px; line-height: 1.8; }
 
 .mask { position: fixed; inset: 0; background: #0006; display: flex; align-items: flex-end; justify-content: center; z-index: 9; }
@@ -110,7 +118,7 @@ const UNITS = {
 
 const LS = { get: (k, d) => { try { const v = localStorage.getItem('dz_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set: (k, v) => localStorage.setItem('dz_' + k, JSON.stringify(v)) };
-const S = { key: LS.get('key', ''), cls: LS.get('cls', 'g3'), unit: null, data: null, loading: false, modal: null, busy: {} };
+const S = { key: LS.get('key', ''), cls: LS.get('cls', 'g3'), unit: null, data: null, loading: false, modal: null, busy: {}, watch: [] };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const items = n => Array.from({ length: n }, (_, i) => '單元複習' + String(i + 1).padStart(2, '0'));
@@ -134,6 +142,13 @@ function theme() {
   document.querySelector('meta[name=theme-color]').content = T['--main'];
 }
 const petOn = () => !!PETS[S.cls] && LS.get('pet_' + S.cls, true);
+
+async function loadWatch() {
+  try { S.watch = (await api({ mode: 'watch' })).list; render(); } catch (e) {}
+}
+const CLS_NAME = Object.fromEntries(CLASSES);
+const daysAgo = t => { const d = Math.floor((Date.now() - t) / 864e5); return d <= 0 ? '今天' : d + ' 天了'; };
+function goWatch(c, u) { S.cls = c; LS.set('cls', c); LS.set('unit_' + c, u); load(); }
 
 async function load() {
   S.loading = true; S.data = null; render();
@@ -180,7 +195,7 @@ async function toggle(full, item) {
     if (was) S.data.done[k] = was; else delete S.data.done[k];
     toast('沒存到，請再按一次');
   }
-  delete S.busy[k]; render();
+  delete S.busy[k]; render(); loadWatch();
 }
 
 function openUnit(edit) {
@@ -223,6 +238,11 @@ function render() {
   const d = S.data, u = d && d.units.find(x => x.id === S.unit);
   let h = `<div class="wrap"><header><img src="logo.png" alt=""><h1>訂正紀錄</h1><span class="sub">SUNNY魔法數學</span></header>
     <div class="tabs">${CLASSES.map(([c, n]) => `<button class="tab ${c === S.cls ? 'on' : ''}" onclick="pick('${c}')">${n}</button>`).join('')}</div>`;
+  if (S.watch.length) {
+    h += '<div class="watch"><h3>⚠ 最後 3 位還沒訂正（要注意）</h3>' + S.watch.map(w =>
+      `<button onclick="goWatch('${w.cls}','${w.unit}')"><b>${esc(w.kids.map(k => k.nick).join('、'))}</b><br><small>${CLS_NAME[w.cls]}・${esc(w.name)}・${esc(w.item)}・剩 ${w.kids.length} 人${w.since ? '（' + daysAgo(w.since) + '）' : ''}</small></button>`).join('') +
+      '<div class="hint">想關心家長：跟浩克說「擬訂正訊息」</div></div>';
+  }
   if (S.loading || !d) { app.innerHTML = h + '<div class="empty">讀取中…</div></div>' + modal(); return; }
   h += `<div class="units"><button class="unit add" onclick="openUnit()">＋ 單元</button>${d.units.map(x => {
     const tot = x.items.length * d.roster.length, ok = x.items.reduce((s, it) => s + d.roster.filter(r => d.done[x.id + '|' + it + '|' + r.full]).length, 0);
@@ -234,16 +254,19 @@ function render() {
   const key = (it, r) => u.id + '|' + it + '|' + r.full;
   h += `<div class="card"><table><thead><tr><th class="name">${d.roster.length} 人</th>${u.items.map(it =>
     `<th>${esc(it)}<span class="n">${d.roster.filter(r => d.done[key(it, r)]).length}/${d.roster.length}</span></th>`).join('')}</tr></thead><tbody>`;
+  const lastOf = {};
+  u.items.forEach(it => { const m = d.roster.filter(r => !d.done[key(it, r)]); if (m.length && m.length <= 3 && d.roster.length > 3) m.forEach(r => lastOf[key(it, r)] = 1); });
   d.roster.forEach((r, i) => {
-    h += `<tr><td class="name"><span class="no">${i + 1}</span>${esc(r.nick)}</td>${u.items.map(it => {
+    const isLast = u.items.some(it => lastOf[key(it, r)]);
+    h += `<tr><td class="name"><span class="no">${i + 1}</span>${esc(r.nick)}${isLast ? '<span class="tag">最後</span>' : ''}</td>${u.items.map(it => {
       const k = key(it, r), ok = d.done[k];
-      return `<td class="c ${ok ? 'ok' : ''} ${S.busy[k] ? 'busy' : ''}" onclick="toggle(${esc(JSON.stringify(r.full))}, ${esc(JSON.stringify(it))})">${ok ? '✅' : ''}</td>`;
+      return `<td class="c ${ok ? 'ok' : ''} ${lastOf[k] ? 'last' : ''} ${S.busy[k] ? 'busy' : ''}" onclick="toggle(${esc(JSON.stringify(r.full))}, ${esc(JSON.stringify(it))})">${ok ? '✅' : ''}</td>`;
     }).join('')}</tr>`;
   });
   h += '</tbody></table></div><div class="left">';
   u.items.forEach(it => {
     const miss = d.roster.filter(r => !d.done[key(it, r)]).map(r => esc(r.nick));
-    h += `<div><b>${esc(it)}</b>　${miss.length ? `還沒訂正 ${miss.length} 人：${miss.join('、')}` : '<span class="all">全班完成 🎉</span>'}</div>`;
+    h += `<div><b>${esc(it)}</b>　${!miss.length ? '<span class="all">全班完成 🎉</span>' : miss.length <= 3 && d.roster.length > 3 ? `<span class="lastline">⚠ 最後 ${miss.length} 位：${miss.join('、')}</span>` : `還沒訂正 ${miss.length} 人：${miss.join('、')}`}</div>`;
   });
   app.innerHTML = h + '</div></div>' + modal();
 }
@@ -269,10 +292,10 @@ function setPet(on) { LS.set('pet_' + S.cls, on); toast(on ? '🐾 打勾會順�
 async function login() {
   const pw = $('#pw').value.trim(); if (!pw) return;
   S.key = pw;
-  try { await api({ mode: 'ping' }); LS.set('key', pw); load(); }
+  try { await api({ mode: 'ping' }); LS.set('key', pw); load(); loadWatch(); }
   catch (e) { S.key = ''; render(); toast(e.message === 'bad_key' ? '密碼不對' : '連不上，請檢查網路'); }
 }
-if (S.key) load(); else render();
+if (S.key) { load(); loadWatch(); } else render();
 </script>
 </body>
 </html>
