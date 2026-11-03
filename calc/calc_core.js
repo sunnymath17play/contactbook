@@ -41,9 +41,9 @@ function vLayout(rowsStr, bars, cols, op) {
 function addLayout(a, b, res) { return vLayout([String(a), '+' + pad(b, a), String(res)], [1], Math.max(String(a).length, String(b).length, String(res).length) + 1, '+'); }
 function subLayout(a, b, res) { return vLayout([String(a), '-' + pad(b, a), String(res)], [1], Math.max(String(a).length, String(b).length) + 1, '-'); }
 function mul1Layout(a, m, res) { const w = Math.max(String(a).length, String(res).length) + 1; return vLayout([String(a), '×' + ' '.repeat(String(a).length - 1) + m, String(res)], [1], w, '×'); }
-function mul2Layout(a, b, p1, p2, sum) {   // 乘十位那一列先寫一個 0
-  const w = Math.max(String(sum).length, String(p2 * 10).length, String(a).length) + 1;
-  return vLayout([String(a), '×' + ' '.repeat(String(a).length - 2) + b, String(p1), String(p2 * 10), String(sum)], [1, 3], w, '×2');
+function mul2Layout(a, b, p1, p2, sum) {   // 乘十位那一列不寫 0，第一個數字寫在十位數的底下（SUNNY 2026-11-04）
+  const w = Math.max(String(sum).length, String(p2).length + 1, String(a).length) + 1;
+  return vLayout([String(a), '×' + ' '.repeat(String(a).length - 2) + b, String(p1), String(p2) + ' ', String(sum)], [1, 3], w, '×2');
 }
 // 長除法：除數在左、被除數在右，商寫在上面一列；中間商 0 不寫乘的那一列，直接往下拿
 function divSteps(N, d) {
@@ -78,7 +78,7 @@ function checkLayout(L) {
   if (L.kind === 'd') { const st = L.st; return st.quot * Number(L.rows[1].slice(0, st.dd).join('').trim()) + st.rem === Number(st.s) && st.rem < L.d; }
   const sign = L.rows[1].join('').trim()[0];
   if (L.rows.length === 3) { const a = num(0), b = num(1), c = num(2); return sign === '+' ? a + b === c : sign === '-' ? a - b === c : a * b === c; }
-  const a = num(0), b = num(1); return num(2) === a * (b % 10) && num(3) === a * Math.floor(b / 10) * 10 && num(4) === a * b;
+  const a = num(0), b = num(1); return num(2) === a * (b % 10) && num(3) === a * Math.floor(b / 10) && num(4) === a * b;
 }
 
 // ---------- 出題（綁一個亂數；同樣的呼叫順序＝同樣的題目） ----------
@@ -160,7 +160,7 @@ function carryMap(L) {
   if (L.op === '+') put(2, addCols(a, b).carries);
   else if (L.op === '-') put(2, subCols(a, b).borrows);
   else if (L.op === '×') put(2, mul1Cols(a, b).carries);
-  else { put(2, mul1Cols(a, b % 10).carries); put(3, mul1Cols(a, Math.floor(b / 10)).carries, 1); put(4, addCols(n(2), n(3)).carries); }
+  else { put(2, mul1Cols(a, b % 10).carries); put(3, mul1Cols(a, Math.floor(b / 10)).carries, 1); put(4, addCols(n(2), n(3) * 10).carries); }
   return m;
 }
 
@@ -227,7 +227,7 @@ function classify(L, kid, wrong) {
 function teachSteps(L) {
   const S = [], cols = L.cols, n = s => Number(L.rows[s].join('').replace(/[^0-9]/g, '') || 0);
   const cell = (r, c) => [r, c, L.rows[r][c]];
-  const colAdd = (r, A, B, op) => {   // 加、減：從個位一位一位來
+  const colAdd = (r, A, B, op, bShift = 0) => {   // 加、減：從個位一位一位來（bShift：B 的右邊幾位是空的）
     const res = op === '+' ? addCols(A, B) : subCols(A, B), dA = digits(A), dB = digits(B), len = String(res.v).length;
     for (let i = 0; i < (op === '-' ? dA.length : len); i++) {
       const c = cols - 1 - i, a = dA[i] || 0, b = dB[i] || 0;
@@ -235,7 +235,7 @@ function teachSteps(L) {
       if (op === '+') {
         const cr = res.carries[i], sum = a + b + cr;
         if (i >= dA.length && i >= dB.length) { S.push({ cells: [cell(r, c)], say: `最後手上還記著 ${cr}，寫在${POS[i]}` }); continue; }
-        const only = i >= dA.length ? b : i >= dB.length ? a : null;
+        const only = i >= dA.length ? b : (i >= dB.length || i < bShift) ? a : null;
         S.push({ cells: [cell(r, c)], say: only !== null ? `${POS[i]}：只有 ${only}${cr ? `，再加手上記的 ${cr} ＝ ${sum}` : ''}${sum >= 10 ? `，寫 ${sum % 10}，手上記 1` : `，寫 ${sum}`}` : `${POS[i]}：${a}＋${b}${cr ? `，再加手上記的 ${cr}` : ''} ＝ ${sum}${sum >= 10 ? `，寫 ${sum % 10}，手上記 1` : ''}` });
       } else {
         const br = res.borrows[i], top = a - br;
@@ -248,12 +248,13 @@ function teachSteps(L) {
   };
   const colMul = (r, A, m, shift) => {   // 乘一位數：從個位一位一位來，最後一位整個寫下去
     const res = mul1Cols(A, m), dA = digits(A);
-    if (shift && L.rows[r][cols - 1] !== ' ') S.push({ cells: [cell(r, cols - 1)], say: '乘十位：個位先寫一個 0，從十位開始寫' });
     for (let i = 0; i < dA.length; i++) {
       const c = cols - 1 - i - shift, cr = res.carries[i] || 0, p = dA[i] * m + cr, last = i === dA.length - 1;
-      const head = `${POS[i + shift]}：${dA[i]}×${m}＝${dA[i] * m}${cr ? `，再加手上記的 ${cr} ＝ ${p}` : ''}`;
-      if (last) { const w = String(p), cs = w.split('').map((_, k) => cell(r, c - (w.length - 1 - k))); S.push({ cells: cs, say: head + (p >= 10 ? `，最後一位，${p} 整個寫下去` : '') }); }
-      else S.push({ cells: [cell(r, c)], say: head + (p >= 10 ? `，寫 ${p % 10}，手上記 ${Math.floor(p / 10)}` : '') });
+      const head = `${shift ? '' : POS[i] + '：'}${dA[i]}×${m}＝${dA[i] * m}${cr ? `，再加手上記的 ${cr} ＝ ${p}` : ''}`;
+      // 乘十位的第一個數字：寫在十位數的底下（不寫 0）
+      const where = shift && i === 0 ? `，${p % 10} 要寫在十位數 ${m} 的底下` : '';
+      if (last) { const w = String(p), cs = w.split('').map((_, k) => cell(r, c - (w.length - 1 - k))); S.push({ cells: cs, say: head + (p >= 10 ? `，最後一位，${p} 整個寫下去` : `，寫 ${p}`) }); }
+      else S.push({ cells: [cell(r, c)], say: head + (where || (p >= 10 ? `，寫 ${p % 10}` : `，寫 ${p}`)) + (p >= 10 ? `，手上記 ${Math.floor(p / 10)}` : '') });
     }
   };
   if (L.kind === 'v') {
@@ -262,9 +263,9 @@ function teachSteps(L) {
     else if (L.op === '×') colMul(2, a, b, 0);
     else {
       const b0 = b % 10, b1 = Math.floor(b / 10);
-      S.push({ cells: [], say: `第一步：${a}×${b0}（乘個位）` }); colMul(2, a, b0, 0);
-      S.push({ cells: [], say: `第二步：${a}×${b1}0（乘十位）` }); colMul(3, a, b1, 1);
-      S.push({ cells: [], say: '第三步：兩列加起來' }); colAdd(4, n(2), n(3), '+');
+      S.push({ cells: [], say: `先用個位數的 ${b0} 打山豬` }); colMul(2, a, b0, 0);
+      S.push({ cells: [], say: `再來換十位數的 ${b1} 打山豬` }); colMul(3, a, b1, 1);
+      S.push({ cells: [], say: '最後兩列加起來' }); colAdd(4, n(2), n(3) * 10, '+', 1);
     }
   } else {
     const st = L.st, d = L.d, s = st.s;
