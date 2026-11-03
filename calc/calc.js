@@ -193,7 +193,7 @@ function ansHTML() {
   const a = Q.ans, n = Math.max(a.length + (Q.done ? 0 : 1), 1), off = Q.L.cols - a.length;
   let boxes = "";
   for (let i = 0; i < Math.min(n, Q.ansMax); i++) {
-    const ch = a[i] || "", bad = ch && Q.wrong.has("2," + (off + i));
+    const ch = a[i] || "", bad = ch && Q.ansBad;   // 答錯：整個答案框變紅，不指出哪一位
     boxes += `<span class="ad${bad ? " bad" : ""}${!Q.done && i === a.length ? " cur" : ""}">${ch}</span>`;
   }
   return `<div class="cpaper"><div class="cpaper-t">✏️ 先在紙上算</div><div class="cpaper-s">直式寫好、借位劃清楚</div>
@@ -214,7 +214,7 @@ function key(k) {
     if (k === "del") Q.ans = Q.ans.slice(0, -1);
     else if (/^[0-9]$/.test(k) && Q.ans.length < Q.ansMax) Q.ans += k;
     else return;
-    Q.wrong.clear(); drawQ(); return;
+    Q.wrong.clear(); Q.ansBad = false; drawQ(); return;
   }
   const [r, c] = Q.act, L = Q.L, step = L.kind === "d" ? 1 : -1;
   const move = d => { const nc = Q.act[1] + d; if (nc >= 0 && nc < L.cols) Q.act = [Q.act[0], nc]; };
@@ -256,8 +256,9 @@ async function submit() {
     S = Object.assign(S, r);
     const gr = r.graded || local;
     if (gr.ok) return right(r);
+    // 只填答案（三年級加減法）：看不到紙上的算法，不猜錯在哪一位，直接說答案不對（SUNNY 2026-11-04）
+    if (Q.ans !== undefined) { Q.ansBad = true; drawQ({ html: `❌ 答案不對。回去看紙上的直式，一位一位再檢查一次。<small>連續歸零了，改好答案再按「完成」。</small>`, cls: "bad" }); return; }
     Q.wrong = new Set((gr.wrong || []).map(([a, b]) => a + "," + b));
-    if (Q.ans !== undefined && gr.type === "align") gr.hint = "答案的位數不對，回去看看紙上的直式，有沒有少寫或多寫一位？";
     drawQ({ html: `💡 ${esc(gr.hint)}<small>連續歸零了，改好紅色格子再按「完成」。</small>`, cls: "bad" });
     return;
   }
