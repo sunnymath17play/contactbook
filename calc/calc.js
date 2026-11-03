@@ -203,15 +203,12 @@ function drawQ(note) {
 }
 // 格子大小照「中間剩下的空間」算（手機、平板、電腦都塞得剛好），最大 64px
 // 只填答案：一格一個數字、從左往右打；錯的位數變紅（答案靠右對到直式答案列）
+// 答案框：一個長方形（像計算機螢幕），不畫一格一格的框，看不出答案有幾位（SUNNY 2026-11-04：三位數出現四格會誤會）
 function ansHTML() {
-  const a = Q.ans, n = Math.max(a.length + (Q.done ? 0 : 1), 1), off = Q.L.cols - a.length;
-  let boxes = "";
-  for (let i = 0; i < Math.min(n, Q.ansMax); i++) {
-    const ch = a[i] || "", bad = ch && (Q.ansBad || Q.wrong.has("2," + (off + i)));   // 錯很多位：整個答案框變紅；只錯一位：那一位變紅
-    boxes += `<span class="ad${bad ? " bad" : ""}${!Q.done && i === a.length ? " cur" : ""}">${ch}</span>`;
-  }
+  const a = Q.ans, off = Q.L.cols - a.length;
+  const digits = a.split("").map((ch, i) => `<b class="${!Q.ansBad && Q.wrong.has("2," + (off + i)) ? "bad" : ""}">${ch}</b>`).join("");   // 只錯一位：那個字變紅
   return `<div class="cpaper"><div class="cpaper-t">✏️ 先在紙上算</div><div class="cpaper-s">直式寫好、借位劃清楚</div>
-    <div class="cans"><span class="cans-l">答案</span>${boxes}</div></div>`;
+    <div class="cans"><span class="cans-l">答案</span><span class="cscreen${Q.ansBad ? " bad" : ""}">${a ? digits : '<i class="ph">打答案</i>'}${Q.done ? "" : '<i class="cursor"></i>'}</span></div></div>`;
 }
 // 只填答案 → 放進直式的答案列（靠右），批改、提示、教學都跟原本一樣
 function ansToKid() { const L = Q.L, a = Q.ans; Q.kid = L.rows.map((row, r) => C.isGiven(L, r) ? row.slice() : row.map(() => " ")); a.split("").forEach((ch, i) => { Q.kid[2][L.cols - a.length + i] = ch; }); }
@@ -276,7 +273,8 @@ async function submit() {
     // 只錯一位數（位數一樣、只有一格不同）→ 才指出那一位、給提示
     if (Q.ans !== undefined && (gr.wrong || []).length === 1 && gr.type !== "align") {
       Q.ansBad = false; Q.wrong = new Set(gr.wrong.map(([a, b]) => a + "," + b));
-      drawQ({ html: `💡 ${esc(gr.hint)}<small>連續歸零了，改好紅色那一位再按「完成」。</small>`, cls: "bad" }); return;
+      const h = gr.hint.replace("紅色這一格", "紅色這個數字").replace("紅色的格子", "紅色的數字");   // 答案框沒有格子，說「數字」
+      drawQ({ html: `💡 ${esc(h)}<small>連續歸零了，改好紅色那個數字再按「完成」。</small>`, cls: "bad" }); return;
     }
     if (Q.ans !== undefined) { Q.ansBad = true; drawQ({ html: `❌ 答案不對。回去看紙上的直式，一位一位再檢查一次。<small>連續歸零了，改好答案再按「完成」。</small>`, cls: "bad" }); return; }
     Q.wrong = new Set((gr.wrong || []).map(([a, b]) => a + "," + b));
