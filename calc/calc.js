@@ -190,10 +190,10 @@ function drawQ(note) {
   else pad = `<div class="ckeys">${["7", "8", "9", "del", "4", "5", "6", "←", "1", "2", "3", "→", "0", "ok"].map(k =>
       k === "del" ? `<button type="button" class="ck fn era" data-k="del">橡皮擦</button>` : k === "ok" ? `<button type="button" class="ck okk" data-k="ok">完成</button>`
       : `<button type="button" class="ck${k === "0" ? " zero" : ""}${k === "←" || k === "→" ? (ansMode && L.kind !== "d" ? " fn hid" : " fn") : ""}" data-k="${k}">${ansMode && L.kind === "d" && k === "←" ? "← 商" : ansMode && L.kind === "d" && k === "→" ? "餘數 →" : k}</button>`).join("")}</div>`;
-  w.innerHTML = `<div class="cqs">
+  w.innerHTML = `<div class="cqs${Q.done ? " qdone" : ""}">
     <div class="cqhead"><div class="cqtop"><span>第 ${idx}／${S.perDay} 題</span><span class="cdots">${dots}</span><span class="cs">連續 <b>${S.streak}</b></span></div>
       <div class="cq">${esc(p.text.replace(/－/g, "−").replace(/＋/g, "+"))} ＝ ？</div></div>
-    <div class="cmain"><div class="cgarea" id="cgarea">${ansMode ? ansHTML() : `<div class="cgridbox">${g}</div>`}</div>
+    <div class="cmain"><div class="cgarea" id="cgarea">${Q.askSunny ? askHTML() : ansMode ? ansHTML() : `<div class="cgridbox">${g}</div>`}</div>
       <div class="cnote ${note && note.cls || "tip"}" id="cnote">${note ? note.html : esc(tip)}</div></div>
     <div class="cpad">${pad}</div></div>`;
   fitGrid();
@@ -211,6 +211,10 @@ function screenHTML(val, field, ph) {
   const act = !Q.done && (Q.L.kind !== "d" || Q.field === field), bad = Q.ansBad || (Q.badField === field && Q.badPos === undefined);
   const digits = val.split("").map((ch, i) => `<b class="${Q.badField === field && Q.badPos === i ? "bad" : ""}">${ch}</b>`).join("");   // 只錯一位：那個字變紅
   return `<span class="cscreen${bad ? " bad" : ""}${act ? " on" : ""}" data-f="${field}">${val ? digits : `<i class="ph">${ph}</i>`}${act ? '<i class="cursor"></i>' : ""}</span>`;
+}
+function askHTML() {
+  return `<div class="cask"><img src="${IMG}reward_3.png" alt=""><div class="cask-t">${esc(Q.askSunny.t)}</div><div class="cask-s">${esc(Q.askSunny.s)}</div>
+    <div class="cask-b">📒 帶著計算本找 SUNNY</div></div>`;
 }
 function ansHTML() {
   const L = Q.L, sub = L.kind === "d" ? "直式寫好、每一步對齊" : L.op === "-" ? "直式寫好、借位劃清楚" : L.op === "+" ? "直式寫好、進位記在手上" : "直式寫好、乘完加上手上記的";
@@ -315,7 +319,7 @@ async function submit() {
   // 第二次：自己改對了就過；還是錯就一步一步教
   if (local.ok) { log({ attempt: 2 }); Q.done = true; Q.wrong.clear(); drawQ({ html: "改對了！👍 這一題你學會了。", cls: "ok" }); return; }
   log({ attempt: 2, taught: true });
-  teach();
+  askSunny();
 }
 async function submitAns() {
   if (!Q.ans) { drawQ({ html: Q.L.kind === "d" ? "✏️ 先在紙上算好，再把商打進來喔！" : "✏️ 先在紙上算好，再把答案打進來喔！", cls: "warn" }); return; }
@@ -341,7 +345,7 @@ async function submitAns() {
   // 第二次：自己改對了就過；還是錯就一步一步教（看完整直式）
   api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 2, taught: !chk.ok }).catch(() => {});
   if (chk.ok) { Q.done = true; Q.ansBad = false; Q.badField = undefined; drawQ({ html: "改對了！👍 這一題你學會了。", cls: "ok" }); return; }
-  teach();
+  askSunny();
 }
 function log(extra) { api(null, Object.assign({ mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, cells: Q.kid.map(r => r.join("")) }, extra)).catch(() => {}); }
 function right(r) {
@@ -354,6 +358,19 @@ function right(r) {
 }
 
 // ---------- 第二次錯：浩克帶你算一次（自己按「下一步」，一次看一句；數字鍵的位置換成上一步／下一步，版面不會跳） ----------
+// ---------- 第二次還錯：浩克努力說服孩子帶計算本去找 SUNNY（SUNNY 2026-11-04：這樣才有機會連續對） ----------
+const ASK_SUNNY = [
+  ["這題卡住沒關係！", "把計算本帶去給 SUNNY 看，SUNNY 一眼就找得到是哪一步出錯。找出來以後，同樣的錯就不會再犯，連續答對才會越來越長喔！"],
+  ["浩克偷偷告訴你一個祕密…", "厲害的人不是從來不錯，是錯了會去問！拿著計算本找 SUNNY，一下子就能弄懂，下次這種題目你就穩穩拿分。"],
+  ["你已經很接近了！", "答案差一點點，問題一定藏在計算本的某一步裡。帶去給 SUNNY 看，抓到那個小怪獸，計算王獎狀就離你更近一步！"],
+  ["浩克跟你打勾勾 🤙", "下次上課記得帶計算本去找 SUNNY，花一分鐘問清楚，比自己猜十次還有用！問完你就會發現：原來這麼簡單！"],
+];
+function askSunny() {
+  Q.done = true; Q.ansBad = false; Q.badField = undefined; Q.wrong.clear();
+  const [t, s] = ASK_SUNNY[(Q.idx + (S.streak || 0)) % ASK_SUNNY.length];
+  Q.askSunny = { t, s };
+  drawQ({ html: "這一題先不算，下一題重新開始累積連續題數，加油！", cls: "tip" });
+}
 function teach() {
   Q.ans = undefined;   // 教的時候改看完整直式
   const steps = C.teachSteps(Q.L), L = Q.L;

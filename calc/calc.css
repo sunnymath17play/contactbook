@@ -212,3 +212,18 @@
 .cans .cscreen .ph{white-space:nowrap;}
 .cqs .ck.fn{font-size:18px;}
 @media (max-height:700px){.cpaper{padding:8px 12px;} .cpaper-t{font-size:18px;} .cpaper-s{margin:0 0 6px;font-size:13px;} .cans .cscreen{height:52px;font-size:34px;} .cpaper .cans + .cans{margin-top:6px;}}
+/* 第二次算錯：浩克說服孩子帶計算本找 SUNNY */
+.cask{background:#fff;border-radius:22px;padding:14px 16px 16px;text-align:center;box-shadow:0 4px 14px rgba(20,140,120,.15);border:3px solid #FFD54A;max-width:420px;}
+.cask img{width:110px;height:auto;border-radius:18px;}
+.cask-t{font-size:22px;font-weight:900;color:#0F7E6B;margin:4px 0 6px;}
+.cask-s{font-size:16px;font-weight:700;color:#1E3A5F;line-height:1.6;text-align:left;}
+.cask-b{display:inline-block;margin-top:10px;background:#FFF3C4;color:#8A6200;border-radius:999px;padding:6px 14px;font-size:16px;font-weight:900;}
+@media (max-height:700px){.cask img{width:70px;} .cask-t{font-size:18px;} .cask-s{font-size:14px;line-height:1.5;}}
+/* 做完一題（只剩「下一題」）：按鈕區縮小，讓中間的卡片放得下 */
+.cqs.qdone .cpad{min-height:0;}
+.cqs.qdone .cnote{height:auto;min-height:48px;}
+/* 內容再多也不能把整個畫面撐高（標題列一定在最上面） */
+.vroom.croom.qmode{overflow:hidden;}
+.vroom.croom.qmode .cbody{min-height:0;}
+.vroom.croom.qmode .cwrap{min-height:0;}
+.cgarea{overflow:auto;}
