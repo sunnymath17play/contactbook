@@ -168,3 +168,4 @@
 .cans .ad.bad{border-color:#E5675B;background:#FFE4E1;color:#C0392B;animation:cshake .35s;}
 @media (max-width:380px){.cans .ad{width:44px;height:56px;font-size:32px;}}
 .cqs .ck.hid{visibility:hidden;}
+.cqs .ck.era{font-size:18px;font-weight:900;}
