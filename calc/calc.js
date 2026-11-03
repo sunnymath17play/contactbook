@@ -17,9 +17,14 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp
 // 測試連結 &chtest=1：計算挑戰自己記住（不靠影片小挑戰）
 if (/[?&]chtest=1/.test(location.search)) lsS("wh_chtest", "1");
 const TESTER = lsG("wh_chtest") === "1";
-if (typeof CH === "undefined" || !CH || typeof CalcCore === "undefined") return;
+// 測試連結打開卻沒出現 → 畫面上方顯示原因（給 SUNNY 截圖給浩克看）
+const why = m => { if (!/[?&]chtest=1/.test(location.search)) return; const d = document.createElement("div"); d.style.cssText = "position:fixed;left:8px;right:8px;top:8px;z-index:99;background:#C0392B;color:#fff;padding:10px 12px;border-radius:12px;font:700 15px sans-serif"; d.textContent = "計算挑戰沒有打開：" + m + "（版本 2026-11-04b）"; document.body.appendChild(d); };
+if (typeof CH === "undefined" || !CH) { why("連結裡的班級代號不對"); return; }
+if (typeof CalcCore === "undefined") { why("出題程式沒有載入，請重新整理"); return; }
 const GRADE = 3 + (schoolYear() - CH.y);
-if (CALC_GRADES.indexOf(GRADE) < 0 || (!CALC_OPEN && !TESTER) || qs("preview") === "1") return;
+if (CALC_GRADES.indexOf(GRADE) < 0) { why("這個班不是三、四年級"); return; }
+if (!CALC_OPEN && !TESTER) { why("測試記號沒有存起來（瀏覽器可能是無痕模式）"); return; }
+if (qs("preview") === "1") return;
 const C = window.CalcCore, CHEER = window.CALC_CHEER || { ok: ["答對了！"], streak: [], reset: ["沒關係，再來一次！"], stamp: ["今天 5 題全對！"] };
 const RULES = [
   "每天 5 題；做完就要等明天才有新題目。",
