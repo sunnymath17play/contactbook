@@ -186,3 +186,11 @@
 .cvbar img{width:44px;height:44px;border-radius:12px;flex:none;}
 .cvbar span{flex:1;min-width:0;} .cvbar b{display:block;font-size:17px;font-weight:900;} .cvbar small{display:block;font-size:13px;font-weight:700;color:#E9FFFA;}
 .cvbar i{font-style:normal;width:26px;height:26px;border-radius:50%;background:#fff;color:#14A38B;display:grid;place-items:center;font-weight:900;font-size:20px;flex:none;}
+/* ===== 連續點按不會放大縮小（2026-11-04 SUNNY：小朋友連點橡皮擦畫面忽大忽小） ===== */
+.croom,.croom *{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.croom .cbody{-webkit-user-select:none;user-select:none;}
+.croom .cname input{-webkit-user-select:text;user-select:text;}
+/* 提示框固定高度：字多在框裡捲，不推版面 */
+.cqs .cnote{height:84px;min-height:84px;max-height:84px;}
+@media (max-height:700px){.cqs .cnote{height:70px;min-height:70px;max-height:70px;}}
+@media (min-width:760px) and (min-aspect-ratio:1/1){.cqs .cnote{height:110px;min-height:110px;max-height:110px;}}

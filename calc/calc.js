@@ -215,12 +215,14 @@ function ansHTML() {
 }
 // 只填答案 → 放進直式的答案列（靠右），批改、提示、教學都跟原本一樣
 function ansToKid() { const L = Q.L, a = Q.ans; Q.kid = L.rows.map((row, r) => C.isGiven(L, r) ? row.slice() : row.map(() => " ")); a.split("").forEach((ch, i) => { Q.kid[2][L.cols - a.length + i] = ch; }); }
-function fitGrid() {
+function fitGrid(force) {
   const a = el("cgarea"), g = el("cgrid"); if (!a || !g || !Q) return;
-  const L = Q.L, cs = Math.max(24, Math.min(window.innerWidth >= 760 ? 76 : 64, Math.floor((a.clientWidth - 24) / L.cols), Math.floor((a.clientHeight - 24) / L.rows.length)));
-  g.style.setProperty("--cs", cs + "px");
+  // 一題只算一次格子大小（提示框字變多、按鍵重畫都不會讓格子忽大忽小）；轉螢幕／視窗變寬窄才重算
+  if (!Q.cs || force) { const L = Q.L; Q.cs = Math.max(24, Math.min(window.innerWidth >= 760 ? 76 : 64, Math.floor((a.clientWidth - 24) / L.cols), Math.floor((a.clientHeight - 24) / L.rows.length))); }
+  g.style.setProperty("--cs", Q.cs + "px");
 }
-window.addEventListener("resize", () => { if (Q && room.classList.contains("qmode")) fitGrid(); });
+let lastW = window.innerWidth;
+window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; lastW = window.innerWidth; if (Q && room.classList.contains("qmode")) fitGrid(true); });   // 只看寬度（手機網址列跑出來收起來不算）
 function nextQ() { if (Q.idx < S.perDay && S.first.length >= Q.idx) startQ(Q.idx + 1); else drawHome(false); }
 function key(k) {
   if (!Q || Q.done || Q.busy) return;
