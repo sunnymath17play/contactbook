@@ -40,8 +40,21 @@ const STAMPS = 12;   // 浩克章 stamp_1.png ~ stamp_12.png（阿居畫），�
 const tile = document.createElement("button");
 tile.type = "button"; tile.className = "ctile hop"; tile.id = "ctile";
 tile.innerHTML = `<img class="ic" src="${IMG}tile.png" alt="" onerror="this.style.visibility='hidden'"><span class="tx"><b>計算挑戰</b><small id="ctileSub">每天 5 題，挑戰連續答對！</small></span><span class="go">›</span>`;
-const tiles = el("tiles"); if (tiles) tiles.insertAdjacentElement("afterend", tile);
+// 排版（SUNNY 2026-11-04：計算挑戰和影片教室都是正事，放在一起）：
+// 第一排「影片教室｜計算挑戰」並排；寵物蛋（好玩的）移到下面變成一條
+const tiles = el("tiles");
+if (tiles) {
+  const vids = el("videos"); if (vids) vids.insertAdjacentElement("afterend", tile); else tiles.appendChild(tile);
+  tiles.classList.add("two");
+  const pt = el("ptile"); if (pt) { tiles.insertAdjacentElement("afterend", pt); pt.classList.add("solo"); }
+}
 tile.onclick = () => openRoom();
+// 影片教室裡也放入口（平板 QR code &v=1 會直接進影片教室，看不到樹洞首頁）
+const vbar = document.createElement("button");
+vbar.type = "button"; vbar.className = "cvbar";
+vbar.innerHTML = `<img src="${IMG}tile.png" alt=""><span><b>計算挑戰</b><small id="cvbarSub">每天 5 題，挑戰連續答對！</small></span><i>›</i>`;
+vbar.onclick = () => openRoom();
+const vbody = el("vbody"); if (vbody) { const pc = el("petcard3"); if (pc) vbody.insertBefore(vbar, pc); else vbody.prepend(vbar); }
 
 const room = document.createElement("div");
 room.className = "vroom croom"; room.id = "croom";
@@ -67,7 +80,8 @@ async function loadState() {
 }
 function updateTile() {
   const sub = el("ctileSub"); if (!sub || !S || !S.ok) return;
-  sub.textContent = S.first.length >= S.perDay ? `今天做完了！連續答對 ${S.streak} 題` : `連續答對 ${S.streak}／${S.goal} 題・今天還有 ${S.perDay - S.first.length} 題`;
+  sub.textContent = S.first.length >= S.perDay ? `今天做完了！連續答對 ${S.streak} 題` : `連續 ${S.streak}／${S.goal} 題・今天還有 ${S.perDay - S.first.length} 題`;
+  const vs = el("cvbarSub"); if (vs) vs.textContent = sub.textContent;
 }
 function openRoom() { room.classList.add("show"); history.pushState({ c: 1 }, ""); Q = null; drawHome(true); }
 function closeRoom() { room.classList.remove("show"); Q = null; updateTile(); }
