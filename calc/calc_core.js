@@ -239,7 +239,10 @@ function teachSteps(L) {
         S.push({ cells: [cell(r, c)], say: only !== null ? `${POS[i]}：只有 ${only}${cr ? `，再加手上記的 ${cr} ＝ ${sum}` : ''}${sum >= 10 ? `，寫 ${sum % 10}，手上記 1` : `，寫 ${sum}`}` : `${POS[i]}：${a}＋${b}${cr ? `，再加手上記的 ${cr}` : ''} ＝ ${sum}${sum >= 10 ? `，寫 ${sum % 10}，手上記 1` : ''}` });
       } else {
         const br = res.borrows[i], top = a - br;
-        S.push({ cells: [cell(r, c)], say: `${POS[i]}：${br ? `${a} 被借走 1，剩 ${top}；` : ''}${top < b ? `${top} 不夠減 ${b}，向左邊借 1 → ${top + 10}－${b}＝${top + 10 - b}` : `${top}－${b}＝${top - b}`}` });
+        // 0 被右邊借：0 不夠借，先向左邊借 1 變成 10，借給右邊 1 剩 9（不會出現「剩 -1」）
+        const say = br && a === 0 ? `${POS[i]}：0 不夠借，先向左邊借 1 變成 10，借給右邊 1 剩 9；9－${b}＝${9 - b}`
+          : `${POS[i]}：${br ? `${a} 被借走 1，剩 ${top}；` : ''}${top < b ? `${top} 不夠減 ${b}，向左邊借 1 → ${top + 10}－${b}＝${top + 10 - b}` : `${top}－${b}＝${top - b}`}`;
+        S.push({ cells: [cell(r, c)], say });
       }
     }
   };

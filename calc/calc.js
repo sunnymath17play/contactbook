@@ -14,6 +14,8 @@ const lsG = k => { try { return localStorage.getItem(k); } catch (e) { return nu
 const lsS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const el = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// 測試連結 &chtest=1：計算挑戰自己記住（不靠影片小挑戰）
+if (/[?&]chtest=1/.test(location.search)) lsS("wh_chtest", "1");
 const TESTER = lsG("wh_chtest") === "1";
 if (typeof CH === "undefined" || !CH || typeof CalcCore === "undefined") return;
 const GRADE = 3 + (schoolYear() - CH.y);
@@ -67,6 +69,7 @@ function closeRoom() { room.classList.remove("show"); Q = null; updateTile(); }
 
 // ---------- 首頁：連續題數、今天進度、集章卡、獎狀 ----------
 async function drawHome(reload) {
+  room.classList.remove("qmode"); if (Q) { Q.teachUI = null; }
   const w = el("cwrap");
   if (reload || !S) { w.innerHTML = `<div class="cload">浩克拿題目中…</div>`; await loadState(); }
   if (!S || !S.ok) {
@@ -140,64 +143,93 @@ function startQ(idx) {
   drawQ();
 }
 const DISP = ch => ch === "-" ? "−" : ch === "+" ? "+" : ch;
+// 作答畫面（2026-11-04 改版）：題目在上、格子在中間、提示一行在格子下面、數字鍵固定在最下面（平板橫放／電腦：數字鍵放右邊）
+// 提示和「浩克帶你算」都放在同一個小框，不會把數字鍵擠下去；電腦可以直接用鍵盤打數字
 function drawQ(note) {
+  if (note !== undefined) Q.note = note;
+  note = Q.note;
+  room.classList.add("qmode");
   const { L, p, idx } = Q, w = el("cwrap");
-  const fitW = Math.floor((Math.min(window.innerWidth, 480) - 40) / L.cols), fitH = Math.floor((window.innerHeight - 470) / L.rows.length);
-  const cs = Math.max(34, Math.min(58, fitW, fitH));
   const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < S.first.length ? (S.first[i] ? "ok" : "no") : i === idx - 1 ? "now" : ""}"></i>`).join("");
-  let g = `<div class="cgrid ${L.kind === "d" ? "div" : ""}" style="grid-template-columns:repeat(${L.cols},${cs}px);--cs:${cs}px">`;
+  let g = `<div class="cgrid ${L.kind === "d" ? "div" : ""}" id="cgrid" style="grid-template-columns:repeat(${L.cols},var(--cs))">`;
   L.rows.forEach((row, r) => row.forEach((_, c) => {
     const given = C.isGiven(L, r), ch = Q.kid[r][c], k = r + "," + c;
-    const cls = ["cc", given ? "g" : "e", L.kind === "v" && L.bars.includes(r) ? "bar" : "", L.kind === "d" && r === 1 && c >= L.dd ? "dvd" : "", L.kind === "d" && r === 1 && c === L.dd ? "brk" : "",
+    const cls = ["cc", given ? "g" : "e", L.kind === "v" && L.bars.includes(r) ? "bar" : "", L.kind === "d" && r === 1 && c === L.dd ? "brk" : "",
       L.kind === "d" && r === 0 && c >= L.dd ? "quo" : "", !given && Q.act[0] === r && Q.act[1] === c && !Q.done ? "act" : "", Q.wrong.has(k) ? "bad" : "", Q.teach && Q.teach.has(k) ? "teach" : ""].filter(Boolean).join(" ");
     g += `<div class="${cls}" data-r="${r}" data-c="${c}">${ch === " " ? "" : DISP(ch)}</div>`;
   }));
   g += `</div>`;
-  const keys = ["7","8","9","4","5","6","1","2","3","←","0","→"].map(k => `<button type="button" class="ck" data-k="${k}">${k}</button>`).join("");
-  w.innerHTML = `
-    <div class="cqtop"><span>第 ${idx}／${S.perDay} 題</span><span class="cdots">${dots}</span><span class="cs">連續 <b>${S.streak}</b></span></div>
-    <div class="cq">${esc(p.text.replace(/－/g, "−").replace(/＋/g, "+"))} ＝ ？</div>
-    <div class="ctip">${L.kind === "d" ? "商從左邊開始寫，每一步都寫在對的格子裡。" : L.op === "×2" ? "先乘個位、再乘十位，最後加起來；每個數字寫進一格。" : "從個位開始，一格寫一個數字；進位記在手上。"}</div>
-    <div class="cgridbox">${g}</div>
-    <div class="cnote ${note && note.cls || ""}" id="cnote">${note ? note.html : ""}</div>
-    ${Q.done ? `<button class="cbtn big" id="cnext">${idx < S.perDay ? "下一題 →" : "看今天的成績"}</button>` : `<div class="ckeys">${keys}</div>
-    <div class="crow"><button type="button" class="cbtn gray" id="cdel">⌫ 擦掉</button><button type="button" class="cbtn" id="cok">完成</button></div>`}`;
-  w.querySelectorAll(".cc.e").forEach(d => d.onclick = () => { if (Q.done) return; Q.act = [+d.dataset.r, +d.dataset.c]; drawQ(note); });
-  w.querySelectorAll(".ck").forEach(b => b.onclick = () => key(b.dataset.k));
-  if (el("cdel")) el("cdel").onclick = () => key("del");
-  if (el("cok")) el("cok").onclick = submit;
-  if (el("cnext")) el("cnext").onclick = () => { if (idx < S.perDay && S.first.length >= idx) startQ(idx + 1); else drawHome(false); };
+  const tip = L.kind === "d" ? "商從左邊開始寫，每一步都寫在對的格子裡。" : L.op === "×2" ? "先乘個位、再乘十位，最後加起來。" : "從個位開始，一格一個數字；進位記在手上。";
+  let pad;
+  if (Q.teachUI) pad = `<div class="cpad2"><button type="button" class="cbtn gray" id="tprev" ${Q.teachUI.i <= 1 ? "disabled" : ""}>◀ 上一步</button><button type="button" class="cbtn" id="tnext">${Q.teachUI.i >= Q.teachUI.n ? (idx < S.perDay ? "下一題 →" : "看今天的成績") : "下一步 ▶"}</button></div>`;
+  else if (Q.done) pad = `<div class="cpad2 one"><button class="cbtn" id="cnext">${idx < S.perDay ? "下一題 →" : "看今天的成績"}</button></div>`;
+  else pad = `<div class="ckeys">${["7", "8", "9", "del", "4", "5", "6", "←", "1", "2", "3", "→", "0", "ok"].map(k =>
+      k === "del" ? `<button type="button" class="ck fn" data-k="del">⌫</button>` : k === "ok" ? `<button type="button" class="ck okk" data-k="ok">完成</button>`
+      : `<button type="button" class="ck${k === "0" ? " zero" : ""}${k === "←" || k === "→" ? " fn" : ""}" data-k="${k}">${k}</button>`).join("")}</div>`;
+  w.innerHTML = `<div class="cqs">
+    <div class="cqhead"><div class="cqtop"><span>第 ${idx}／${S.perDay} 題</span><span class="cdots">${dots}</span><span class="cs">連續 <b>${S.streak}</b></span></div>
+      <div class="cq">${esc(p.text.replace(/－/g, "−").replace(/＋/g, "+"))} ＝ ？</div></div>
+    <div class="cmain"><div class="cgarea" id="cgarea"><div class="cgridbox">${g}</div></div>
+      <div class="cnote ${note && note.cls || "tip"}" id="cnote">${note ? note.html : esc(tip)}</div></div>
+    <div class="cpad">${pad}</div></div>`;
+  fitGrid();
+  w.querySelectorAll(".cc.e").forEach(d => d.onclick = () => { if (Q.done) return; Q.act = [+d.dataset.r, +d.dataset.c]; drawQ(); });
+  w.querySelectorAll(".ck").forEach(b => b.onclick = () => b.dataset.k === "ok" ? submit() : key(b.dataset.k));
+  if (el("cnext")) el("cnext").onclick = nextQ;
+  if (el("tnext")) el("tnext").onclick = () => Q.teachUI.go(1);
+  if (el("tprev")) el("tprev").onclick = () => Q.teachUI.go(-1);
 }
+// 格子大小照「中間剩下的空間」算（手機、平板、電腦都塞得剛好），最大 64px
+function fitGrid() {
+  const a = el("cgarea"), g = el("cgrid"); if (!a || !g || !Q) return;
+  const L = Q.L, cs = Math.max(24, Math.min(window.innerWidth >= 760 ? 76 : 64, Math.floor((a.clientWidth - 24) / L.cols), Math.floor((a.clientHeight - 24) / L.rows.length)));
+  g.style.setProperty("--cs", cs + "px");
+}
+window.addEventListener("resize", () => { if (Q && room.classList.contains("qmode")) fitGrid(); });
+function nextQ() { if (Q.idx < S.perDay && S.first.length >= Q.idx) startQ(Q.idx + 1); else drawHome(false); }
 function key(k) {
   if (!Q || Q.done || Q.busy) return;
   const [r, c] = Q.act, L = Q.L, step = L.kind === "d" ? 1 : -1;
-  const move = d => { let nc = Q.act[1] + d; if (nc >= 0 && nc < L.cols) Q.act = [r, nc]; };
-  if (k === "←") move(-1); else if (k === "→") move(1);
-  else if (k === "del") { Q.kid[r][c] = " "; Q.wrong.delete(r + "," + c); }
+  const move = d => { const nc = Q.act[1] + d; if (nc >= 0 && nc < L.cols) Q.act = [Q.act[0], nc]; };
+  const vmove = d => { let nr = r + d; while (nr >= 0 && nr < L.rows.length && C.isGiven(L, nr)) nr += d; if (nr >= 0 && nr < L.rows.length) Q.act = [nr, c]; };
+  if (k === "←") move(-1); else if (k === "→") move(1); else if (k === "↑") vmove(-1); else if (k === "↓") vmove(1);
+  else if (k === "del") { if (Q.kid[r][c] === " ") move(-step); const [r2, c2] = Q.act; Q.kid[r2][c2] = " "; Q.wrong.delete(r2 + "," + c2); }
   else { Q.kid[r][c] = k; Q.wrong.delete(r + "," + c); move(step); }
-  const n = el("cnote"); drawQ(n && n.innerHTML ? { html: n.innerHTML, cls: n.className.replace("cnote", "").trim() } : null);
+  drawQ();
 }
+// 電腦：直接用鍵盤打數字、方向鍵移動、Backspace 擦掉、Enter 完成／下一步
+document.addEventListener("keydown", e => {
+  if (!Q || !room.classList.contains("show") || !room.classList.contains("qmode") || document.querySelector(".cmodal,.creward")) return;
+  const k = e.key;
+  if (Q.teachUI) { if (k === "Enter" || k === "ArrowRight" || k === " ") { e.preventDefault(); Q.teachUI.go(1); } else if (k === "ArrowLeft") Q.teachUI.go(-1); return; }
+  if (Q.done) { if (k === "Enter") { e.preventDefault(); nextQ(); } return; }
+  if (/^[0-9]$/.test(k)) key(k);
+  else if (k === "Backspace" || k === "Delete") { e.preventDefault(); key("del"); }
+  else if (k === "ArrowLeft") key("←"); else if (k === "ArrowRight") key("→");
+  else if (k === "ArrowUp") { e.preventDefault(); key("↑"); } else if (k === "ArrowDown") { e.preventDefault(); key("↓"); }
+  else if (k === "Enter") { e.preventDefault(); submit(); }
+});
 async function submit() {
-  if (Q.busy) return;
+  if (Q.busy || Q.done) return;
   const local = C.grade(Q.L, Q.kid);
   if (local.unfinished) { drawQ({ html: "✏️ " + esc(local.hint), cls: "warn" }); return; }
   Q.attempt += 1;
   const cells = Q.kid.map(r => r.join(""));
   if (Q.attempt === 1) {
-    Q.busy = true; drawQ({ html: "浩克改改看…", cls: "" });
+    Q.busy = true; drawQ({ html: "浩克改改看…", cls: "tip" });
     let r;
     try { r = await api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, cells, attempt: 1 }); }
     catch (e) { Q.busy = false; Q.attempt = 0; drawQ({ html: "網路不穩，再按一次「完成」。", cls: "warn" }); return; }
     Q.busy = false;
     if (!r || !r.ok && !r.graded) { Q.attempt = 0; drawQ({ html: r && r.err === "unfinished" ? "✏️ " + esc(r.hint) : "現在送不出去，再按一次「完成」。", cls: "warn" }); return; }
     S = Object.assign(S, r);
-    const gr = r.graded || (r.dup ? local : null) || local;
+    const gr = r.graded || local;
     if (gr.ok) return right(r);
     Q.wrong = new Set((gr.wrong || []).map(([a, b]) => a + "," + b));
-    drawQ({ html: `<b>連續題數歸零了</b>，${esc(pick(CHEER.reset))}<br>💡 ${esc(gr.hint)}`, cls: "bad" });
+    drawQ({ html: `💡 ${esc(gr.hint)}<small>連續歸零了，改好紅色格子再按「完成」。</small>`, cls: "bad" });
     return;
   }
-  // 第二次：自己改對了就過；還是錯就動畫教
+  // 第二次：自己改對了就過；還是錯就一步一步教
   if (local.ok) { log({ attempt: 2 }); Q.done = true; Q.wrong.clear(); drawQ({ html: "改對了！👍 這一題你學會了。", cls: "ok" }); return; }
   log({ attempt: 2, taught: true });
   teach();
@@ -206,34 +238,25 @@ function log(extra) { api(null, Object.assign({ mode: "calc", classId: CH.id, na
 function right(r) {
   Q.done = true; Q.wrong.clear();
   const milestone = S.streak && S.streak % 10 === 0;
-  drawQ({ html: `⭕ 答對了！已經連續答對 <b>${S.streak}</b> 題　${esc(milestone ? `連續 ${S.streak} 題，好厲害！` : pick(CHEER.ok))}`, cls: "ok" });
+  drawQ({ html: `⭕ 答對了！連續 <b>${S.streak}</b> 題　${esc(milestone ? `${S.streak} 題了，好厲害！` : pick(CHEER.ok))}`, cls: "ok" });
   updateTile();
   if (r.cert) setTimeout(() => showCert(r.cert.n, true, r.stamp ? reward : null), 600);
   else if (r.stamp) setTimeout(reward, 500);
 }
 
-// ---------- 第二次錯：一步一步教 ----------
+// ---------- 第二次錯：浩克帶你算一次（自己按「下一步」，一次看一句；數字鍵的位置換成上一步／下一步，版面不會跳） ----------
 function teach() {
-  const steps = C.teachSteps(Q.L);
-  Q.kid = Q.L.rows.map((row, r) => C.isGiven(Q.L, r) ? row.slice() : row.map(() => " "));
-  Q.wrong.clear(); Q.done = true; Q.teach = new Set();
-  let i = 0, tm = null;
-  const say = [];
-  const tick = () => {
-    if (i >= steps.length) { finish(); return; }
-    const s = steps[i++]; Q.teach = new Set();
-    s.cells.forEach(([r, c, ch]) => { Q.kid[r][c] = ch; Q.teach.add(r + "," + c); });
-    say.push(s.say);
-    drawTeach(say, false);
-    tm = setTimeout(tick, Math.max(1700, s.say.length * 160));
+  const steps = C.teachSteps(Q.L), L = Q.L;
+  Q.wrong.clear(); Q.done = true;
+  const show = i => {   // 顯示到第 i 步
+    Q.kid = L.rows.map((row, r) => C.isGiven(L, r) ? row.slice() : row.map(() => " "));
+    steps.slice(0, i).forEach(s => s.cells.forEach(([r, c, ch]) => { Q.kid[r][c] = ch; }));
+    Q.teach = new Set(steps[i - 1].cells.map(([r, c]) => r + "," + c));
+    Q.teachUI.i = i;
+    drawQ({ html: `<span class="cstep">浩克帶你算　${i}／${steps.length}</span>${esc(steps[i - 1].say)}`, cls: "teachbox" });
   };
-  const finish = () => { clearTimeout(tm); steps.slice(i).forEach(s => { s.cells.forEach(([r, c, ch]) => { Q.kid[r][c] = ch; }); say.push(s.say); }); i = steps.length; Q.teach = new Set(); drawTeach(say, true); };
-  function drawTeach(lines, end) {
-    drawQ({ html: `<b>浩克帶你算一次：</b><div class="csteps">${lines.map((t, k) => `<div class="${k === lines.length - 1 && !end ? "now" : ""}">${esc(t)}</div>`).join("")}</div>${end ? "" : `<button type="button" class="cskip" id="cskip">全部看完 ⏩</button>`}`, cls: "teachbox" });
-    if (el("cskip")) el("cskip").onclick = finish;
-    const box = el("cnote"); if (box) box.scrollIntoView({ block: "nearest" });
-  }
-  tick();
+  Q.teachUI = { i: 0, n: steps.length, go: d => { const n = Q.teachUI.i + d; if (n > steps.length) { Q.teachUI = null; Q.teach = null; nextQ(); return; } if (n >= 1) show(n); } };
+  show(1);
 }
 
 // ---------- 5 題全對：獎勵動畫（阿居畫的分鏡，約 2 秒）＋蓋章 ----------

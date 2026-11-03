@@ -100,3 +100,60 @@
 .cfoot .crule{margin:10px 0 0;}
 .cqr{width:min(62vw,240px);margin:4px auto 10px;}
 .cqr svg{width:100%;height:auto;display:block;}
+
+/* ===== 作答畫面版面（2026-11-04）：數字鍵固定在下面，提示框固定高度，不會把鍵盤擠下去 ===== */
+.vroom.croom.qmode .cbody{overflow:hidden;display:flex;padding:10px 12px calc(10px + env(safe-area-inset-bottom));}
+.vroom.croom.qmode .cwrap{flex:1;display:flex;min-height:0;max-width:none;width:100%;zoom:1;}
+.cqs{flex:1;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px;min-height:0;max-width:520px;margin:0 auto;width:100%;}
+.cqhead .cqtop{margin-bottom:6px;}
+.cqhead .cq{padding:8px 12px;font-size:24px;}
+.cmain{display:flex;flex-direction:column;min-height:0;gap:8px;}
+.cgarea{flex:1;min-height:110px;display:flex;align-items:center;justify-content:center;overflow:auto;}
+.cgarea .cgridbox{display:inline-flex;padding:12px;}
+.cqs .cnote{flex:none;height:66px;margin:0;padding:8px 12px;overflow-y:auto;font-size:16px;line-height:1.45;display:block;}
+.cqs .cnote.tip{background:#fff;color:#4A6280;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;text-align:center;}
+.cqs .cnote small{display:block;font-size:13px;font-weight:700;opacity:.85;margin-top:2px;}
+.cstep{display:inline-block;background:#14A38B;color:#fff;border-radius:8px;padding:0 8px;font-size:13px;margin-right:6px;vertical-align:1px;}
+.cpad{display:flex;flex-direction:column;justify-content:flex-end;min-height:236px;}
+.cqs .ckeys{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0;}
+.cqs .ck{min-height:52px;font-size:25px;}
+.cqs .ck.fn{background:#E7EEF5;color:#4A6280;}
+.cqs .ck.zero{grid-column:span 2;}
+.cqs .ck.okk{grid-column:span 2;background:linear-gradient(180deg,#2BC4A8,#119C84);color:#fff;font-size:22px;box-shadow:0 4px 0 #0B7563;}
+.cpad2{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;}
+.cpad2.one{grid-template-columns:1fr;}
+.cpad2 .cbtn{min-height:64px;font-size:21px;}
+.cpad2 .cbtn:disabled{opacity:.4;}
+/* 平板橫放、電腦：格子在左、數字鍵在右 */
+@media (min-width:760px) and (min-aspect-ratio:1/1){
+  .cqs{max-width:1000px;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);column-gap:18px;}
+  .cqhead{grid-column:1 / 3;}
+  .cmain{grid-column:1;grid-row:2;}
+  .cpad{grid-column:2;grid-row:2;justify-content:center;min-height:0;}
+  .cqs .ck{min-height:64px;}
+  .cqs .cnote{height:76px;font-size:17px;}
+}
+/* 提示框：最多約 3 行，字不會被截掉；數字鍵還是固定在最下面 */
+.cqs .cnote{height:auto;min-height:56px;max-height:100px;}
+@media (min-width:760px) and (min-aspect-ratio:1/1){
+  .cqhead .cqtop{font-size:18px;} .cqhead .cq{font-size:30px;}
+  .cqs .cnote{min-height:64px;max-height:120px;font-size:18px;}
+  .cqs .cnote.tip{font-size:17px;}
+  .cqs .ck{font-size:28px;}
+}
+/* 矮螢幕（小手機）：按鍵矮一點，格子才放得下 */
+@media (max-height:700px){
+  .cqs .ck{min-height:42px;font-size:22px;}
+  .cpad{min-height:190px;}
+  .cpad2 .cbtn{min-height:52px;}
+  .cqhead .cq{font-size:21px;padding:5px 10px;}
+  .cqs .cnote{min-height:48px;max-height:84px;font-size:15px;}
+}
+/* 平板橫放、電腦：右邊一欄＝提示＋數字鍵（提示就在按鍵上面，眼睛不用跑來跑去） */
+@media (min-width:760px) and (min-aspect-ratio:1/1){
+  .cqs{grid-template-rows:auto minmax(0,1fr) auto auto minmax(0,1fr);row-gap:12px;}
+  .cmain{display:contents;}
+  .cgarea{grid-column:1;grid-row:2 / 6;}
+  .cqs .cnote{grid-column:2;grid-row:3;}
+  .cpad{grid-column:2;grid-row:4;}
+}
