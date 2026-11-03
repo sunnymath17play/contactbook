@@ -157,3 +157,14 @@
   .cqs .cnote{grid-column:2;grid-row:3;}
   .cpad{grid-column:2;grid-row:4;}
 }
+/* 三年級加減法：紙上算、只填答案 */
+.cpaper{background:#fff;border-radius:20px;padding:16px 18px;text-align:center;box-shadow:0 3px 10px rgba(20,140,120,.1);max-width:100%;}
+.cpaper-t{font-size:22px;font-weight:900;color:#0F7E6B;}
+.cpaper-s{font-size:15px;font-weight:700;color:#4A6280;margin:2px 0 12px;}
+.cans{display:inline-flex;align-items:center;gap:6px;}
+.cans-l{font-size:18px;font-weight:900;color:#1E3A5F;margin-right:4px;}
+.cans .ad{width:54px;height:64px;border:2.5px solid #BFD3E0;border-radius:12px;display:grid;place-items:center;font-size:40px;font-weight:900;color:#1E3A5F;background:#fff;}
+.cans .ad.cur{border-color:#F5B700;background:#FFF6C9;box-shadow:0 0 0 3px #FFE58A;}
+.cans .ad.bad{border-color:#E5675B;background:#FFE4E1;color:#C0392B;animation:cshake .35s;}
+@media (max-width:380px){.cans .ad{width:44px;height:56px;font-size:32px;}}
+.cqs .ck.hid{visibility:hidden;}

@@ -145,6 +145,8 @@ function startQ(idx) {
   const kid = L.rows.map((row, r) => C.isGiven(L, r) ? row.slice() : row.map(() => " "));
   const r0 = L.kind === "d" ? 0 : 2, c0 = L.kind === "d" ? L.dd : L.cols - 1;
   Q = { idx, p, L, kid, act: [r0, c0], attempt: 0, wrong: new Set(), done: false };
+  // 三年級加減法：紙上用直式算（借位要劃掉、寫清楚），網頁只打答案（SUNNY 2026-11-04）
+  if (GRADE === 3 && (p.type === "add" || p.type === "sub")) { Q.ans = ""; Q.ansMax = L.cols - 1; }
   drawQ();
 }
 const DISP = ch => ch === "-" ? "−" : ch === "+" ? "+" : ch;
@@ -164,17 +166,18 @@ function drawQ(note) {
     g += `<div class="${cls}" data-r="${r}" data-c="${c}">${ch === " " ? "" : DISP(ch)}</div>`;
   }));
   g += `</div>`;
-  const tip = L.kind === "d" ? "商從左邊開始寫，每一步都寫在對的格子裡。" : L.op === "×2" ? "先乘個位、再乘十位，最後加起來。" : "從個位開始，一格一個數字；進位記在手上。";
+  const ansMode = Q.ans !== undefined && !Q.teachUI;
+  const tip = ansMode ? "✏️ 拿紙筆用直式算，要借位的地方劃掉、寫清楚。算完把答案打在下面。" : L.kind === "d" ? "商從左邊開始寫，每一步都寫在對的格子裡。" : L.op === "×2" ? "先乘個位、再乘十位，最後加起來。" : "從個位開始，一格一個數字；進位記在手上。";
   let pad;
   if (Q.teachUI) pad = `<div class="cpad2"><button type="button" class="cbtn gray" id="tprev" ${Q.teachUI.i <= 1 ? "disabled" : ""}>◀ 上一步</button><button type="button" class="cbtn" id="tnext">${Q.teachUI.i >= Q.teachUI.n ? (idx < S.perDay ? "下一題 →" : "看今天的成績") : "下一步 ▶"}</button></div>`;
   else if (Q.done) pad = `<div class="cpad2 one"><button class="cbtn" id="cnext">${idx < S.perDay ? "下一題 →" : "看今天的成績"}</button></div>`;
   else pad = `<div class="ckeys">${["7", "8", "9", "del", "4", "5", "6", "←", "1", "2", "3", "→", "0", "ok"].map(k =>
       k === "del" ? `<button type="button" class="ck fn" data-k="del">⌫</button>` : k === "ok" ? `<button type="button" class="ck okk" data-k="ok">完成</button>`
-      : `<button type="button" class="ck${k === "0" ? " zero" : ""}${k === "←" || k === "→" ? " fn" : ""}" data-k="${k}">${k}</button>`).join("")}</div>`;
+      : `<button type="button" class="ck${k === "0" ? " zero" : ""}${k === "←" || k === "→" ? (ansMode ? " fn hid" : " fn") : ""}" data-k="${k}">${k}</button>`).join("")}</div>`;
   w.innerHTML = `<div class="cqs">
     <div class="cqhead"><div class="cqtop"><span>第 ${idx}／${S.perDay} 題</span><span class="cdots">${dots}</span><span class="cs">連續 <b>${S.streak}</b></span></div>
       <div class="cq">${esc(p.text.replace(/－/g, "−").replace(/＋/g, "+"))} ＝ ？</div></div>
-    <div class="cmain"><div class="cgarea" id="cgarea"><div class="cgridbox">${g}</div></div>
+    <div class="cmain"><div class="cgarea" id="cgarea">${ansMode ? ansHTML() : `<div class="cgridbox">${g}</div>`}</div>
       <div class="cnote ${note && note.cls || "tip"}" id="cnote">${note ? note.html : esc(tip)}</div></div>
     <div class="cpad">${pad}</div></div>`;
   fitGrid();
@@ -185,6 +188,19 @@ function drawQ(note) {
   if (el("tprev")) el("tprev").onclick = () => Q.teachUI.go(-1);
 }
 // 格子大小照「中間剩下的空間」算（手機、平板、電腦都塞得剛好），最大 64px
+// 只填答案：一格一個數字、從左往右打；錯的位數變紅（答案靠右對到直式答案列）
+function ansHTML() {
+  const a = Q.ans, n = Math.max(a.length + (Q.done ? 0 : 1), 1), off = Q.L.cols - a.length;
+  let boxes = "";
+  for (let i = 0; i < Math.min(n, Q.ansMax); i++) {
+    const ch = a[i] || "", bad = ch && Q.wrong.has("2," + (off + i));
+    boxes += `<span class="ad${bad ? " bad" : ""}${!Q.done && i === a.length ? " cur" : ""}">${ch}</span>`;
+  }
+  return `<div class="cpaper"><div class="cpaper-t">✏️ 先在紙上算</div><div class="cpaper-s">直式寫好、借位劃清楚</div>
+    <div class="cans"><span class="cans-l">答案</span>${boxes}</div></div>`;
+}
+// 只填答案 → 放進直式的答案列（靠右），批改、提示、教學都跟原本一樣
+function ansToKid() { const L = Q.L, a = Q.ans; Q.kid = L.rows.map((row, r) => C.isGiven(L, r) ? row.slice() : row.map(() => " ")); a.split("").forEach((ch, i) => { Q.kid[2][L.cols - a.length + i] = ch; }); }
 function fitGrid() {
   const a = el("cgarea"), g = el("cgrid"); if (!a || !g || !Q) return;
   const L = Q.L, cs = Math.max(24, Math.min(window.innerWidth >= 760 ? 76 : 64, Math.floor((a.clientWidth - 24) / L.cols), Math.floor((a.clientHeight - 24) / L.rows.length)));
@@ -194,6 +210,12 @@ window.addEventListener("resize", () => { if (Q && room.classList.contains("qmod
 function nextQ() { if (Q.idx < S.perDay && S.first.length >= Q.idx) startQ(Q.idx + 1); else drawHome(false); }
 function key(k) {
   if (!Q || Q.done || Q.busy) return;
+  if (Q.ans !== undefined && !Q.teachUI) {
+    if (k === "del") Q.ans = Q.ans.slice(0, -1);
+    else if (/^[0-9]$/.test(k) && Q.ans.length < Q.ansMax) Q.ans += k;
+    else return;
+    Q.wrong.clear(); drawQ(); return;
+  }
   const [r, c] = Q.act, L = Q.L, step = L.kind === "d" ? 1 : -1;
   const move = d => { const nc = Q.act[1] + d; if (nc >= 0 && nc < L.cols) Q.act = [Q.act[0], nc]; };
   const vmove = d => { let nr = r + d; while (nr >= 0 && nr < L.rows.length && C.isGiven(L, nr)) nr += d; if (nr >= 0 && nr < L.rows.length) Q.act = [nr, c]; };
@@ -216,6 +238,10 @@ document.addEventListener("keydown", e => {
 });
 async function submit() {
   if (Q.busy || Q.done) return;
+  if (Q.ans !== undefined) {
+    if (!Q.ans) { drawQ({ html: "✏️ 先在紙上算好，再把答案打進來喔！", cls: "warn" }); return; }
+    ansToKid();
+  }
   const local = C.grade(Q.L, Q.kid);
   if (local.unfinished) { drawQ({ html: "✏️ " + esc(local.hint), cls: "warn" }); return; }
   Q.attempt += 1;
@@ -231,6 +257,7 @@ async function submit() {
     const gr = r.graded || local;
     if (gr.ok) return right(r);
     Q.wrong = new Set((gr.wrong || []).map(([a, b]) => a + "," + b));
+    if (Q.ans !== undefined && gr.type === "align") gr.hint = "答案的位數不對，回去看看紙上的直式，有沒有少寫或多寫一位？";
     drawQ({ html: `💡 ${esc(gr.hint)}<small>連續歸零了，改好紅色格子再按「完成」。</small>`, cls: "bad" });
     return;
   }
@@ -251,6 +278,7 @@ function right(r) {
 
 // ---------- 第二次錯：浩克帶你算一次（自己按「下一步」，一次看一句；數字鍵的位置換成上一步／下一步，版面不會跳） ----------
 function teach() {
+  Q.ans = undefined;   // 教的時候改看完整直式
   const steps = C.teachSteps(Q.L), L = Q.L;
   Q.wrong.clear(); Q.done = true;
   const show = i => {   // 顯示到第 i 步
