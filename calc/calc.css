@@ -204,3 +204,11 @@
 .cans .cscreen .cursor{display:inline-block;width:3px;height:40px;background:#F5B700;margin-left:4px;animation:cblink 1s steps(1) infinite;}
 @keyframes cblink{50%{opacity:0}}
 @media (max-width:380px){.cans .cscreen{min-width:170px;height:58px;font-size:36px;}}
+/* 全部只填答案：除法兩個框（商、餘數） */
+.cpaper .cans + .cans{margin-top:10px;}
+.cpaper .cans .cans-l{min-width:44px;text-align:right;}
+.cans .cscreen:not(.on):not(.bad){border-color:#C9D6E2;}
+.cans .cscreen.on{box-shadow:0 0 0 4px #D7F5EE;}
+.cans .cscreen .ph{white-space:nowrap;}
+.cqs .ck.fn{font-size:18px;}
+@media (max-height:700px){.cpaper{padding:8px 12px;} .cpaper-t{font-size:18px;} .cpaper-s{margin:0 0 6px;font-size:13px;} .cans .cscreen{height:52px;font-size:34px;} .cpaper .cans + .cans{margin-top:6px;}}
