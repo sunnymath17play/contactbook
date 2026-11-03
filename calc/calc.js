@@ -193,7 +193,7 @@ function ansHTML() {
   const a = Q.ans, n = Math.max(a.length + (Q.done ? 0 : 1), 1), off = Q.L.cols - a.length;
   let boxes = "";
   for (let i = 0; i < Math.min(n, Q.ansMax); i++) {
-    const ch = a[i] || "", bad = ch && Q.ansBad;   // 答錯：整個答案框變紅，不指出哪一位
+    const ch = a[i] || "", bad = ch && (Q.ansBad || Q.wrong.has("2," + (off + i)));   // 錯很多位：整個答案框變紅；只錯一位：那一位變紅
     boxes += `<span class="ad${bad ? " bad" : ""}${!Q.done && i === a.length ? " cur" : ""}">${ch}</span>`;
   }
   return `<div class="cpaper"><div class="cpaper-t">✏️ 先在紙上算</div><div class="cpaper-s">直式寫好、借位劃清楚</div>
@@ -257,6 +257,11 @@ async function submit() {
     const gr = r.graded || local;
     if (gr.ok) return right(r);
     // 只填答案（三年級加減法）：看不到紙上的算法，不猜錯在哪一位，直接說答案不對（SUNNY 2026-11-04）
+    // 只錯一位數（位數一樣、只有一格不同）→ 才指出那一位、給提示
+    if (Q.ans !== undefined && (gr.wrong || []).length === 1 && gr.type !== "align") {
+      Q.ansBad = false; Q.wrong = new Set(gr.wrong.map(([a, b]) => a + "," + b));
+      drawQ({ html: `💡 ${esc(gr.hint)}<small>連續歸零了，改好紅色那一位再按「完成」。</small>`, cls: "bad" }); return;
+    }
     if (Q.ans !== undefined) { Q.ansBad = true; drawQ({ html: `❌ 答案不對。回去看紙上的直式，一位一位再檢查一次。<small>連續歸零了，改好答案再按「完成」。</small>`, cls: "bad" }); return; }
     Q.wrong = new Set((gr.wrong || []).map(([a, b]) => a + "," + b));
     drawQ({ html: `💡 ${esc(gr.hint)}<small>連續歸零了，改好紅色格子再按「完成」。</small>`, cls: "bad" });
