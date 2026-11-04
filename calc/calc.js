@@ -7,7 +7,7 @@
    原始碼在 程式碼\計算挑戰\，node build.cjs 複製到 contactbook\calc\
    ============================================================ */
 (function(){
-const CALC_OPEN = false;   // SUNNY 試玩 OK 才改 true；之前只有測試連結（&chtest=1）看得到
+const CALC_OPEN = true;    // 2026-11-04 SUNNY：可以上架了（三、四年級孩子都看得到）
 const CALC_GRADES = [3, 4];
 const IMG = "calc/img/";
 const lsG = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
