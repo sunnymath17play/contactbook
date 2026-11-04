@@ -217,7 +217,7 @@ function askHTML() {
     <div class="cask-b">📒 帶著計算本找 SUNNY</div></div>`;
 }
 function ansHTML() {
-  const L = Q.L, sub = L.kind === "d" ? "直式寫好、每一步對齊" : L.op === "-" ? "直式寫好、借位劃清楚" : L.op === "+" ? "直式寫好、進位記在手上" : "直式寫好、乘完加上手上記的";
+  const L = Q.L, sub = L.kind === "d" ? "直式寫好、每一步對齊" : L.op === "-" ? "直式寫好、借位劃清楚" : L.op === "+" ? "注意是否需要進位喔" : "直式寫好、乘完加上手上記的";
   const rows = L.kind === "d"
     ? `<div class="cans"><span class="cans-l">商</span>${screenHTML(Q.ans, "q", "打商")}</div><div class="cans"><span class="cans-l">餘數</span>${screenHTML(Q.rem, "r", "沒有就空著")}</div>`
     : `<div class="cans"><span class="cans-l">答案</span>${screenHTML(Q.ans, "q", "打答案")}</div>`;
