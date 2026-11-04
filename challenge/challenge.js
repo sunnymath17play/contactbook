@@ -110,7 +110,7 @@ function ask(){
     ${cur.tries ? `<div class="chagain">看完了，再答一次！</div>` : ""}
     ${q.choices
       ? `<div class="chch">${cur.order.map(t => `<button type="button" class="chopt" data-a="${esc(t)}" ${cur.wrong.includes(t) ? "disabled" : ""}>${esc(t)}</button>`).join("")}</div>`
-      : `<form class="chnum" id="chNum"><input id="chIn" type="text" inputmode="decimal" autocomplete="off" placeholder="答案"><span>${esc(q.unit || "")}</span><button type="submit" class="chbtn">送出</button></form>`}
+      : `<form class="chnum" id="chNum"><input id="chIn" type="text" inputmode="decimal" autocomplete="off" placeholder="${esc(q.ph || "答案")}"><span>${esc(q.unit || "")}</span><button type="submit" class="chbtn">送出</button></form>`}
     <button type="button" class="chlink" id="chMean">我看不懂題目意思</button>
     <div class="chmean" id="chMeanBox" hidden>${face("hi", "sm")}<div>${esc(q.meaning)}</div></div>`);
   $("chMean").onclick = () => { $("chMeanBox").hidden = !$("chMeanBox").hidden; };
@@ -119,7 +119,9 @@ function ask(){
 }
 // 打數字的題目：全形數字轉半形、去掉逗號，孩子多打了單位（120元）也算對，比數值（60.0＝60）
 const toNum = s => { const m = String(s).replace(/[０-９．]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[,，\s]/g, "").match(/^-?\d+(\.\d+)?/); return m ? +m[0] : NaN; };
-const same = (a, b) => String(a).replace(/\s/g, "") === String(b).replace(/\s/g, "") || (/^-?\d+(\.\d+)?$/.test(String(b)) && toNum(a) === +b);
+// 有餘數的答案寫「商...餘」（SUNNY 教法：餘＝點三點）：孩子打 . 。 … ．不管幾個都當成「...」，全形數字轉半形
+const dots = s => String(s).replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/\s/g, "").replace(/(\d)(?:[.．。・·]{2,}|…+)(\d)/g, "$1...$2");
+const same = (a, b) => String(a).replace(/\s/g, "") === String(b).replace(/\s/g, "") || (/\.\.\./.test(String(b)) && dots(a) === dots(b)) || (/^-?\d+(\.\d+)?$/.test(String(b)) && toNum(a) === +b);
 
 function check(a, btn){
   const q = cur.c.qs[cur.i];
