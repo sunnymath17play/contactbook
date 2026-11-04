@@ -92,7 +92,7 @@ async function drawHome(reload) {
   const w = el("cwrap");
   if (reload || !S) { w.innerHTML = `<div class="cload">浩克拿題目中…</div>`; await loadState(); }
   if (!S || !S.ok) {
-    const msg = { no_name: "先回樹洞首頁，在「我是＿＿」打上你的本名，再來挑戰喔！", not_roster: "浩克找不到你的名字，請打本名（例如：王小明），或問 SUNNY。", net: "網路好像不穩，等一下再點一次。" }[S && S.err] || "現在打不開，等一下再試試。";
+    const msg = { no_name: "先回樹洞首頁，在「我是＿＿」打上你的本名，再來挑戰喔！", not_roster: "浩克找不到你的名字，請打本名（例如：王小明），或問 SUNNY。", net: "網路好像斷了，等一下再點一次。" }[S && S.err] || "現在打不開，等一下再試試。";
     if (S && (S.err === "no_name" || S.err === "not_roster")) {
       w.innerHTML = `<div class="cmsg">${S.err === "no_name" ? "你好！先打上你的<b>本名</b>，浩克才知道是誰在挑戰喔！" : "浩克找不到這個名字，請打<b>本名</b>（例如：王小明）。"}</div>
         <div class="cname"><input id="cnameIn" maxlength="10" placeholder="打你的本名" autocomplete="off" value="${esc(S.err === "not_roster" ? myName() : "")}"><button class="cbtn" id="cnameOk">好！</button></div>
@@ -298,7 +298,7 @@ async function submit() {
     Q.busy = true; drawQ({ html: "浩克改改看…", cls: "tip" });
     let r;
     try { r = await api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, cells, attempt: 1 }); }
-    catch (e) { Q.busy = false; Q.attempt = 0; drawQ({ html: "網路不穩，再按一次「完成」。", cls: "warn" }); return; }
+    catch (e) { Q.busy = false; Q.attempt = 0; drawQ({ html: "網路好像斷了，再按一次「完成」。", cls: "warn" }); return; }
     Q.busy = false;
     if (!r || !r.ok && !r.graded) { Q.attempt = 0; drawQ({ html: r && r.err === "unfinished" ? "✏️ " + esc(r.hint) : "現在送不出去，再按一次「完成」。", cls: "warn" }); return; }
     S = Object.assign(S, r);
@@ -329,7 +329,7 @@ async function submitAns() {
     Q.busy = true; drawQ({ html: "浩克改改看…", cls: "tip" });
     let r;
     try { r = await api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 1 }); }
-    catch (e) { Q.busy = false; Q.attempt = 0; drawQ({ html: "網路不穩，再按一次「完成」。", cls: "warn" }); return; }
+    catch (e) { Q.busy = false; Q.attempt = 0; drawQ({ html: "網路好像斷了，再按一次「完成」。", cls: "warn" }); return; }
     Q.busy = false;
     if (!r || !r.ok && !r.graded) { Q.attempt = 0; drawQ({ html: "現在送不出去，再按一次「完成」。", cls: "warn" }); return; }
     S = Object.assign(S, r);
@@ -360,10 +360,10 @@ function right(r) {
 // ---------- 第二次錯：浩克帶你算一次（自己按「下一步」，一次看一句；數字鍵的位置換成上一步／下一步，版面不會跳） ----------
 // ---------- 第二次還錯：浩克努力說服孩子帶計算本去找 SUNNY（SUNNY 2026-11-04：這樣才有機會連續對） ----------
 const ASK_SUNNY = [
-  ["這題卡住沒關係！", "把計算本帶去給 SUNNY 看，SUNNY 一眼就找得到是哪一步出錯。找出來以後，同樣的錯就不會再犯，連續答對才會越來越長喔！"],
-  ["浩克偷偷告訴你一個祕密…", "厲害的人不是從來不錯，是錯了會去問！拿著計算本找 SUNNY，一下子就能弄懂，下次這種題目你就穩穩拿分。"],
-  ["你已經很接近了！", "答案差一點點，問題一定藏在計算本的某一步裡。帶去給 SUNNY 看，抓到那個小怪獸，計算王獎狀就離你更近一步！"],
-  ["浩克跟你打勾勾 🤙", "下次上課記得帶計算本去找 SUNNY，花一分鐘問清楚，比自己猜十次還有用！問完你就會發現：原來這麼簡單！"],
+  ["這題卡住沒關係！", "把計算本帶去給 SUNNY 看，SUNNY 一下就能找到是哪一步算錯。找出來以後，同樣的錯就不會再犯，連續答對的題數才會越來越多喔！"],
+  ["浩克偷偷告訴你一個祕密…", "厲害的人不是從來不錯，而是錯了會去問！拿著計算本找 SUNNY，很快就能弄懂，下次遇到這種題目就不怕了。"],
+  ["你已經很接近了！", "答案只差一點點，問題一定藏在計算本的某一步裡。帶去給 SUNNY 看，把它找出來，計算王獎狀就離你更近一步！"],
+  ["浩克跟你約好喔！", "下次上課記得帶計算本去找 SUNNY，花一分鐘問清楚，比自己猜十次還有用！問完你就會發現：原來這麼簡單！"],
 ];
 function askSunny() {
   Q.done = true; Q.ansBad = false; Q.badField = undefined; Q.wrong.clear();
