@@ -123,6 +123,16 @@ function create(rand) {
       }
     }
   };
+  // 四年級加減法：五位數，連續進位／連續退位（中間有 0 的退位）
+  G.g4Add = () => {
+    for (;;) { const a = ri(10000, 89999), b = ri(1000, 99999 - a), r = addCols(a, b); if (r.v <= 99999 && nCarry(r.carries) >= 3 && consecutive(r.carries)) return { a, b, v: a + b }; }
+  };
+  G.g4Sub = zero => {
+    for (;;) {
+      let a = ri(20000, 99999); if (zero) { const A = digits(a); A[1] = 0; A[2] = 0; a = Number(A.reverse().join('')); }
+      const b = ri(1000, a - 1000), r = subCols(a, b); if (nCarry(r.borrows) >= 3 && consecutive(r.borrows)) return { a, b, v: a - b };
+    }
+  };
   // 題目 → 統一格式 { text, ans, L }
   G.P = {
     add: p => ({ type: 'add', text: `${p.a}＋${p.b}`, ans: p.v, L: addLayout(p.a, p.b, p.v), chk: p.a + p.b === p.v }),
@@ -140,8 +150,19 @@ function dailySet(grade, date, name) {
   const rand = rng(hashStr(`${grade}|${date}|${name}`)), G = create(rand), P = G.P;
   const dayNo = Math.floor(Date.parse(date + 'T00:00:00Z') / 86400000);   // 用日期當「第幾天」決定單雙日的變化
   let list;
-  if (grade === 3) list = [P.add(G.g3Add()), P.sub(G.g3Sub(dayNo)), P.mul1(G.g3Mul(dayNo)), rand() < 0.5 ? P.add(G.g3Add()) : P.sub(G.g3Sub(dayNo + 1)), P.mul1(G.g3Mul(dayNo + 1))];
-  else list = [P.mul1(G.g4Mul1()), P.mul2(G.g4Mul2()), P.mul2(G.g4Mul2()), P.div(G.g4Div(1)), P.div(G.g4Div(0))];
+  if (date <= '2026-11-04') {   // 11/4 以前的舊排法（當天已經有孩子在做，不換題目）
+    if (grade === 3) list = [P.add(G.g3Add()), P.sub(G.g3Sub(dayNo)), P.mul1(G.g3Mul(dayNo)), rand() < 0.5 ? P.add(G.g3Add()) : P.sub(G.g3Sub(dayNo + 1)), P.mul1(G.g3Mul(dayNo + 1))];
+    else list = [P.mul1(G.g4Mul1()), P.mul2(G.g4Mul2()), P.mul2(G.g4Mul2()), P.div(G.g4Div(1)), P.div(G.g4Div(0))];
+    return list.map((p, i) => Object.assign(p, { id: `${date}-${i + 1}` }));
+  }
+  // 2026-11-05 起（SUNNY：加減乘除比例相當，不要都是加減法）：每種至少 1 題，多的輪流；順序每天打亂
+  const mk = {
+    3: { add: () => P.add(G.g3Add()), sub: k => P.sub(G.g3Sub(dayNo + k)), mul: k => P.mul1(G.g3Mul(dayNo + k)) },
+    4: { add: () => P.add(G.g4Add()), sub: k => P.sub(G.g4Sub((dayNo + k) % 2 === 0)), mul: k => (k ? P.mul1(G.g4Mul1()) : P.mul2(G.g4Mul2())), div: k => P.div(G.g4Div((dayNo + k) % 2)) },
+  }[grade === 3 ? 3 : 4];
+  const kinds = Object.keys(mk), extra = grade === 3 ? [kinds[dayNo % 3], kinds[(dayNo + 1) % 3]] : [kinds[dayNo % 4]];   // 三年級：3 種＋2 題輪流（三天一輪剛好平均）；四年級：4 種＋1 題輪流
+  list = kinds.map(k => mk[k](0)).concat(extra.map(k => mk[k](1)));
+  for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
   return list.map((p, i) => Object.assign(p, { id: `${date}-${i + 1}` }));
 }
 
