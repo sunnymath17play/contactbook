@@ -351,7 +351,7 @@ function log(extra) { api(null, Object.assign({ mode: "calc", classId: CH.id, na
 function right(r) {
   Q.done = true; Q.wrong.clear();
   const milestone = S.streak && S.streak % 10 === 0;
-  drawQ({ html: `⭕ 答對了！連續 <b>${S.streak}</b> 題　${esc(milestone ? `${S.streak} 題了，好厲害！` : pick(CHEER.ok))}`, cls: "ok" });
+  drawQ({ html: `⭕ 答對了！連續 <b>${S.streak}</b> 題　${esc(milestone ? `${S.streak} 題了，好厲害！` : pick(CHEER.ok.filter(t => !/手上記/.test(t) || Q.p.type === "add" || /^mul/.test(Q.p.type))))}`, cls: "ok" });
   updateTile();
   if (r.cert) setTimeout(() => showCert(r.cert.n, true, r.stamp ? reward : null), 600);
   else if (r.stamp) setTimeout(reward, 500);
