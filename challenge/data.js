@@ -2288,7 +2288,7 @@ window.CHALLENGES={
   "title": "256÷4 炸彈超人第五型（三位數喊救命）",
   "unit": "除法",
   "order": 7,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "185 ÷ 5 的答案是哪一個？",
@@ -2366,7 +2366,7 @@ window.CHALLENGES={
   "title": "306÷5 炸彈超人第六型（剩下0不寫）",
   "unit": "除法",
   "order": 8,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "427 ÷ 7 的答案是哪一個？",
@@ -2440,7 +2440,7 @@ window.CHALLENGES={
   "title": "957÷4 炸彈超人第四型（三位數）",
   "unit": "除法",
   "order": 6,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "738 ÷ 3 的答案是哪一個？",
