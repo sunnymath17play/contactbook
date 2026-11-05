@@ -2155,7 +2155,7 @@ window.CHALLENGES={
   "title": "79÷2 炸彈超人第三型（有餘數）",
   "unit": "除法",
   "order": 5,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "58 ÷ 3 的答案是哪一個？",
