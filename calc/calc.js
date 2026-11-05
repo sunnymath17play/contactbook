@@ -419,6 +419,8 @@ function drawCert(x, W, H, logo, name, n, date, goal) {
   t("SUNNY", 0.30, 0.705, 0.036, "#1E3A5F");
 }
 if (typeof window !== "undefined") window.CALC_DRAW_CERT = drawCert;
+// 獎狀牆（challenge.js）拿計算王獎狀：{ certs:[{n,date}], goal, bg, logo }
+window.CALC_CERTS = async () => { if (!S || !S.ok) await loadState(); return S && S.ok ? { certs: S.certs || [], goal: S.goal, bg: IMG + CERT.img, logo: IMG + CERT.logo } : null; };
 async function showCert(n, fresh, after) {
   const c = S.certs.find(x => x.n === n); if (!c) return;
   let url = "";

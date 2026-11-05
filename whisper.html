@@ -524,6 +524,7 @@
   .vmine .tx{flex:1;display:flex;flex-direction:column;}
   .vmine b{font-size:17px;font-weight:900;color:#6B3B14;}
   .vmine .tx span{font-size:15px;font-weight:800;color:#6B5030;}
+  button.vmine{width:100%;border:0;font:inherit;text-align:left;cursor:pointer;}   /* 2026-11-05 變成按鈕：打開獎狀牆 */
   .vmine em{font-style:normal;font-size:20px;color:#F2611B;margin:0 1px;}
   .vmine .md{width:46px;height:46px;}
   .vh{display:flex;align-items:center;gap:8px;margin:6px 0 8px;}
@@ -624,9 +625,25 @@
     .vplayer .now .nt small{font-size:15px;}
     .vplayer .chnow .chgo{font-size:21px;padding:10px 22px 10px 10px;}
   }
+  /* 🎬 首映卡、📢 換季公告（2026-11-05；圖：阿居） */
+  .vprem{position:relative;display:flex;align-items:center;gap:10px;margin:2px 0 14px;padding:8px;border-radius:22px;background:linear-gradient(90deg,#7A1420,#B8232F);box-shadow:0 4px 12px rgba(120,20,30,.3);color:#FFF3D6;}
+  .vprem img{width:42%;max-width:220px;border-radius:14px;flex:none;}
+  .vprem .vpt{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .vprem b{font-size:clamp(17px,4.6vw,22px);font-weight:900;color:#FFD86B;}
+  .vprem span{font-size:14px;font-weight:800;line-height:1.35;}
+  .vprem em{font-style:normal;font-size:14px;font-weight:900;color:#fff;background:rgba(0,0,0,.25);border-radius:999px;padding:2px 10px;align-self:flex-start;}
+  .vseason{position:fixed;inset:0;z-index:58;background:rgba(40,22,8,.6);display:flex;align-items:center;justify-content:center;padding:16px;}
+  .vsin{width:100%;max-width:420px;background:#FFF8E8;border-radius:24px;padding:14px 16px 18px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3);}
+  .vsin img{width:100%;border-radius:16px;}
+  .vsin>b{display:block;font-size:22px;font-weight:900;color:#B8460B;margin:10px 0 4px;}
+  .vsin p{font-size:16px;font-weight:800;color:#5A3412;line-height:1.6;margin:0 0 12px;}
+  .vsin img.vsic{width:24px;height:24px;border-radius:0;vertical-align:-5px;margin-right:2px;}
+  .vsgo,.vsok{border:0;border-radius:999px;font-weight:900;font-size:17px;padding:10px 20px;margin:4px;}
+  .vsgo{background:#E9763A;color:#fff;box-shadow:0 3px 0 #B2501E;}
+  .vsok{background:#F3E2C4;color:#6B3A12;}
 </style>
 <link rel="stylesheet" href="calc/calc.css?v=1793763308427">
-<link rel="stylesheet" href="challenge/challenge.css?v=1793853612714">
+<link rel="stylesheet" href="challenge/challenge.css?v=1793857116009">
 </head>
 <body>
 <div class="wrap">
@@ -726,8 +743,8 @@
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
 <script src="v/list.js?v=1793853536334"></script>
-<script src="challenge/data.js?v=1793853612714"></script>
-<script src="challenge/challenge.js?v=1793853612714"></script>
+<script src="challenge/data.js?v=1793857116009"></script>
+<script src="challenge/challenge.js?v=1793857116009"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -1032,7 +1049,7 @@ $("askLetter").onclick=async()=>{
 
 /* ---------- 📺 影片教室（後端只回傳這個班「現在年級」的影片） ---------- */
 const escH=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let VIDS=[];
+let VIDS=[], SOON=[];   // SOON＝快要首映的影片（後台 soon，2026-11-05）
 const isNew=v=>{const t=Date.parse(v.date);return !!t && Date.now()-t<7*86400000;};
 const seenSet=()=>{try{return new Set(JSON.parse(lsGet("wh_watched")||"[]"));}catch(e){return new Set();}};
 const markSeen=id=>{const s=seenSet();s.add(id);lsSet("wh_watched",JSON.stringify([...s].slice(-300)));WH_SYNC();};
@@ -1285,7 +1302,7 @@ function drawRoom(){
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
     w.innerHTML=shareBtn()+meBox()+`
-      <div class="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></div>${resumeCard()}
+      ${premCard()}<button type="button" class="vmine" id="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀牆 ›</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></button>${resumeCard()}
       <div class="vh"><span class="vpill blue"><i class="pl"></i>最新影片</span>${VIDS.length>1?'<small>左右滑</small>':""}</div>
       <div class="vrow">${VIDS.filter(v=>!isHulk(v)).slice(0,6).map(card).join("")}</div>
       <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>
@@ -1302,6 +1319,8 @@ function drawRoom(){
         <div class="vfind-out" id="vfindOut"></div></div>
       ${hulk.length?`<button class="vhulk" type="button" data-unit="${escH(hulk[0].unit)}"><img src="th/hulkwave.png" alt="">認識浩克 ›</button>`:""}`;
     drawFind();
+    const vm=$("vmine"); if(vm) vm.onclick=()=>{ if(window.CHAL&&CHAL.wall) CHAL.wall(); };   // 🏆 獎狀牆（2026-11-05）
+    premTick(); seasonNotice();
   }else{
     const isAsk=VIEW==="__ask", isSchool=VIEW==="__school";
     const vs=isAsk?VIDS.filter(v=>v.type==="ask")
@@ -1421,6 +1440,38 @@ document.addEventListener("click",e=>{
 // 影片教室只給在班的孩子看（2026-10-30）：用樹洞打的名字對 SUNNY 的在班名單
 // needname＝還沒打名字；locked＝名字對不上在班名單（或退班）→ 都顯示打名字的格子
 const VKEY=()=>"wh_vids_"+CH.id, VLOCK=()=>"wh_vlock_"+CH.id;
+// 🎬 首映卡（2026-11-05）：後台 soon＝16 小時內要首映的影片 → 最上面一張卡＋倒數，時間到自動重新載入影片（圖：阿居 th/premiere.jpg）
+const premAt=v=>Date.parse(String(v.from).replace(" ","T")+":00+08:00");
+function premCard(){
+  if(!SOON.length) return "";
+  const t=premAt(SOON[0]), d=new Date(t), now=new Date();
+  const day=d.toDateString()===now.toDateString()?(d.getHours()>=17?"今晚":"今天"):"明天";
+  const hm=`${d.getHours()>12?d.getHours()-12:d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
+  return `<div class="vprem"><img src="th/premiere.jpg" alt=""><div class="vpt"><b>${day} ${hm} 首映！</b>
+    <span>${SOON.map(v=>escH(v.title)).join("、")}</span><em id="vprCd"></em></div></div>`;
+}
+let premTimer=null;
+function premTick(){
+  clearInterval(premTimer); if(!SOON.length) return;
+  const up=()=>{ const e=$("vprCd"), left=premAt(SOON[0])-Date.now();
+    if(left<=0){ clearInterval(premTimer); SOON=[]; loadVideos(); return; }
+    if(!e) return; const h=Math.floor(left/3600000), m=Math.ceil(left%3600000/60000);
+    e.textContent=`還有 ${h?h+" 小時 ":""}${m} 分鐘`; };
+  up(); premTimer=setInterval(up,20000);
+}
+// 📢 換季公告（2026-11-06 08:00 舊影片下架）：之後第一次進影片教室跳一次（圖：阿居 th/season.jpg）
+const SEASON_AT=Date.parse("2026-11-06T08:00:00+08:00"), SEASON_KEY="wh_season_1106";
+function seasonNotice(){
+  if(Date.now()<SEASON_AT||lsGet(SEASON_KEY)||$("vseason")) return;
+  lsSet(SEASON_KEY,"1");
+  const d=document.createElement("div"); d.id="vseason"; d.className="vseason";
+  d.innerHTML=`<div class="vsin"><img src="th/season.jpg" alt=""><b>影片教室換新片囉！</b>
+    <p>之前的影片「畢業」了！<br>你拿到的獎狀，全部掛在<br><b><img class="vsic" src="th/trophy.png" alt="">我的獎狀牆</b>，隨時都看得到！</p>
+    <button type="button" class="vsgo" id="vsGo">去看我的獎狀牆</button><button type="button" class="vsok" id="vsOk">好！</button></div>`;
+  document.body.appendChild(d);
+  $("vsOk").onclick=()=>d.remove();
+  $("vsGo").onclick=()=>{ d.remove(); if(window.CHAL&&CHAL.wall) CHAL.wall(); };
+}
 async function loadVideos(){
   try{
     const r=await fetch(ENDPOINT+"?mode=videos&class="+encodeURIComponent(CH.id)
@@ -1429,7 +1480,7 @@ async function loadVideos(){
     if(!(j&&j.ok&&Array.isArray(j.videos))) throw 0;
     if(j.need_name||j.locked){ VSTATE=j.locked?"locked":"needname"; lsSet(VLOCK(),"1"); lsSet(VKEY(),"[]"); VIDS=[]; renderVideos([]); return; }
     lsSet(VLOCK(),"");
-    VSTATE="ok"; lsSet(VKEY(),JSON.stringify(j.videos)); renderVideos(j.videos); syncProgress();
+    VSTATE="ok"; SOON=Array.isArray(j.soon)?j.soon:[]; lsSet(VKEY(),JSON.stringify(j.videos)); renderVideos(j.videos); syncProgress();
   }catch(e){ if(VSTATE!=="locked"&&VSTATE!=="needname") VSTATE="fail"; renderVideos(); }   // 連不上：有記住的就照用，沒有就顯示「陸續上架中」
 }
 (async()=>{
@@ -1573,6 +1624,6 @@ $("send").onclick=async()=>{
 <!-- 🧮 計算挑戰（三、四年級；程式在 calc/，由 程式碼\計算挑戰\build.cjs 產生） -->
 <script src="calc/calc_core.js?v=1793763308427"></script>
 <script src="calc/cheer.js?v=1793763308427"></script>
-<script src="calc/calc.js?v=1793763308427"></script>
+<script src="calc/calc.js?v=1793857112669"></script>
 </body>
 </html>
