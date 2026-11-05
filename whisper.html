@@ -725,7 +725,7 @@
 
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
-<script src="v/list.js?v=1793837447561"></script>
+<script src="v/list.js?v=1793853501491"></script>
 <script src="challenge/data.js?v=1793837542771"></script>
 <script src="challenge/challenge.js?v=1793837542771"></script>
 <script>
@@ -1209,10 +1209,11 @@ function resumeCard(){
 /* 期中評量影片會自動下架 → 卡片上寫「看到 11/6」，最後 3 天變紅色 */
 function untilTag(v){
   if(!v.until) return "";
-  const end=Date.parse(v.until+"T23:59:59+08:00"), left=Math.ceil((end-Date.now())/86400000);
+  const [d,tm]=v.until.split(" ");   // 下架可以寫到分鐘「2026-11-06 08:00」（2026-11-05）
+  const end=Date.parse(d+(tm?"T"+tm+":00+08:00":"T23:59:59+08:00")), left=Math.ceil((end-Date.now())/86400000);
   if(!(left>=0)) return "";
-  const m=v.until.split("-");
-  return `<span class="vuntil${left<=3?" hot":""}">看到 ${+m[1]}/${+m[2]}${left===0?"（今天最後一天）":""}</span>`;
+  const m=d.split("-");
+  return `<span class="vuntil${left<=3?" hot":""}">看到 ${+m[1]}/${+m[2]}${tm?" "+tm:""}${left===0&&!tm?"（今天最後一天）":""}</span>`;
 }   // 小挑戰播放器也用
 // 每支影片的狀態小圖：過關＝金牌、看過＝綠勾、有小挑戰還沒過＝獎盃
 function statIcon(v,seen){
