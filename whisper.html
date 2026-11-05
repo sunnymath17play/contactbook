@@ -1445,7 +1445,7 @@ const premAt=v=>Date.parse(String(v.from).replace(" ","T")+":00+08:00");
 function premCard(){
   if(!SOON.length) return "";
   const t=premAt(SOON[0]), d=new Date(t), now=new Date();
-  const day=d.toDateString()===now.toDateString()?(d.getHours()>=17?"今晚":"今天"):"明天";
+  const eve=d.getHours()>=17, day=d.toDateString()===now.toDateString()?(eve?"今晚":"今天"):("明天"+(eve?"晚上":""));
   const hm=`${d.getHours()>12?d.getHours()-12:d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
   return `<div class="vprem"><img src="th/premiere.jpg" alt=""><div class="vpt"><b>${day} ${hm} 首映！</b>
     <span>${SOON.map(v=>escH(v.title)).join("、")}</span><em id="vprCd"></em></div></div>`;
@@ -1459,8 +1459,8 @@ function premTick(){
     e.textContent=`還有 ${h?h+" 小時 ":""}${m} 分鐘`; };
   up(); premTimer=setInterval(up,20000);
 }
-// 📢 換季公告（2026-11-06 08:00 舊影片下架）：之後第一次進影片教室跳一次（圖：阿居 th/season.jpg）
-const SEASON_AT=Date.parse("2026-11-06T08:00:00+08:00"), SEASON_KEY="wh_season_1106";
+// 📢 換季公告（SUNNY 改成 2026-11-05 16:08 舊影片馬上下架）：之後第一次進影片教室跳一次（圖：阿居 th/season.jpg）
+const SEASON_AT=Date.parse("2026-11-05T16:00:00+08:00"), SEASON_KEY="wh_season_1106";
 function seasonNotice(){
   if(Date.now()<SEASON_AT||lsGet(SEASON_KEY)||$("vseason")) return;
   lsSet(SEASON_KEY,"1");
