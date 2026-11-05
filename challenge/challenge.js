@@ -214,7 +214,7 @@ const LAYOUT = {
   grand_角: { img: "cert_grand_角.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.29, 0.375, 0.405, 0.45, 0.49, 0.53], logo: [0.19, 0.19, 0.2], date: ["c", 0.57, null], sign: "SUNNY" },
   grand_加與減: { img: "cert_grand_加與減.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.235, 0.2, 0.19], date: ["c", 0.595, 0.625], sign: "SUNNY" },
 };
-async function drawCert({ grand, unit, name, line1, line2 }){
+async function drawCert({ grand, unit, name, line1, line2, date }){   // date＝當初過關那天（獎狀牆重畫用）
   const L = grand ? (LAYOUT["grand_" + unit] || LAYOUT.grand) : LAYOUT.small, bg = await loadImg(IMG + L.img);
   const W = bg.naturalWidth, H = bg.naturalHeight, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d"); x.drawImage(bg, 0, 0);
@@ -230,7 +230,7 @@ async function drawCert({ grand, unit, name, line1, line2 }){
   fit("特頒此狀，以資鼓勵！", W * 0.045, W * 0.66, 800); x.fillText("特頒此狀，以資鼓勵！", cx, Y[5]);
   // 品牌 LOGO（正式水滴版）：小獎狀放左上角，大獎狀放署名上方
   try { const lg = await loadImg(IMG + "logo.png"), lw = W * L.logo[2]; x.drawImage(lg, L.logo[0] === "c" ? cx - lw / 2 : W * L.logo[0], H * L.logo[1], lw, lw * lg.naturalHeight / lg.naturalWidth); } catch (e) {}
-  const d = new Date();
+  const d = date ? new Date(date + "T12:00:00") : new Date();
   const dx = L.date[0] === "c" ? cx : W * L.date[0];
   x.fillStyle = "#7A6550"; fit("x", W * 0.034, W, 700); x.textAlign = L.date[0] === "c" ? "center" : "left";
   const ds = `${d.getFullYear() - 1911} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
@@ -255,7 +255,9 @@ async function showCert(name){
     <div class="chcert"><img src="${url}" alt="獎狀"></div>
     <div class="chtip">長按獎狀可以存到手機，拿給爸爸媽媽看！</div>
     ${grand ? `<button type="button" class="chbtn big gold" id="chGrand"><img class="chic" src="th/medal.png" alt="">「${esc(c.unit)}」全部過關！領大獎狀</button>` : ""}
+    <button type="button" class="chbtn" id="chWall"><img class="chic" src="th/trophy.png" alt="">掛到我的獎狀牆</button>
     <button type="button" class="chlink" id="chDone">回影片清單</button>`, true);
+  $("chWall").onclick = () => { done(); wall(); };
   if (grand) $("chGrand").onclick = () => showGrand(name, c.unit);
   $("chDone").onclick = done;
 }
@@ -286,11 +288,83 @@ function tileNote(vs){
 }
 function close(){ stopSeg(); hide(); cur = null; try { yt && yt.destroy && yt.destroy(); } catch (e) {} yt = null; }
 
+// ---------- 🏆 獎狀牆（2026-11-05 SUNNY：獎狀要有儀式感，影片下架了也看得到） ----------
+// 圖都是阿居畫的：wall_top/mid/bot（背景切三段）、frame_wood/gold（相框）、curtain_l/r（開幕布幕）、ribbon_new（NEW 緞帶）
+// 影片名稱從 window.CHALLENGES 找（全部題目，含已下架影片的）→ 影片只下架、題目檔不要刪
+const ALL = window.CHALLENGES || {};
+const wallSeen = () => { try { return JSON.parse(lsGet("wh_wall_seen") || "[]"); } catch (e) { return []; } };
+function wallItems(){
+  const items = [];
+  Object.entries(passed()).forEach(([k, date]) => {
+    if (k.startsWith("__grand_")) { const unit = k.slice(8); items.push({ key: k, grand: true, unit, date, title: `「${unit}」大獎狀`, line1: `「${unit}」單元`, line2: "小挑戰全部過關" }); return; }
+    const c = ALL[k]; if (!c) return;
+    items.push({ key: k, unit: c.unit || "其他", date, title: c.title, line1: `看完「${c.title}」`, line2: "小挑戰全部答對" });
+  });
+  return items.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+const md = d => { const m = String(d || "").split("-"); return m.length === 3 ? `${+m[1]}/${+m[2]}` : ""; };
+async function calcCertURL(c, info, name){   // 計算王獎狀（calc.js 的畫法）
+  const bg = await loadImg(info.bg), logo = await loadImg(info.logo).catch(() => null);
+  const cv = document.createElement("canvas"); cv.width = bg.naturalWidth; cv.height = bg.naturalHeight;
+  const x = cv.getContext("2d"); x.drawImage(bg, 0, 0); window.CALC_DRAW_CERT(x, cv.width, cv.height, logo, name, c.n, c.date, info.goal);
+  return cv.toDataURL("image/jpeg", 0.88);
+}
+async function wall(){
+  const name = (lsGet("wh_name") || "").trim();
+  const items = wallItems();
+  let calc = null; try { calc = window.CALC_CERTS && window.CALC_DRAW_CERT ? await window.CALC_CERTS() : null; } catch (e) {}
+  const calcs = calc && calc.certs ? calc.certs.map(c => ({ key: "__calc_" + c.n, calc: c, date: c.date, title: `計算王獎狀 第 ${c.n} 張` })) : [];
+  const all = items.concat(calcs), seen = new Set(wallSeen()), total = all.length;
+  const grands = items.filter(i => i.grand), smalls = items.filter(i => !i.grand);
+  const units = [...new Set(smalls.map(i => i.unit))];
+  const card = i => `<div class="cwitem${i.grand ? " gold" : ""}"><button type="button" class="cwf" data-k="${esc(i.key)}">
+      <span class="cwpic"><img alt="" data-pic="${esc(i.key)}"></span>
+      <img class="cwfr" src="${IMG}frame_${i.grand ? "gold" : "wood"}.png" alt="">
+      ${seen.has(i.key) ? "" : `<img class="cwnew" src="${IMG}ribbon_new.png" alt="新的">`}</button>
+      <div class="cwcap">${esc(i.title)}<small>${md(i.date)}</small></div></div>`;
+  const sec = (title, list) => list.length ? `<div class="cwsec"><span>${esc(title)}</span></div><div class="cwgrid">${list.map(card).join("")}</div>` : "";
+  let el = $("cwall"); if (el) el.remove();
+  el = document.createElement("div"); el.id = "cwall"; el.className = "cwall";
+  el.innerHTML = `<div class="cwin">
+      <div class="cwtop"><img src="${IMG}wall_top.jpg" alt=""><div class="cwsign"><b>${esc(name || "我")}的獎狀牆</b></div></div>
+      <div class="cwmid">
+        <div class="cwcount">${total ? `你已經得到 <em id="cwNum">0</em> 張獎狀！` : "還沒有獎狀喔！"}</div>
+        ${total ? sec("大獎狀", grands) + units.map(u => sec(u, smalls.filter(i => i.unit === u))).join("") + sec("計算王", calcs)
+          : `<div class="cwempty">看完影片，挑戰「小挑戰」全部答對，<br>第一張獎狀就會掛在這裡！</div>`}
+      </div>
+      <div class="cwbot"><img src="${IMG}wall_bot.jpg" alt=""></div>
+    </div>
+    <button type="button" class="cwclose" id="cwClose">回影片教室</button>
+    <div class="cwbig" id="cwBig"></div>
+    <div class="cwcur" id="cwCur"><img class="l" src="${IMG}curtain_l.jpg" alt=""><img class="r" src="${IMG}curtain_r.jpg" alt=""></div>`;
+  document.body.appendChild(el);
+  const curt = $("cwCur");
+  let opened = false;
+  const open = () => { if (opened) return; opened = true; curt.classList.add("open"); setTimeout(() => curt.remove(), 1400); setTimeout(countUp, 600); };
+  curt.onclick = open; setTimeout(open, 600);   // 布幕拉開（點一下可以直接開）
+  function countUp(){ const e = $("cwNum"); if (!e) return; let n = 0; const step = Math.max(1, Math.ceil(total / 20)); const t = setInterval(() => { n = Math.min(total, n + step); e.textContent = n; if (n >= total) clearInterval(t); }, 60); }
+  $("cwClose").onclick = () => el.remove();
+  const big = $("cwBig"), urls = {};
+  el.querySelectorAll(".cwf").forEach(b => b.onclick = () => {
+    const u = urls[b.dataset.k]; if (!u) return;
+    big.innerHTML = `<div class="cwbigin"><img src="${u}" alt="獎狀"><div class="chtip">長按獎狀可以存到手機，拿給爸爸媽媽看！</div><button type="button" class="chbtn" id="cwBigX">掛回牆上</button></div>`;
+    big.classList.add("show"); $("cwBigX").onclick = () => big.classList.remove("show");
+  });
+  lsSet("wh_wall_seen", JSON.stringify(all.map(i => i.key)));
+  // 一張一張把獎狀畫進相框（日期用當初過關那天）
+  for (const i of all) {
+    try {
+      urls[i.key] = i.calc ? await calcCertURL(i.calc, calc, name || "小朋友") : await drawCert({ grand: i.grand, unit: i.unit, name: name || "小朋友", line1: i.line1, line2: i.line2, date: i.date });
+      const im = el.querySelector(`img[data-pic="${CSS.escape(i.key)}"]`); if (im) im.src = urls[i.key];
+    } catch (e) {}
+  }
+}
+
 // TRIAL＝整個功能試用（目前已正式開放＝false）；單支影片還沒審用題目檔的 draft
 const TRIAL = false;
 // stat：這支影片的小挑戰狀態（pass 過關／todo 還沒過／"" 沒有小挑戰）；unitStat：一個單元有幾支有小挑戰、過關幾支；certs：拿到幾張獎狀（含大獎狀）
 const stat = id => !D[id] ? "" : passed()[id] ? "pass" : "todo";
 const unitStat = vs => { const has = vs.filter(v => D[v.id]); return { has: has.length, ok: has.filter(v => passed()[v.id]).length }; };
 const certs = () => Object.keys(passed()).length;
-if (!TRIAL || TESTER) window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close, stat, unitStat, certs };
+if (!TRIAL || TESTER) window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close, stat, unitStat, certs, wall };
 })();
