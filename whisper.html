@@ -1157,7 +1157,11 @@ function srcOf(v){
   return {src:"其他",key:"",page:0,order:1e9,label:q};
 }
 const srcRank=s=>{const i=SRCS.findIndex(x=>x[0]===s);return i<0?9:i;};
-const bySrc=(a,b)=>{const A=srcOf(a),B=srcOf(b);return srcRank(A.src)-srcRank(B.src)||A.order-B.order;};
+// 同一個出處（沒寫出處的「其他」）再照小挑戰的 order 排：炸彈超人系列＝第一型、第二型…照順序；介紹片沒有小挑戰 → 排在第一型前面（2026-11-06）
+const chOrd=v=>{const C=window.CHALLENGES||{},c=C[v.id];if(c&&c.order)return c.order;
+  if(/炸彈超人介紹/.test(v.title||"")){const f=Object.values(C).find(x=>/炸彈超人第一型/.test(x.title||""));return f?f.order-0.5:null;}return null;};
+const bySrc=(a,b)=>{const A=srcOf(a),B=srcOf(b);const x=chOrd(a),y=chOrd(b);
+  return srcRank(A.src)-srcRank(B.src)||A.order-B.order||(x!=null&&y!=null?x-y:0);};
 let FIND_SRC="講義A";
 const thumb=id=>`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
 const UNIT_ICON=[["浩克","th/hulkwave.png"],["圓","th/u/circle.png"],["周長","th/u/perimeter.png"],["多邊形","th/u/polygon.png"],["三角形","th/u/triangle.png"],
