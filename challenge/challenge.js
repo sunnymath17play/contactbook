@@ -206,6 +206,8 @@ function loadImg(src){ return new Promise((res, rej) => { const i = new Image();
 // 小獎狀：阿居 2026-10-26 畫的影片小挑戰專屬獎狀（浩克在右下；字置中一欄；LOGO 左上角；署名只寫 SUNNY）
 const LAYOUT = {
   small: { img: "cert_video.jpg", title: "獎　狀", tc: "#E0731B", y: [0.28, 0.385, 0.42, 0.48, 0.535, 0.595], logo: [0.14, 0.165, 0.22], date: ["c", 0.665, 0.70], sign: "SUNNY" },
+  // 炸彈超人系列專屬小獎狀（阿居 2026-11-06：紅炸彈獎牌、被炸暈的小精靈、茶葉蛋、右下炸彈超人浩克）；片名有「炸彈超人」就用這張
+  small_炸彈超人: { img: "cert_炸彈超人.jpg", title: "獎　狀", tc: "#D9381E", y: [0.27, 0.355, 0.385, 0.44, 0.49, 0.545], logo: [0.15, 0.172, 0.2], date: [0.22, 0.6, null], sign: "SUNNY" },
   grand: { sign: "SUNNY", img: "cert_grand.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.27, 0.40, 0.435, 0.50, 0.56, 0.63], logo: [0.135, 0.665, 0.26], date: [0.15, 0.77, 0.81] },
   // 單元專用大獎狀（阿居畫；沒有專用的單元就用上面通用的 grand）
   grand_三角形: { img: "cert_grand_三角形.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.19, 0.19, 0.2], date: ["c", 0.595, 0.625], sign: "SUNNY" },
@@ -215,7 +217,7 @@ const LAYOUT = {
   grand_加與減: { img: "cert_grand_加與減.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.235, 0.2, 0.19], date: ["c", 0.595, 0.625], sign: "SUNNY" },
 };
 async function drawCert({ grand, unit, name, line1, line2, date }){   // date＝當初過關那天（獎狀牆重畫用）
-  const L = grand ? (LAYOUT["grand_" + unit] || LAYOUT.grand) : LAYOUT.small, bg = await loadImg(IMG + L.img);
+  const L = grand ? (LAYOUT["grand_" + unit] || LAYOUT.grand) : (/炸彈超人/.test(line1) ? LAYOUT.small_炸彈超人 : LAYOUT.small), bg = await loadImg(IMG + L.img);
   const W = bg.naturalWidth, H = bg.naturalHeight, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const x = cv.getContext("2d"); x.drawImage(bg, 0, 0);
   const F = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif', cx = W / 2, Y = L.y.map(v => v * H);
