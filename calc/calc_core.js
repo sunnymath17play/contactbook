@@ -45,6 +45,11 @@ function mul2Layout(a, b, p1, p2, sum) {   // 乘十位那一列不寫 0，第�
   const w = Math.max(String(sum).length, String(p2).length + 1, String(a).length) + 1;
   return vLayout([String(a), '×' + ' '.repeat(String(a).length - 2) + b, String(p1), String(p2) + ' ', String(sum)], [1, 3], w, '×2');
 }
+// 四位×三位（紙本小卡 2026-11-05）：乘十位那一列往左一格、乘百位那一列往左兩格，都不寫 0
+function mul3Layout(a, b, ps, sum) {
+  const w = Math.max(String(sum).length, String(ps[1]).length + 1, String(ps[2]).length + 2, String(a).length) + 1;
+  return vLayout([String(a), '×' + ' '.repeat(Math.max(0, String(a).length - 3)) + b, String(ps[0]), String(ps[1]) + ' ', String(ps[2]) + '  ', String(sum)], [1, 4], w, '×3');
+}
 // 長除法：除數在左、被除數在右，商寫在上面一列；中間商 0 不寫乘的那一列，直接往下拿
 function divSteps(N, d) {
   const s = String(N), dd = String(d).length, cols = dd + s.length; let q = Array(s.length).fill(null), rows = [], work = null, val = 0, started = false;
@@ -76,6 +81,7 @@ function diffCells(A, B) { const out = []; A.rows.forEach((r, i) => r.forEach((c
 function checkLayout(L) {
   const num = r => Number(L.rows[r].join('').replace(/[^0-9]/g, '') || 0);
   if (L.kind === 'd') { const st = L.st; return st.quot * Number(L.rows[1].slice(0, st.dd).join('').trim()) + st.rem === Number(st.s) && st.rem < L.d; }
+  if (L.op === '×3') { const a = num(0), b = num(1), D = digits(b); return num(2) === a * D[0] && num(3) === a * D[1] && num(4) === a * D[2] && num(5) === a * b; }
   const sign = L.rows[1].join('').trim()[0];
   if (L.rows.length === 3) { const a = num(0), b = num(1), c = num(2); return sign === '+' ? a + b === c : sign === '-' ? a - b === c : a * b === c; }
   const a = num(0), b = num(1); return num(2) === a * (b % 10) && num(3) === a * Math.floor(b / 10) && num(4) === a * b;
@@ -123,6 +129,31 @@ function create(rand) {
       }
     }
   };
+  // 紙本小卡四年級（2026-11-05 SUNNY）：四位×三位；除法＝三、四位÷兩位，或三位÷三位
+  G.g4Mul3 = () => {
+    for (;;) {
+      let a = ri(1023, 9876); if (rand() < 0.3) { const A = digits(a); A[1 + ri(0, 1)] = 0; a = Number(A.reverse().join('')); }
+      const b = ri(123, 987), D = digits(b); if (D.some(x => x < 2)) continue;
+      const ps = D.map(x => mul1Cols(a, x)), s1 = addCols(ps[0].v, ps[1].v * 10);
+      if (ps.every(p => nCarry(p.carries) >= 2) && nCarry(s1.carries) >= 2) return { a, b, ps: ps.map(p => p.v), v: a * b };
+    }
+  };
+  G.g4Div2 = kind => {   // kind 0＝四位÷兩位、1＝三位÷兩位、2＝三位÷三位
+    for (;;) {
+      let d, q, r, N;
+      if (kind === 2) { d = ri(102, 489); q = ri(2, 9); r = ri(0, d - 1); N = q * d + r; if (N > 999 || d % 10 === 0) continue; }
+      else {
+        d = ri(1, 9) * 10 + (rand() < 0.6 ? ri(6, 9) : ri(2, 5));
+        q = kind === 0 ? (rand() < 0.75 ? ri(12, 98) : ri(1, 4) * 100 + ri(1, 9)) : (rand() < 0.5 ? ri(3, 9) : ri(12, 49));
+        r = ri(0, d - 1); N = q * d + r;
+        if (q % 10 === 0 || (kind === 0 ? N < 1000 || N > 9999 : N < 100 || N > 999)) continue;
+      }
+      if (divSteps(N, d).rows.length <= 4) return { N, d, q, r };
+    }
+  };
+  G.g4DivZero2 = () => {   // 四位÷兩位，商三位、中間是 0（小陽忘了寫 0 用）
+    for (;;) { const d = ri(12, 49), q = ri(1, 4) * 100 + ri(1, 9), r = ri(0, d - 1), N = q * d + r; if (N >= 1000 && N <= 9999) return { N, d, q, r }; }
+  };
   // 四年級加減法：五位數，連續進位／連續退位（中間有 0 的退位）
   G.g4Add = () => {
     for (;;) { const a = ri(10000, 89999), b = ri(1000, 99999 - a), r = addCols(a, b); if (r.v <= 99999 && nCarry(r.carries) >= 3 && consecutive(r.carries)) return { a, b, v: a + b }; }
@@ -139,6 +170,7 @@ function create(rand) {
     sub: p => ({ type: 'sub', text: `${p.a}－${p.b}`, ans: p.v, L: subLayout(p.a, p.b, p.v), chk: p.a - p.b === p.v && p.v + p.b === p.a }),
     mul1: p => ({ type: 'mul1', text: `${p.a}×${p.m}`, ans: p.v, L: mul1Layout(p.a, p.m, p.v), chk: p.a * p.m === p.v }),
     mul2: p => ({ type: 'mul2', text: `${p.a}×${p.b}`, ans: p.v, L: mul2Layout(p.a, p.b, p.p1, p.p2, p.v), chk: p.a * p.b === p.v && p.p1 + p.p2 * 10 === p.v }),
+    mul3: p => ({ type: 'mul3', text: `${p.a}×${p.b}`, ans: p.v, L: mul3Layout(p.a, p.b, p.ps, p.v), chk: p.a * p.b === p.v && p.ps[0] + p.ps[1] * 10 + p.ps[2] * 100 === p.v }),
     div: p => ({ type: 'div', text: `${p.N}÷${p.d}`, ans: p.r ? `${p.q}…${p.r}` : p.q, L: divLayout(p.N, p.d), chk: p.q * p.d + p.r === p.N && p.r < p.d }),
   };
   G.ri = ri;
@@ -307,5 +339,5 @@ function teachSteps(L) {
   return S;
 }
 
-return { isGiven, optionalZero, carryMap, grade, classify, teachSteps, rng, hashStr, digits, addCols, subCols, mul1Cols, nCarry, consecutive, vLayout, addLayout, subLayout, mul1Layout, mul2Layout, divSteps, divLayout, blankOf, diffCells, checkLayout, create, dailySet };
+return { isGiven, optionalZero, carryMap, grade, classify, teachSteps, rng, hashStr, digits, addCols, subCols, mul1Cols, nCarry, consecutive, vLayout, addLayout, subLayout, mul1Layout, mul2Layout, mul3Layout, divSteps, divLayout, blankOf, diffCells, checkLayout, create, dailySet };
 });

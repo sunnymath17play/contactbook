@@ -106,7 +106,10 @@ async function drawHome(reload) {
   }
   const doneN = S.first.length, left = S.perDay - doneN, pct = Math.min(100, Math.round(S.streak / S.goal * 100));
   const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < doneN ? (S.first[i] ? "ok" : "no") : i === doneN ? "now" : ""}"></i>`).join("");
-  w.innerHTML = `
+  // 打綽號／去姓的名字也認得，但提醒孩子打本名（SUNNY 2026-11-06：記得提醒小孩）；一鍵改成本名
+  const typed = String(myName() || "").replace(/[^一-鿿A-Za-z]/g, ""), realName = /^測試/.test(S.key) ? "" : S.key;
+  const nameTip = realName && typed !== realName ? `<div class="cnametip">浩克認出你是 <b>${esc(realName)}</b> 😊 下次記得打<b>本名</b>喔！<button class="cbtn" id="cfixname">改成本名</button></div>` : "";
+  w.innerHTML = `${nameTip}
     <div class="cstreak"><div class="cnum"><small>已經連續答對</small><b>${S.streak}</b><small>題</small></div>
       <div class="cbar"><i style="width:${pct}%"></i></div><div class="cgoal">連續答對 ${S.goal} 題 → 計算王獎狀（還差 ${Math.max(0, S.goal - S.streak)} 題）</div>
       <div class="ccheer">${esc(homeCheer())}</div></div>
@@ -117,6 +120,7 @@ async function drawHome(reload) {
       ${S.certs.length ? S.certs.map(c => `<button class="ccert" data-n="${c.n}">🏆 第 ${c.n} 張（${c.date.slice(5).replace("-", "/")}）</button>`).join("") : `<div class="csmall">連續答對 ${S.goal} 題就能拿到，再找 SUNNY 領獎品！</div>`}</div>
     <div class="cfoot"><button class="crule" id="crule">📜 挑戰規則</button><button class="crule" id="cpad">📲 用平板做</button></div>`;
   if (el("cgo")) el("cgo").onclick = () => startQ(doneN + 1);
+  if (el("cfixname")) el("cfixname").onclick = () => { if (typeof setMyName === "function") setMyName(realName); else lsS("wh_name", realName); drawHome(true); };
   el("crule").onclick = showRules;
   el("cpad").onclick = showPad;
   w.querySelectorAll(".ccert").forEach(b => b.onclick = () => showCert(+b.dataset.n));
