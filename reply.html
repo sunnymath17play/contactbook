@@ -135,6 +135,7 @@ async function api(q){
   return await r.json();
 }
 async function sendReply(row,text,src){
+  text=String(text||"").replace(/(?:\s*\n[ \t　]*SUNNY[ \t　]*){2,}\s*$/i,"\n\n                   SUNNY");   // 2026-11-07：SUNNY 自己打了署名、草稿的署名還在 → 只留一個
   const r=await fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:JSON.stringify({mode:"reply",key:KEY,row,text,src:src||""})});
   return await r.json();
