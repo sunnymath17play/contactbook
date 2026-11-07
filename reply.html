@@ -219,7 +219,7 @@ function groups(){
 function ctxHTML(rs){
   // 同一個孩子用不同名字看影片（寶儀／王寶儀）→ 加起來
   const ks=[...new Set(rs.map(kidKey))], x={views:0,pass:0};
-  ks.forEach(k=>{ const o=CTX[k]; if(o){ x.views+=o.views||0; x.pass+=o.pass||0; } });
+  const seen=new Set(); ks.forEach(k=>{ const o=CTX[k]; if(o&&!seen.has(o.id||k)){ seen.add(o.id||k); x.views+=o.views||0; x.pass+=o.pass||0; } });   // 後台已把同一個孩子合成一份（id），不重複加
   if(!x.views&&!x.pass) return `<div class="ctx"><span class="none">近 7 天沒有看影片紀錄</span></div>`;
   return `<div class="ctx"><span><img src="th/tv.png" alt="">近 7 天看了 <em>${x.views}</em> 支影片</span>${x.pass?`<span><img src="th/medal.png" alt="">過關 <em>${x.pass}</em> 個小挑戰</span>`:""}</div>`;
 }

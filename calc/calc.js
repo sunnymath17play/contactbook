@@ -107,7 +107,7 @@ async function drawHome(reload) {
   const doneN = S.first.length, left = S.perDay - doneN, pct = Math.min(100, Math.round(S.streak / S.goal * 100));
   const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < doneN ? (S.first[i] ? "ok" : "no") : i === doneN ? "now" : ""}"></i>`).join("");
   // 打綽號／去姓的名字也認得，但提醒孩子打本名（SUNNY 2026-11-06：記得提醒小孩）；一鍵改成本名
-  const typed = String(myName() || "").replace(/[^一-鿿A-Za-z]/g, ""), realName = /^測試/.test(S.key) ? "" : S.key;
+  const typed = String(myName() || "").replace(/姸/g, "妍").replace(/[^一-鿿A-Za-z]/g, "").toLowerCase(), realName = /^測試/.test(S.key) ? "" : S.key;
   const nameTip = realName && typed !== realName ? `<div class="cnametip">浩克認出你是 <b>${esc(realName)}</b> 😊 下次記得打<b>本名</b>喔！<button class="cbtn" id="cfixname">改成本名</button></div>` : "";
   w.innerHTML = `${nameTip}
     <div class="cstreak"><div class="cnum"><small>已經連續答對</small><b>${S.streak}</b><small>題</small></div>
