@@ -554,6 +554,32 @@
   .vunit .go{font-size:22px;font-weight:900;flex:none;}
   .vprog{display:block;height:7px;border-radius:9px;background:rgba(255,255,255,.85);overflow:hidden;}
   .vprog i{display:block;height:100%;border-radius:9px;min-width:4px;}
+  /* 💣 炸彈超人闖關（2026-11-06）：按鈕＋阿居闖關地圖，照順序 介紹→第一型…第十型 */
+  .vbomb{display:flex;align-items:center;gap:10px;width:100%;border:3px solid #E53935;border-radius:20px;padding:8px 10px 8px 8px;margin:0 0 12px;
+    background:linear-gradient(135deg,#FFF3C4,#FFD8B0);cursor:pointer;font-family:var(--font);text-align:left;box-shadow:0 4px 12px rgba(229,57,53,.22);}
+  .vbomb:active{transform:scale(.98);}
+  .vbomb img{width:112px;height:63px;object-fit:cover;border-radius:12px;flex:none;}
+  .vbomb .bt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .vbomb b{font-size:18px;font-weight:900;color:#C62828;}
+  .vbomb small{font-size:12.5px;font-weight:700;color:#6B4A2A;}
+  .vbomb .go{font-size:26px;font-weight:900;color:#E53935;}
+  .vbomb .end,.bmend{display:inline-block;background:#E53935;color:#fff;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:900;}
+  .bmhead{text-align:center;margin:2px 0 10px;}
+  .bmhead b{display:block;font-size:22px;font-weight:900;color:#C62828;}
+  .bmhead small{font-size:13.5px;font-weight:700;color:#6B4A2A;}
+  .bmmap{position:relative;width:100%;aspect-ratio:1672/941;border-radius:18px;overflow:hidden;background:url(th/bomb_map.jpg) center/cover;margin-bottom:12px;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  .bmn{position:absolute;transform:translate(-50%,-50%);width:12%;overflow:visible;aspect-ratio:1;border-radius:50%;border:3px solid #fff;background:#E53935;color:#fff;
+    font-family:var(--font);font-weight:900;font-size:clamp(13px,4vw,22px);display:flex;align-items:center;justify-content:center;flex-direction:column;line-height:1.05;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.3);padding:0;}
+  .bmn.intro{background:#F28C28;font-size:clamp(11px,3.2vw,17px);}
+  .bmn.done{background:#3BA55C;}
+  .bmn.done::after{content:"★";position:absolute;right:-14%;top:-18%;color:#FFC107;font-size:1.15em;text-shadow:0 1px 2px rgba(0,0,0,.35);}
+  .bmn.next{animation:bmpulse 1s ease-in-out infinite;box-shadow:0 0 0 5px #FFEB3B,0 3px 8px rgba(0,0,0,.3);}
+  .bmn.soon{background:#9E9E9E;cursor:default;opacity:.92;}
+  .bmn.soon small{font-size:.48em;font-weight:800;}
+  .bmn.playing{outline:4px solid #2F7DD1;}
+  @keyframes bmpulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.13);}}
+  .bmbox{position:absolute;right:3%;top:3%;background:rgba(255,255,255,.92);border-radius:12px;padding:3px 9px;font-size:12px;font-weight:900;color:#B8460B;}
+  .bmtip{font-size:13px;font-weight:700;color:#6B5A45;text-align:center;margin:0 0 10px;}
   .vunit .vdot,.vwide .vdot{position:absolute;right:6px;top:-7px;margin:0;font-size:12px;padding:0 8px;}
   .vwide{position:relative;width:100%;display:flex;align-items:center;gap:10px;margin-bottom:10px;border:0;border-radius:20px;padding:10px 14px 10px 8px;cursor:pointer;
     font-family:var(--font);text-align:left;box-shadow:0 5px 12px rgba(200,120,30,.2);}
@@ -1283,6 +1309,40 @@ function gateHTML(nm){
         <p>打上<b>本名</b>就能領一顆蛋！</p></div></div>`:""}
     </div></div>`;
 }
+// ---------- 💣 炸彈超人闖關（2026-11-06 SUNNY）：介紹→第一型…第十型照順序；不鎖關，只提示「下一關」；還沒上架＝灰色「即將登場」；11/30 下片倒數 ----------
+const BOMB_END="2026-11-30";   // 最後一天（影片的「下架」也設這天）；後台有 until 就用後台的
+const BOMB_POS=[[190,560],[300,745],[590,745],[880,745],[1180,745],[1165,515],[820,515],[485,515],[440,320],[765,320],[1095,320]];   // 阿居闖關地圖 1672×941 上的位置：紅旗旁＝介紹，10 個平台＝第一～十型
+const bombNodes=()=>{
+  const C="一二三四五六七八九十", nodes=[{label:"介紹",vs:VIDS.filter(v=>/炸彈超人介紹/.test(v.title||""))}];
+  for(let i=0;i<10;i++) nodes.push({label:String(i+1),name:`第${C[i]}型`,vs:VIDS.filter(v=>new RegExp(`炸彈超人第${C[i]}型`).test(v.title||"")).sort((a,b)=>(chOrd(a)||0)-(chOrd(b)||0))});
+  const seen=seenSet(), ok=v=>{const s=window.CHAL&&CHAL.stat?CHAL.stat(v.id):"";return s?s==="pass":seen.has(v.id);};
+  nodes.forEach(n=>{n.done=n.vs.length>0&&n.vs.every(ok);n.play=(n.vs.find(v=>!ok(v))||n.vs[0]||{}).id;});
+  const nx=nodes.find(n=>n.vs.length&&!n.done); if(nx) nx.next=true;
+  return nodes;
+};
+function bombLeft(){
+  const us=VIDS.filter(v=>/炸彈超人/.test(v.title||"")).map(v=>v.until).filter(Boolean).sort();
+  const end=String(us.length?us[us.length-1]:BOMB_END).slice(0,10), t=Date.parse(end+"T23:59:59+08:00"), d=Math.ceil((t-Date.now())/86400000);
+  const md=end.slice(5).replace("-","/").replace(/^0/,"").replace("/0","/");
+  return {md, txt:d<=1?"今天是最後一天！":`還剩 ${d} 天`};
+}
+function bombBtn(){
+  const ns=bombNodes(); if(!ns.some(n=>n.vs.length)) return "";
+  const has=ns.filter(n=>n.vs.length), ok=has.filter(n=>n.done).length, L=bombLeft();
+  return `<button type="button" class="vbomb" data-unit="__bomb"><img src="th/bomb_hero.jpg" alt=""><span class="bt"><b>💣 炸彈超人闖關</b>
+    <small>過關 ${ok}／${has.length}　<span class="end">${L.md} 下片・${L.txt}</span></small></span><span class="go">›</span></button>`;
+}
+function bombHTML(){
+  const ns=bombNodes(), L=bombLeft(), has=ns.filter(n=>n.vs.length), ok=has.filter(n=>n.done).length, all=ns.slice(1).every(n=>n.done);
+  const nodes=ns.map((n,i)=>{const [x,y]=BOMB_POS[i], st={left:(x/1672*100).toFixed(2)+"%",top:(y/941*100).toFixed(2)+"%"};
+    const cls="bmn"+(i===0?" intro":"")+(n.vs.length?(n.done?" done":"")+(n.next?" next":""):" soon");
+    return n.vs.length?`<button type="button" class="${cls}" data-play="${escH(n.play)}" style="left:${st.left};top:${st.top}" aria-label="${n.name||"介紹"}">${n.label}</button>`
+      :`<span class="${cls}" style="left:${st.left};top:${st.top}">${n.label}<small>即將登場</small></span>`;}).join("");
+  const list=ns.filter(n=>n.vs.length).map(n=>`<div class="vh2">${n.name?`💣 ${n.name}`:"🎬 先看介紹"}${n.done?"　✔":""}</div>`+n.vs.map(line).join("")).join("");
+  return `<div class="bmhead"><b>💣 炸彈超人闖關地圖</b><small>從介紹開始，一關一關挑戰！過關 ${ok}／${has.length}　<span class="bmend">${L.md} 下片・${L.txt}</span></small></div>
+    <div class="bmmap">${nodes}<span class="bmbox">${all?"🎉 十型全破！":"終點寶箱 🏆"}</span></div>
+    <div class="bmtip">會跳動的就是下一關；灰色的還沒上架，敬請期待！</div>${list}`;
+}
 function drawRoom(){
   const w=$("vwrap"), seen=seenSet();
   $("vroom").classList.toggle("gate", VIEW==="home" && !VIDS.length && (VSTATE==="needname"||VSTATE==="locked"));
@@ -1306,7 +1366,7 @@ function drawRoom(){
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
     w.innerHTML=shareBtn()+meBox()+`
-      ${premCard()}<button type="button" class="vmine" id="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀牆 ›</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></button>${resumeCard()}
+      ${premCard()}${bombBtn()}<button type="button" class="vmine" id="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀牆 ›</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></button>${resumeCard()}
       <div class="vh"><span class="vpill blue"><i class="pl"></i>最新影片</span>${VIDS.length>1?'<small>左右滑</small>':""}</div>
       <div class="vrow">${VIDS.filter(v=>!isHulk(v)).slice(0,6).map(card).join("")}</div>
       <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>
@@ -1325,6 +1385,8 @@ function drawRoom(){
     drawFind();
     const vm=$("vmine"); if(vm) vm.onclick=()=>{ if(window.CHAL&&CHAL.wall) CHAL.wall(); };   // 🏆 獎狀牆（2026-11-05）
     premTick(); seasonNotice();
+  }else if(VIEW==="__bomb"){
+    w.innerHTML=bombHTML();
   }else{
     const isAsk=VIEW==="__ask", isSchool=VIEW==="__school";
     const vs=isAsk?VIDS.filter(v=>v.type==="ask")
@@ -1343,7 +1405,7 @@ function drawRoom(){
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
   $("petcard3").style.display=VIEW==="home"?"":"none";
   $("vhome").style.display=VIEW==="home"&&homeTipOn()?"block":"none";
-  $("vroomTitle").innerHTML=VIEW==="home"||VIEW.startsWith("__")?escH((CLASS_NAME||"")+"影片教室"):`<img src="${iconOf(VIEW)}" alt="">${escH(VIEW)}`;
+  $("vroomTitle").innerHTML=VIEW==="__bomb"?"💣 炸彈超人闖關":VIEW==="home"||VIEW.startsWith("__")?escH((CLASS_NAME||"")+"影片教室"):`<img src="${iconOf(VIEW)}" alt="">${escH(VIEW)}`;
   $("vbody").scrollTop=0;
 }
 // 找不到影片＝還沒有人問過這題 → 邀請孩子自己問（今天送過的，請他明天再來）
