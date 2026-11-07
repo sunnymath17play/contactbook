@@ -1,6 +1,7 @@
 /* ============================================================
    🧮 樹洞「計算挑戰」（三、四年級，2026-11-03 SUNNY 的點子）
-   每天 5 題，一格一格填方格直式；第一次按「完成」就對才算「連續答對」，錯了歸零
+   每天 5 題，紙上算、網頁打答案；第一次按「完成」就對才算「連續答對」
+   2026-11-07 道具：🔁重做卡（蓋 3 章送 1）、🛡️免歸零卡（連續 20 題送 1）、💾存檔點（50/100/150）、⭐累積答對稱號（規則都由後台算）
    第一次錯：紅格子＋一句提示（進位照 SUNNY「記在手上」，不畫小小進位數字）；第二次錯：一步一步動畫教
    當天 5 題全對：獎勵動畫＋蓋一個浩克章；連續答對 200 題：計算王獎狀（請找 SUNNY 領取獎品，一人最多 2 張）
    題目、批改：calc_core.js（和紙本小卡、樹洞後台同一份）；連續題數、獎狀都由後台算（mode=calc／calc_state）
@@ -28,7 +29,11 @@ if (qs("preview") === "1") return;
 const C = window.CalcCore, CHEER = window.CALC_CHEER || { ok: ["答對了！"], streak: [], reset: ["沒關係，再來一次！"], stamp: ["今天 5 題全對！"] };
 const RULES = [
   "每天 5 題；做完就要等明天才有新題目。",
-  "每一題<b>第一次按「完成」就對</b>，才算「連續答對」。第一次錯，連續題數就從 0 重新算（看提示改對也一樣）。",
+  "每一題<b>第一次按「完成」就對</b>，才算「連續答對」。",
+  "🔁 <b>重做卡</b>：每蓋 3 個全對章送 1 張。答錯時自動用掉一張，再算一次；算對了，連續照樣 +1！",
+  "🛡️ <b>免歸零卡</b>：每連續答對 20 題送 1 張。答錯（或重做也錯）時自動用掉一張，連續題數保住。",
+  "💾 <b>存檔點</b>：連續到 50、100、150 題會存檔。兩種卡都用完時答錯，只退回存檔點，不會回到 0。",
+  "⭐ <b>累積答對</b>：答對的題數一直加、不會歸零；到 50、100、200 題升級稱號。兩種卡最多各存 3 張。",
   "連續答對 <b>200 題</b> → 得到「計算王獎狀」，請找 SUNNY 領取獎品。",
   "拿到獎狀後，連續題數從 0 重新開始；<b>每個人最多領 2 次獎品</b>。",
   "哪一天沒做不會歸零，只有算錯才會歸零。",
@@ -114,17 +119,31 @@ async function drawHome(reload) {
       <div class="cbar"><i style="width:${pct}%"></i></div><div class="cgoal">連續答對 ${S.goal} 題 → 計算王獎狀（還差 ${Math.max(0, S.goal - S.streak)} 題）</div>
       <div class="ccheer">${esc(homeCheer())}</div></div>
     <div class="ctoday"><div class="ct">今天的 5 題 <span class="cdots">${dots}</span></div>
-      ${left > 0 ? `<button class="cbtn big" id="cgo">${doneN ? `繼續第 ${doneN + 1} 題` : "開始今天的 5 題"}</button>` : `<div class="cdone">今天做完了！明天再來挑戰 💪</div>`}</div>
+      ${S.pend && S.pend === doneN ? `<button class="cbtn big" id="credo">🔁 重做第 ${doneN} 題（已用重做卡）</button>` : ""}
+      ${left > 0 ? `<button class="cbtn big${S.pend && S.pend === doneN ? " gray" : ""}" id="cgo">${doneN ? `繼續第 ${doneN + 1} 題` : "開始今天的 5 題"}</button>` : S.pend && S.pend === doneN ? "" : `<div class="cdone">今天做完了！明天再來挑戰 💪</div>`}</div>
+    ${itemsHTML()}
     <div class="ccard"><div class="ct">我的集章卡 <small>（5 題全對蓋一個章）</small></div><div class="cstamps">${stampsHTML()}</div></div>
     <div class="ccard"><div class="ct">計算王獎狀 <small>已拿到 ${S.certs.length}／${S.maxCert} 張</small></div>
       ${S.certs.length ? S.certs.map(c => `<button class="ccert" data-n="${c.n}">🏆 第 ${c.n} 張（${c.date.slice(5).replace("-", "/")}）</button>`).join("") : `<div class="csmall">連續答對 ${S.goal} 題就能拿到，再找 SUNNY 領獎品！</div>`}</div>
     <div class="cfoot"><button class="crule" id="crule">📜 挑戰規則</button><button class="crule" id="cpad">📲 用平板做</button></div>`;
   if (el("cgo")) el("cgo").onclick = () => startQ(doneN + 1);
+  if (el("credo")) el("credo").onclick = () => startQ(doneN, true);
   if (el("cfixname")) el("cfixname").onclick = () => { if (typeof setMyName === "function") setMyName(realName); else lsS("wh_name", realName); drawHome(true); };
   el("crule").onclick = showRules;
   el("cpad").onclick = showPad;
   w.querySelectorAll(".ccert").forEach(b => b.onclick = () => showCert(+b.dataset.n));
-  if (!lsG("wh_calc_rules")) { lsS("wh_calc_rules", "1"); showRules(); }
+  if (!lsG("wh_calc_rules2")) { lsS("wh_calc_rules2", "1"); showRules(); }   // 2026-11-07 新增道具規則 → 每個孩子再看一次
+}
+function itemsHTML() {
+  if (S.redo === undefined) return "";   // 後台還沒更新
+  const full = n => n >= S.itemMax;
+  const redoNext = S.redoEvery - (S.stamps.length % S.redoEvery), shieldNext = S.shieldEvery - (S.streak % S.shieldEvery);
+  const nt = S.nextTitle ? `再答對 ${S.nextTitle.n - S.total} 題 → 「${esc(S.nextTitle.t)}」` : "最高稱號了，太厲害了！";
+  return `<div class="ccard citems"><div class="ct">我的道具 <small>（答錯時會自動使用，各最多 ${S.itemMax} 張）</small></div>
+      <div class="cit"><span class="ci">🔁</span><b>重做卡 ×${S.redo}</b><small>${full(S.redo) ? "已經存滿了" : `再蓋 ${redoNext} 個全對章送一張`}</small></div>
+      <div class="cit"><span class="ci">🛡️</span><b>免歸零卡 ×${S.shield}</b><small>${full(S.shield) ? "已經存滿了" : `再連續答對 ${shieldNext} 題送一張`}</small></div>
+      <div class="cit"><span class="ci">💾</span><b>存檔點 ${S.savePoint} 題</b><small>${S.savePoint ? "卡片用完時答錯，只退回這裡" : `連續到 ${S.saveEvery} 題就會存檔`}</small></div></div>
+    <div class="ccard ctotal"><div class="ct">⭐ 累積答對 <b>${S.total}</b> 題${S.title ? ` <span class="ctitle">${esc(S.title)}</span>` : ""}</div><div class="csmall">${nt}（答對的題數不會歸零）</div></div>`;
 }
 function homeCheer() {
   if (!S.streak && !S.best) return "從第 1 題開始累積吧！在紙上慢慢算。";
@@ -158,11 +177,11 @@ function modal(html, btn, onClose) {
 }
 
 // ---------- 做題 ----------
-function startQ(idx) {
+function startQ(idx, redo) {
   const p = SET[idx - 1], L = p.L;
   const kid = L.rows.map((row, r) => C.isGiven(L, r) ? row.slice() : row.map(() => " "));
   const r0 = L.kind === "d" ? 0 : 2, c0 = L.kind === "d" ? L.dd : L.cols - 1;
-  Q = { idx, p, L, kid, act: [r0, c0], attempt: 0, wrong: new Set(), done: false };
+  Q = { idx, p, L, kid, act: [r0, c0], attempt: redo ? 1 : 0, wrong: new Set(), done: false, redo: !!redo };
   // 三年級加減法：紙上用直式算（借位要劃掉、寫清楚），網頁只打答案（SUNNY 2026-11-04）
   // 全部題目：紙上用直式算，網頁只打答案（SUNNY 2026-11-04）；除法分「商」「餘數」兩格
   Q.ans = ""; Q.ansMax = L.kind === "d" ? L.st.s.length : L.cols - 1;
@@ -339,23 +358,52 @@ async function submitAns() {
     S = Object.assign(S, r);
     const ok = r.graded ? r.graded.ok : chk.ok;
     if (ok) return right(r);
+    Q.redo = r.item === "redo";
+    const after = missText(r);
     if (chk.field) {   // 只錯一位數（或除法只錯餘數）→ 指出來
       Q.badField = chk.field; Q.badPos = chk.pos; Q.ansBad = false;
-      drawQ({ html: `💡 ${esc(chk.hint)}<small>連續歸零了，改好紅色的地方再按「完成」。</small>`, cls: "bad" }); return;
+      drawQ({ html: `💡 ${esc(chk.hint)}<small>${after}</small>`, cls: Q.redo ? "warn" : "bad" }); return;
     }
     Q.ansBad = true;
-    drawQ({ html: "❌ 答案不對。回去看紙上的直式，一位一位再檢查一次。<small>連續歸零了，改好答案再按「完成」。</small>", cls: "bad" }); return;
+    drawQ({ html: `❌ 答案不對。回去看紙上的直式，一位一位再檢查一次。<small>${after}</small>`, cls: Q.redo ? "warn" : "bad" }); return;
+  }
+  // 用了重做卡的這一題：等後台算（算對連續 +1；還是錯 → 免歸零卡／存檔點／歸零）
+  if (Q.redo) {
+    Q.busy = true; drawQ({ html: "浩克改改看…", cls: "tip" });
+    let r;
+    try { r = await api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 2, taught: !chk.ok }); }
+    catch (e) { Q.busy = false; Q.attempt = 1; drawQ({ html: "網路好像斷了，再按一次「完成」。", cls: "warn" }); return; }
+    Q.busy = false;
+    if (!r || !r.ok) { Q.attempt = 1; drawQ({ html: "現在送不出去，再按一次「完成」。", cls: "warn" }); return; }
+    S = Object.assign(S, r); Q.redo = false;
+    if (r.redoOk) { Q.ansBad = false; Q.badField = undefined; return right(r, "🔁 重做成功！"); }
+    if (r.redoOk === false) { askSunny(missText(r)); return; }
+    // 後台沒有這一題的重做紀錄（例如已經交過下一題）→ 照一般第二次
   }
   // 第二次：自己改對了就過；還是錯就一步一步教（看完整直式）
-  api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 2, taught: !chk.ok }).catch(() => {});
+  else api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 2, taught: !chk.ok }).catch(() => {});
   if (chk.ok) { Q.done = true; Q.ansBad = false; Q.badField = undefined; drawQ({ html: "改對了！👍 這一題你學會了。", cls: "ok" }); return; }
   askSunny();
 }
+// 答錯之後用了什麼（後台決定）：重做卡／免歸零卡／存檔點／歸零
+function missText(r) {
+  if (r.item === "redo") return "🔁 用了重做卡！再算一次，算對照樣 +1";
+  if (r.item === "shield") return `🛡️ 免歸零卡擋住了！連續 ${r.streak} 題保住`;
+  if (r.item === "save") return `💾 退回存檔點 ${r.back} 題，不是 0 喔！`;
+  return "連續歸零了，改好再按「完成」。";
+}
+function goodNews(r) {
+  const a = [];
+  if (r.gotShield) a.push("🛡️ 連續 " + r.streak + " 題，送你一張免歸零卡！");
+  if (r.saved) a.push("💾 存檔！之後答錯最多只退回 " + r.saved + " 題。");
+  if (r.newTitle) a.push("⭐ 累積答對 " + r.total + " 題，升級成「" + esc(r.newTitle) + "」！");
+  return a.length ? "<small>" + a.join("<br>") + "</small>" : "";
+}
 function log(extra) { api(null, Object.assign({ mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, cells: Q.kid.map(r => r.join("")) }, extra)).catch(() => {}); }
-function right(r) {
-  Q.done = true; Q.wrong.clear();
+function right(r, head) {
+  Q.done = true; Q.wrong.clear(); Q.gotRedo = !!r.gotRedo;
   const milestone = S.streak && S.streak % 10 === 0;
-  drawQ({ html: `⭕ 答對了！連續 <b>${S.streak}</b> 題　${esc(milestone ? `${S.streak} 題了，好厲害！` : pick(CHEER.ok.filter(t => !/手上記/.test(t) || Q.p.type === "add" || /^mul/.test(Q.p.type))))}`, cls: "ok" });
+  drawQ({ html: `${head ? esc(head) + " " : "⭕ 答對了！"}連續 <b>${S.streak}</b> 題　${esc(milestone ? `${S.streak} 題了，好厲害！` : pick(CHEER.ok.filter(t => !/手上記/.test(t) || Q.p.type === "add" || /^mul/.test(Q.p.type))))}${goodNews(r)}`, cls: "ok" });
   updateTile();
   if (r.cert) setTimeout(() => showCert(r.cert.n, true, r.stamp ? reward : null), 600);
   else if (r.stamp) setTimeout(reward, 500);
@@ -369,11 +417,11 @@ const ASK_SUNNY = [
   ["你已經很接近了！", "答案只差一點點，問題一定藏在計算本的某一步裡。帶去給 SUNNY 看，把它找出來，計算王獎狀就離你更近一步！"],
   ["浩克跟你約好喔！", "下次上課記得帶計算本去找 SUNNY，花一分鐘問清楚，比自己猜十次還有用！問完你就會發現：原來這麼簡單！"],
 ];
-function askSunny() {
+function askSunny(missed) {
   Q.done = true; Q.ansBad = false; Q.badField = undefined; Q.wrong.clear();
   const [t, s] = ASK_SUNNY[(Q.idx + (S.streak || 0)) % ASK_SUNNY.length];
   Q.askSunny = { t, s };
-  drawQ({ html: "這一題先不算，下一題重新開始累積連續題數，加油！", cls: "tip" });
+  drawQ({ html: missed ? `${missed}<small>這一題帶去問 SUNNY，下一題繼續加油！</small>` : "這一題先不算，下一題繼續加油！", cls: "tip" });
 }
 function teach() {
   Q.ans = undefined;   // 教的時候改看完整直式
@@ -395,7 +443,7 @@ function reward() {
   const m = document.createElement("div"); m.className = "creward";
   const n = S.stamps.length, st = ((n - 1) % STAMPS) + 1;
   m.innerHTML = `<div class="rw"><img class="rf" src="${IMG}reward_1.png" alt="" onerror="this.style.display='none'"><div class="rt">今天 5 題全對！</div>
-    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div><small>點一下關掉</small></div>`;
+    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div>${Q && Q.gotRedo ? '<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>' : ""}<small>點一下關掉</small></div>`;
   room.appendChild(m);
   // 4 格只播一次（約 1.8 秒）停在蓋章那一格；3.5 秒後自己關，也可以點一下關掉
   let f = 1, done = false; const tm = setInterval(() => { f += 1; const im = m.querySelector(".rf"); if (im) im.src = `${IMG}reward_${f}.png`; if (f >= 4) { clearInterval(tm); m.classList.add("stamped"); } }, 450);

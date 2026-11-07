@@ -231,3 +231,12 @@
 /* 提醒打本名（2026-11-06） */
 .cnametip{background:#FFF6D6;border:2px solid #F5B800;border-radius:14px;padding:10px 12px;margin:0 0 12px;font-size:16px;line-height:1.6;text-align:center}
 .cnametip .cbtn{display:inline-block;margin:6px 0 0 8px;padding:4px 14px;font-size:15px}
+
+/* 🎒 道具＋累積答對（2026-11-07） */
+.citems .cit{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px dashed #DCE6EF;}
+.citems .cit:first-of-type{border-top:none;}
+.citems .ci{font-size:28px;width:38px;text-align:center;flex:none;}
+.citems .cit b{font-size:17px;color:#1E3A5F;min-width:118px;}
+.citems .cit small{font-size:13.5px;color:#5B7088;font-weight:700;}
+.ctotal .ct b{font-size:24px;color:#E67E22;}
+.ctotal .ctitle{display:inline-block;background:#FFD54F;color:#7A4B00;border-radius:999px;padding:2px 12px;font-size:15px;font-weight:900;margin-left:6px;vertical-align:middle;}
