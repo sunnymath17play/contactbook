@@ -240,3 +240,10 @@
 .citems .cit small{font-size:13.5px;color:#5B7088;font-weight:700;}
 .ctotal .ct b{font-size:24px;color:#E67E22;}
 .ctotal .ctitle{display:inline-block;background:#FFD54F;color:#7A4B00;border-radius:999px;padding:2px 12px;font-size:15px;font-weight:900;margin-left:6px;vertical-align:middle;}
+
+/* 道具圖示（阿居畫） */
+.cii{width:1.45em;height:1.45em;vertical-align:-0.38em;margin:0 1px;}
+.citems .ci{width:46px;}
+.citems .ci .cii{width:46px;height:46px;vertical-align:middle;margin:0;}
+.ctotal .ct .cii{width:30px;height:30px;}
+.crules .cii{width:1.6em;height:1.6em;}

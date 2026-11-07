@@ -36,10 +36,13 @@ const RULES = [
   "⭐ <b>累積答對</b>：答對的題數一直加、不會歸零；到 50、100、200 題升級稱號。兩種卡最多各存 3 張。",
   "連續答對 <b>200 題</b> → 得到「計算王獎狀」，請找 SUNNY 領取獎品。",
   "拿到獎狀後，連續題數從 0 重新開始；<b>每個人最多領 2 次獎品</b>。",
-  "哪一天沒做不會歸零，只有算錯才會歸零。",
+  "哪一天沒做，連續題數不會變。",
   "要打自己的本名；換手機、換平板，紀錄都接得上。",
 ];
 const STAMPS = 12;   // 浩克章 stamp_1.png ~ stamp_12.png（阿居畫），照順序輪流蓋
+// 道具圖示（阿居畫，2026-11-07；原圖 img\_原圖_items_阿居.png，cut_items.cjs 切）：文字裡的 🔁🛡️💾⭐ 一律換成圖
+const ICO = { "🔁": "redo", "🛡": "shield", "💾": "save", "⭐": "total" };
+const ico = s => String(s).replace(/🔁|🛡\uFE0F?|💾|⭐/g, m => `<img class="cii" src="${IMG}item_${ICO[m.replace(/\uFE0F/g, "")]}.png" alt="">`);
 
 // ---------- 首頁方塊（放在影片教室、寵物蛋下面） ----------
 const tile = document.createElement("button");
@@ -139,11 +142,11 @@ function itemsHTML() {
   const full = n => n >= S.itemMax;
   const redoNext = S.redoEvery - (S.stamps.length % S.redoEvery), shieldNext = S.shieldEvery - (S.streak % S.shieldEvery);
   const nt = S.nextTitle ? `再答對 ${S.nextTitle.n - S.total} 題 → 「${esc(S.nextTitle.t)}」` : "最高稱號了，太厲害了！";
-  return `<div class="ccard citems"><div class="ct">我的道具 <small>（答錯時會自動使用，各最多 ${S.itemMax} 張）</small></div>
+  return ico(`<div class="ccard citems"><div class="ct">我的道具 <small>（答錯時會自動使用，各最多 ${S.itemMax} 張）</small></div>
       <div class="cit"><span class="ci">🔁</span><b>重做卡 ×${S.redo}</b><small>${full(S.redo) ? "已經存滿了" : `再蓋 ${redoNext} 個全對章送一張`}</small></div>
       <div class="cit"><span class="ci">🛡️</span><b>免歸零卡 ×${S.shield}</b><small>${full(S.shield) ? "已經存滿了" : `再連續答對 ${shieldNext} 題送一張`}</small></div>
       <div class="cit"><span class="ci">💾</span><b>存檔點 ${S.savePoint} 題</b><small>${S.savePoint ? "卡片用完時答錯，只退回這裡" : `連續到 ${S.saveEvery} 題就會存檔`}</small></div></div>
-    <div class="ccard ctotal"><div class="ct">⭐ 累積答對 <b>${S.total}</b> 題${S.title ? ` <span class="ctitle">${esc(S.title)}</span>` : ""}</div><div class="csmall">${nt}（答對的題數不會歸零）</div></div>`;
+    <div class="ccard ctotal"><div class="ct">⭐ 累積答對 <b>${S.total}</b> 題${S.title ? ` <span class="ctitle">${esc(S.title)}</span>` : ""}</div><div class="csmall">${nt}（答對的題數不會歸零）</div></div>`);
 }
 function homeCheer() {
   if (!S.streak && !S.best) return "從第 1 題開始累積吧！在紙上慢慢算。";
@@ -167,7 +170,7 @@ function showPad() {
     <ol class="crules"><li>用平板的相機掃上面的 QR code</li><li>打開後按「分享」→「加入主畫面」</li><li>之後點平板上的圖示，就直接進計算挑戰</li><li>第一次要打上你的本名，紀錄都會接上</li></ol>`, "關閉");
 }
 function showRules() {
-  modal(`<h3>📜 計算挑戰規則</h3><ol class="crules">${RULES.map(r => `<li>${r}</li>`).join("")}</ol>`, "我知道了");
+  modal(`<h3>📜 計算挑戰規則</h3><ol class="crules">${RULES.map(r => `<li>${ico(r)}</li>`).join("")}</ol>`, "我知道了");
 }
 function modal(html, btn, onClose) {
   const m = document.createElement("div"); m.className = "cmodal";
@@ -217,7 +220,7 @@ function drawQ(note) {
     <div class="cqhead"><div class="cqtop"><span>第 ${idx}／${S.perDay} 題</span><span class="cdots">${dots}</span><span class="cs">連續 <b>${S.streak}</b></span></div>
       <div class="cq">${esc(p.text.replace(/－/g, "−").replace(/＋/g, "+"))} ＝ ？</div></div>
     <div class="cmain"><div class="cgarea" id="cgarea">${Q.askSunny ? askHTML() : ansMode ? ansHTML() : `<div class="cgridbox">${g}</div>`}</div>
-      <div class="cnote ${note && note.cls || "tip"}" id="cnote">${note ? note.html : esc(tip)}</div></div>
+      <div class="cnote ${note && note.cls || "tip"}" id="cnote">${note ? ico(note.html) : esc(tip)}</div></div>
     <div class="cpad">${pad}</div></div>`;
   fitGrid();
   w.querySelectorAll(".cc.e").forEach(d => d.onclick = () => { if (Q.done) return; Q.act = [+d.dataset.r, +d.dataset.c]; drawQ(); });
@@ -443,7 +446,7 @@ function reward() {
   const m = document.createElement("div"); m.className = "creward";
   const n = S.stamps.length, st = ((n - 1) % STAMPS) + 1;
   m.innerHTML = `<div class="rw"><img class="rf" src="${IMG}reward_1.png" alt="" onerror="this.style.display='none'"><div class="rt">今天 5 題全對！</div>
-    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div>${Q && Q.gotRedo ? '<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>' : ""}<small>點一下關掉</small></div>`;
+    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div>${Q && Q.gotRedo ? ico('<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>') : ""}<small>點一下關掉</small></div>`;
   room.appendChild(m);
   // 4 格只播一次（約 1.8 秒）停在蓋章那一格；3.5 秒後自己關，也可以點一下關掉
   let f = 1, done = false; const tm = setInterval(() => { f += 1; const im = m.querySelector(".rf"); if (im) im.src = `${IMG}reward_${f}.png`; if (f >= 4) { clearInterval(tm); m.classList.add("stamped"); } }, 450);
