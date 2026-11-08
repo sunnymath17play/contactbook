@@ -92,7 +92,7 @@ function updateTile() {
   const vs = el("cvbarSub"); if (vs) vs.textContent = sub.textContent;
 }
 function openRoom() { room.classList.add("show"); history.pushState({ c: 1 }, ""); Q = null; drawHome(true); }
-function closeRoom() { room.classList.remove("show"); Q = null; updateTile(); }
+function closeRoom() { room.classList.remove("show"); Q = null; BQ = null; updateTile(); }
 
 // ---------- 首頁：連續題數、今天進度、集章卡、獎狀 ----------
 async function drawHome(reload) {
@@ -112,12 +112,13 @@ async function drawHome(reload) {
     w.innerHTML = `<div class="cmsg">${msg}</div><button class="cbtn" id="cretry">再試一次</button>`;
     el("cretry").onclick = () => drawHome(true); return;
   }
+  if (TAB === "bomb") return drawBomb(reload || !B);   // 💣 拆彈特攻隊分頁（三年級）
   const doneN = S.first.length, left = S.perDay - doneN, pct = Math.min(100, Math.round(S.streak / S.goal * 100));
   const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < doneN ? (S.first[i] ? "ok" : "no") : i === doneN ? "now" : ""}"></i>`).join("");
   // 打綽號／去姓的名字也認得，但提醒孩子打本名（SUNNY 2026-11-06：記得提醒小孩）；一鍵改成本名
   const typed = String(myName() || "").replace(/姸/g, "妍").replace(/[^一-鿿A-Za-z]/g, "").toLowerCase(), realName = /^測試/.test(S.key) ? "" : S.key;
   const nameTip = realName && typed !== realName ? `<div class="cnametip">浩克認出你是 <b>${esc(realName)}</b> 😊 下次記得打<b>本名</b>喔！<button class="cbtn" id="cfixname">改成本名</button></div>` : "";
-  w.innerHTML = `${nameTip}
+  w.innerHTML = `${tabsHTML()}${nameTip}
     <div class="cstreak"><div class="cnum"><small>已經連續答對</small><b>${S.streak}</b><small>題</small></div>
       <div class="cbar"><i style="width:${pct}%"></i></div><div class="cgoal">連續答對 ${S.goal} 題 → 計算王獎狀（還差 ${Math.max(0, S.goal - S.streak)} 題）</div>
       <div class="ccheer">${esc(homeCheer())}</div></div>
@@ -129,6 +130,7 @@ async function drawHome(reload) {
     <div class="ccard"><div class="ct">計算王獎狀 <small>已拿到 ${S.certs.length}／${S.maxCert} 張</small></div>
       ${S.certs.length ? S.certs.map(c => `<button class="ccert" data-n="${c.n}">🏆 第 ${c.n} 張（${c.date.slice(5).replace("-", "/")}）</button>`).join("") : `<div class="csmall">連續答對 ${S.goal} 題就能拿到，再找 SUNNY 領獎品！</div>`}</div>
     <div class="cfoot"><button class="crule" id="crule">📜 挑戰規則</button><button class="crule" id="cpad">📲 用平板做</button></div>`;
+  bindTabs();
   if (el("cgo")) el("cgo").onclick = () => startQ(doneN + 1);
   if (el("credo")) el("credo").onclick = () => startQ(doneN, true);
   if (el("cfixname")) el("cfixname").onclick = () => { if (typeof setMyName === "function") setMyName(realName); else lsS("wh_name", realName); drawHome(true); };
@@ -453,6 +455,125 @@ function reward() {
   const close = () => { if (done) return; done = true; clearInterval(tm); m.remove(); drawHome(false); };
   m.onclick = close; setTimeout(close, 3500);
 }
+
+// ---------- 💣 拆彈特攻隊（三年級除法，2026-11-08 SUNNY）：計算挑戰裡的第二個分頁，樹洞首頁不加任何東西 ----------
+// 每天 5 顆＝炸彈超人第一～八型（後台只給已經首映的型）；一顆一次機會：對＝拆除＋1（累積只加不減），錯＝爆炸＋回去看那一型的影片
+// 不算計算挑戰的連續題數、不用道具卡。圖：阿居 img\_原圖_bomb_阿居.png、_原圖_bombrank_阿居.png（cut_items.cjs 切）
+const BOMB_GRADE = 3;
+let TAB = GRADE === BOMB_GRADE && lsG("wh_calc_tab") === "bomb" ? "bomb" : "calc";
+let B = null, BSET = null, BQ = null;
+const BOMB_RULES = [
+  "每天 5 顆炸彈，都是<b>炸彈超人</b>教過的除法。",
+  "先在紙上用炸彈超人的方法算，再把<b>商</b>和<b>餘數</b>打進來。",
+  "每一顆只有<b>一次機會</b>：算對＝拆彈成功！算錯＝炸彈爆炸，回去看那一型的影片再練。",
+  "拆掉的炸彈會一直累積、不會歸零：<b>10 顆</b>見習隊員、<b>50 顆</b>特攻隊長、<b>100 顆</b>傳奇拆彈王！",
+  "拆彈特攻隊<b>不會影響</b>計算挑戰的連續題數，放心練！",
+];
+const RANK_IMG = t => IMG + "bomb_rank" + ({ "見習隊員": 1, "特攻隊長": 2, "傳奇拆彈王": 3 }[t] || 1) + ".png";
+function tabsHTML() {
+  if (GRADE !== BOMB_GRADE) return "";
+  return `<div class="ctabs"><button type="button" class="ctab${TAB === "calc" ? " on" : ""}" data-tab="calc"><img src="${IMG}tile.png" alt="">每日 5 題</button>
+    <button type="button" class="ctab bomb${TAB === "bomb" ? " on" : ""}" data-tab="bomb"><img src="${IMG}bomb_hero.png" alt="">拆彈特攻隊</button></div>`;
+}
+function bindTabs() {
+  room.querySelectorAll(".ctab").forEach(b => b.onclick = () => { if (b.dataset.tab === TAB) return; TAB = b.dataset.tab; lsS("wh_calc_tab", TAB); drawHome(false); });
+}
+async function loadBomb() {
+  try { B = await api({ mode: "bomb_state", class: CH.id, name: myName() }); } catch (e) { B = { err: "net" }; }
+  BSET = B && B.ok ? C.bombSet(B.date, B.key, B.types) : null;
+}
+async function drawBomb(reload) {
+  const w = el("cwrap"); BQ = null; room.classList.remove("qmode");
+  if (reload || !B) { w.innerHTML = tabsHTML() + `<div class="cload">特攻隊整理炸彈中…</div>`; bindTabs(); await loadBomb(); }
+  if (TAB !== "bomb") return;
+  if (!B || !B.ok) { w.innerHTML = tabsHTML() + `<div class="cmsg">${B && B.err === "net" ? "網路好像斷了，等一下再點一次。" : "拆彈特攻隊現在打不開，等一下再試試。"}</div><button class="cbtn" id="bretry">再試一次</button>`; bindTabs(); el("bretry").onclick = () => drawBomb(true); return; }
+  if (!B.types.length) { w.innerHTML = tabsHTML() + `<div class="ccard bhero"><img class="bh" src="${IMG}bomb_hero.png" alt=""><div><b>拆彈特攻隊</b><small>炸彈超人的影片上架以後，炸彈就會出現喔！</small></div></div>`; bindTabs(); return; }
+  const done = B.res.length, left = B.perDay - done, nr = B.nextRank;
+  const pct = nr ? Math.round(B.total / nr.n * 100) : 100;
+  const bombs = Array.from({ length: B.perDay }, (_, i) => {
+    const s = i < done ? (B.res[i] ? "ok" : "boom") : "live";
+    return `<span class="bb ${s}${i === done ? " now" : ""}"><img src="${IMG}bomb_${s}.png" alt=""><em>${i < done ? (B.res[i] ? "拆除" : "爆炸") : "第 " + (i + 1) + " 顆"}</em></span>`;
+  }).join("");
+  w.innerHTML = tabsHTML() + `
+    <div class="ccard bhero"><img class="bh" src="${B.rank ? RANK_IMG(B.rank) : IMG + "bomb_hero.png"}" alt="">
+      <div class="bht"><b>${B.rank ? esc(B.rank) : "拆彈特攻隊"}</b><span>已經拆除 <em>${B.total}</em> 顆炸彈</span>
+        <div class="cbar bbar"><i style="width:${pct}%"></i></div><small>${nr ? `再拆 ${nr.n - B.total} 顆 → 升級「${esc(nr.t)}」` : "最高等級了，你是傳奇！"}</small></div></div>
+    <div class="ctoday"><div class="ct">今天的 5 顆炸彈</div><div class="bbombs">${bombs}</div>
+      ${left > 0 ? `<button class="cbtn big bgo" id="bgo">${done ? `出任務：拆第 ${done + 1} 顆` : "出任務！開始拆彈"}</button>` : `<div class="cdone">今天的炸彈都處理完了！明天再來出任務 💪</div>`}</div>
+    <div class="ccard brk"><div class="ct">特攻隊徽章</div><div class="branks">${[[10, "見習隊員"], [50, "特攻隊長"], [100, "傳奇拆彈王"]].map(([n, t]) =>
+      `<span class="${B.total >= n ? "got" : ""}"><img src="${RANK_IMG(t)}" alt=""><b>${t}</b><small>${n} 顆</small></span>`).join("")}</div></div>
+    <div class="cfoot"><button class="crule" id="brule">📜 任務說明</button></div>`;
+  bindTabs();
+  if (el("bgo")) el("bgo").onclick = () => startBomb(done + 1);
+  el("brule").onclick = () => modal(`<h3>📜 拆彈特攻隊任務說明</h3><ol class="crules">${BOMB_RULES.map(r => `<li>${r}</li>`).join("")}</ol>`, "出發！");
+  if (!lsG("wh_bomb_rules")) { lsS("wh_bomb_rules", "1"); el("brule").click(); }
+}
+function startBomb(idx) {
+  const p = BSET[idx - 1];
+  BQ = { idx, p, q: "", r: "", field: "q", busy: false };
+  drawBombQ();
+}
+function drawBombQ(note) {
+  room.classList.add("qmode");
+  const w = el("cwrap"), { idx, p } = BQ;
+  const scr = (f, v, ph) => `<span class="cscreen${BQ.field === f ? " on" : ""}" data-f="${f}">${v ? v.split("").map(ch => `<b>${ch}</b>`).join("") : `<i class="ph">${ph}</i>`}${BQ.field === f ? '<i class="cursor"></i>' : ""}</span>`;
+  w.innerHTML = `<div class="cqs bq">
+    <div class="cqhead"><div class="cqtop"><span>第 ${idx}／${B.perDay} 顆炸彈</span><span class="cs">已拆 <b>${B.total}</b></span></div>
+      <div class="cq bqq"><img src="${IMG}bomb_live.png" alt="">${esc(p.text)} ＝ ？</div></div>
+    <div class="cmain"><div class="cgarea"><div class="cpaper"><div class="cpaper-t">✏️ 先在紙上用炸彈超人的方法算</div><div class="cpaper-s">炸彈放對位子、餘數要比除數小</div>
+      <div class="cans"><span class="cans-l">商</span>${scr("q", BQ.q, "打商")}</div><div class="cans"><span class="cans-l">餘數</span>${scr("r", BQ.r, "沒有就空著")}</div></div></div>
+      <div class="cnote ${note ? note.cls : "tip"}">${note ? note.html : "只有一次機會，算好再按「剪線」！"}</div></div>
+    <div class="cpad"><div class="ckeys">${["7", "8", "9", "del", "4", "5", "6", "←", "1", "2", "3", "→", "0", "ok"].map(k =>
+      k === "del" ? `<button type="button" class="ck fn era" data-k="del">橡皮擦</button>` : k === "ok" ? `<button type="button" class="ck okk bcut" data-k="ok">剪線！</button>`
+      : `<button type="button" class="ck${k === "0" ? " zero" : ""}${k === "←" || k === "→" ? " fn" : ""}" data-k="${k}">${k === "←" ? "← 商" : k === "→" ? "餘數 →" : k}</button>`).join("")}</div></div></div>`;
+  w.querySelectorAll(".ck").forEach(b => b.onclick = () => bombKey(b.dataset.k));
+  w.querySelectorAll(".cscreen[data-f]").forEach(s => s.onclick = () => { BQ.field = s.dataset.f; drawBombQ(); });
+}
+function bombKey(k) {
+  if (!BQ || BQ.busy) return;
+  if (k === "ok") return cutWire();
+  const f = BQ.field, max = f === "q" ? 3 : 1;
+  if (k === "←") BQ.field = "q"; else if (k === "→") BQ.field = "r";
+  else if (k === "del") { if (!BQ[f] && f === "r") BQ.field = "q"; else BQ[f] = BQ[f].slice(0, -1); }
+  else if (/^[0-9]$/.test(k) && BQ[f].length < max) BQ[f] += k;
+  else return;
+  drawBombQ();
+}
+async function cutWire() {
+  if (!BQ.q) { drawBombQ({ html: "✏️ 先在紙上算好，再把商打進來喔！", cls: "warn" }); return; }
+  const answer = BQ.q + (BQ.r && Number(BQ.r) ? "…" + Number(BQ.r) : "");
+  BQ.busy = true; drawBombQ({ html: "✂️ 剪線中…", cls: "tip" });
+  let r;
+  try { r = await api(null, { mode: "bomb", classId: CH.id, name: myName(), idx: BQ.idx, answer, types: B.types }); }
+  catch (e) { BQ.busy = false; drawBombQ({ html: "網路好像斷了，再按一次「剪線」。", cls: "warn" }); return; }
+  BQ.busy = false;
+  if (!r || (!r.ok && !r.dup)) { drawBombQ({ html: "現在送不出去，再按一次「剪線」。", cls: "warn" }); return; }
+  B = Object.assign(B, r);
+  if (r.dup) return drawBomb(false);
+  bombResult(r);
+}
+function bombResult(r) {
+  const p = BQ.p, last = BQ.idx >= B.perDay, tn = B.typeNames && B.typeNames[p.type] || "";
+  const m = document.createElement("div"); m.className = "cmodal bres " + (r.right ? "win" : "lose");
+  const CN = "零一二三四五六七八九";
+  m.innerHTML = `<div class="box"><img class="bri" src="${IMG}bomb_${r.right ? "ok" : "boom"}.png" alt="">
+    <h3>${r.right ? "拆彈成功！" : "噗～炸彈爆炸了！"}</h3>
+    <p>${r.right ? `已經拆除 <b>${B.total}</b> 顆炸彈` : `這顆是<b>炸彈超人第${CN[p.type]}型</b>（${esc(tn)}），<br>回去看影片，下一顆一定拆得掉！`}</p>
+    ${r.newRank ? `<div class="bnew"><img src="${RANK_IMG(r.newRank)}" alt=""><b>升級成「${esc(r.newRank)}」！</b></div>` : ""}
+    ${!r.right && r.vid && typeof window.play === "function" ? `<button type="button" class="cbtn gray bvid" id="bvid">📺 看第${CN[p.type]}型影片</button>` : ""}
+    <button type="button" class="cbtn" id="bnext">${last ? "看今天的成果" : "下一顆 →"}</button></div>`;
+  room.appendChild(m);
+  el("bnext").onclick = () => { m.remove(); if (last) drawBomb(false); else startBomb(BQ.idx + 1); };
+  if (el("bvid")) el("bvid").onclick = () => { m.remove(); room.classList.remove("show"); BQ = null; try { window.openRoom(); window.play(r.vid); } catch (e) {} };
+}
+document.addEventListener("keydown", e => {
+  if (!BQ || !room.classList.contains("show") || !room.classList.contains("qmode") || document.querySelector(".cmodal,.creward")) return;
+  const k = e.key;
+  if (/^[0-9]$/.test(k)) bombKey(k);
+  else if (k === "Backspace" || k === "Delete") { e.preventDefault(); bombKey("del"); }
+  else if (k === "ArrowLeft") bombKey("←"); else if (k === "ArrowRight") bombKey("→");
+  else if (k === "Enter") { e.preventDefault(); bombKey("ok"); }
+});
 
 // ---------- 計算王獎狀（阿居設計；字的位置在 CERT） ----------
 const CERT = { img: "cert_calc.jpg", logo: "logo.png" };

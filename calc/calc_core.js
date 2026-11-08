@@ -198,6 +198,48 @@ function dailySet(grade, date, name) {
   return list.map((p, i) => Object.assign(p, { id: `${date}-${i + 1}` }));
 }
 
+// ================= 💣 拆彈特攻隊（三年級除法，2026-11-08 SUNNY）：題型＝炸彈超人第一～八型 =================
+// 每一型的條件跟影片一樣（除數 2～9）：
+//   1 兩位數、十位不夠除（喊救命）→ 商一位（36÷7）　2 兩位數、十位夠除、整除（78÷2）　3 兩位數、十位夠除、有餘數（79÷2）
+//   4 三位數、百位夠除、商三位沒有 0（957÷4）　5 三位數、百位不夠除（喊救命）、商兩位、第一關有剩（256÷4）
+//   6 三位數喊救命、第一關剛好炸光（剩下 0 不寫）、商兩位沒有 0（306÷5）
+//   7 茶葉蛋在最後：商的最後一位是 0（82÷4、931÷3）　8 茶葉蛋在中間：三位數、商三位、中間是 0（618÷3）
+const BOMB_TYPES = { 1: '喊救命', 2: '搭電梯', 3: '有餘數', 4: '三位數', 5: '三位數喊救命', 6: '剩下0不寫', 7: '茶葉蛋在最後', 8: '茶葉蛋在中間' };
+function bombOk(t, N, d) {
+  const q = Math.floor(N / d), s = String(N), qs = String(q), first = +s[0];
+  if (d < 2 || d > 9 || q < 1) return false;
+  switch (+t) {
+    case 1: return s.length === 2 && first < d;
+    case 2: return s.length === 2 && first >= d && N % d === 0 && !qs.includes('0');
+    case 3: return s.length === 2 && first >= d && N % d !== 0 && !qs.includes('0');
+    case 4: return s.length === 3 && first >= d && qs.length === 3 && !qs.includes('0');
+    case 5: return s.length === 3 && first < d && qs.length === 2 && !qs.includes('0') && Math.floor(N / 10) % d !== 0;
+    case 6: return s.length === 3 && first < d && qs.length === 2 && !qs.includes('0') && Math.floor(N / 10) % d === 0;
+    case 7: return (s.length === 2 || s.length === 3) && first >= d && qs.length === s.length && qs.endsWith('0') && !qs.slice(0, -1).includes('0');
+    case 8: return s.length === 3 && first >= d && qs.length === 3 && qs[1] === '0' && qs[2] !== '0';
+  }
+  return false;
+}
+function bombMake(t, rand) {
+  const ri = (a, b) => a + Math.floor(rand() * (b - a + 1));
+  for (let k = 0; k < 5000; k++) {
+    const d = ri(2, 9), N = +t <= 3 || (+t === 7 && rand() < 0.4) ? ri(10, 99) : ri(100, 999);
+    if (bombOk(t, N, d)) { const q = Math.floor(N / d), r = N % d; return { type: +t, N, d, q, r, text: `${N}÷${d}`, ans: r ? `${q}…${r}` : String(q) }; }
+  }
+  return null;
+}
+// 每天 5 顆：從「已經首映」的型裡挑（types 由後台決定、當天第一次打開就固定），新的型多一點機會；同一天同一個孩子題目固定
+function bombSet(date, key, types) {
+  const ts = (types || []).map(Number).filter(t => BOMB_TYPES[t]).sort((a, b) => a - b);
+  if (!ts.length) return [];
+  const rand = rng(hashStr(`bomb|${date}|${key}`)), pick = [];
+  const pool = ts.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  for (let i = 0; i < 5; i++) pick.push(i < pool.length ? pool[i] : (rand() < 0.5 ? ts[ts.length - 1 - Math.floor(rand() * Math.min(3, ts.length))] : ts[Math.floor(rand() * ts.length)]));
+  for (let i = pick.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pick[i], pick[j]] = [pick[j], pick[i]]; }
+  return pick.map((t, i) => Object.assign(bombMake(t, rand), { id: `${date}-b${i + 1}` }));
+}
+
 // ================= 樹洞計算挑戰：批改、找錯在哪、一步一步教 =================
 // 題目給的格子（孩子不用填）：直式＝上面兩列；除法＝除數和被除數那一列
 function isGiven(L, r) { return L.kind === 'd' ? r === 1 : r <= 1; }
@@ -339,5 +381,5 @@ function teachSteps(L) {
   return S;
 }
 
-return { isGiven, optionalZero, carryMap, grade, classify, teachSteps, rng, hashStr, digits, addCols, subCols, mul1Cols, nCarry, consecutive, vLayout, addLayout, subLayout, mul1Layout, mul2Layout, mul3Layout, divSteps, divLayout, blankOf, diffCells, checkLayout, create, dailySet };
+return { isGiven, optionalZero, carryMap, grade, classify, teachSteps, rng, hashStr, digits, addCols, subCols, mul1Cols, nCarry, consecutive, vLayout, addLayout, subLayout, mul1Layout, mul2Layout, mul3Layout, divSteps, divLayout, blankOf, diffCells, checkLayout, create, dailySet, BOMB_TYPES, bombOk, bombMake, bombSet };
 });
