@@ -1362,14 +1362,18 @@ function drawRoom(){
             :`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY</button>`}</div>`;
   }else if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
-    const isHulk=v=>/浩克/.test(v.unit||""), hulk=VIDS.filter(isHulk);
+    const isHulk=v=>/浩克/.test(v.unit||""), hulk=VIDS.filter(isHulk), onlyHulk=hulk.length&&hulk.length===VIDS.length;   // 2026-11-08：只有浩克介紹（換季後）→ 不顯示空的最新影片／選單元
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
     w.innerHTML=shareBtn()+meBox()+`
       ${premCard()}${bombBtn()}<button type="button" class="vmine" id="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀牆 ›</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></button>${resumeCard()}
+      ${onlyHulk?`<div class="vh"><span class="vpill blue"><i class="pl"></i>認識浩克</span>${hulk.length>1?'<small>左右滑</small>':""}</div>
+      <div class="vrow">${hulk.map(card).join("")}</div>
+      <div class="vnone" style="margin-top:4px">${escH(CLASS_NAME)}的新影片陸續上架中 🎬<br>卡住的題目，你要不要當第一個問 SUNNY 的人？ 🙋
+        ${$("done").classList.contains("show")?`<br><small>（今天的悄悄話送過了，明天再來樹洞問喔）</small>`:`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY</button>`}</div>`:`
       <div class="vh"><span class="vpill blue"><i class="pl"></i>最新影片</span>${VIDS.length>1?'<small>左右滑</small>':""}</div>
       <div class="vrow">${VIDS.filter(v=>!isHulk(v)).slice(0,6).map(card).join("")}</div>
-      <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>
+      <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>`}
       <div class="vunits">${units().filter(([u])=>!/浩克/.test(u)).map(([u,vs],i)=>{ const c=UNIT_COLORS[i%UNIT_COLORS.length], p=unitProg(vs,seen);
         return `<button class="vunit" type="button" data-unit="${escH(u)}" style="background:${c[0]}">${fresh(vs)?'<span class="vdot">新</span>':""}
           <img src="${iconOf(u)}" alt=""><span class="ut"><b>${escH(u)}</b>${bar(p,c[1])}<small>${p.t} ${p.n}/${p.d}</small></span><span class="go" style="color:${c[1]}">›</span></button>`; }).join("")}</div>
@@ -1381,7 +1385,7 @@ function drawRoom(){
         <div class="vsrc" id="vsrc">${SRCS.filter(([k])=>k!=="校卷複習").map(([k,t,ic])=>`<button type="button" class="vsrcb" data-src="${k}"><img src="${ic}" alt="">${t}</button>`).join("")}</div>
         <div id="vfindBox"></div>
         <div class="vfind-out" id="vfindOut"></div></div>
-      ${hulk.length?`<button class="vhulk" type="button" data-unit="${escH(hulk[0].unit)}"><img src="th/hulkwave.png" alt="">認識浩克 ›</button>`:""}`;
+      ${hulk.length&&!onlyHulk?`<button class="vhulk" type="button" data-unit="${escH(hulk[0].unit)}"><img src="th/hulkwave.png" alt="">認識浩克 ›</button>`:""}`;
     drawFind();
     const vm=$("vmine"); if(vm) vm.onclick=()=>{ if(window.CHAL&&CHAL.wall) CHAL.wall(); };   // 🏆 獎狀牆（2026-11-05）
     premTick(); seasonNotice();
