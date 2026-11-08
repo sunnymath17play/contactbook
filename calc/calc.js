@@ -44,10 +44,14 @@ const STAMPS = 12;   // 浩克章 stamp_1.png ~ stamp_12.png（阿居畫），�
 const ICO = { "🔁": "redo", "🛡": "shield", "💾": "save", "⭐": "total" };
 const ico = s => String(s).replace(/🔁|🛡\uFE0F?|💾|⭐/g, m => `<img class="cii" src="${IMG}item_${ICO[m.replace(/\uFE0F/g, "")]}.png" alt="">`);
 
+// 💣 拆彈特攻隊新上線提醒：三年級、11/22 前、還沒點過拆彈分頁 → 方塊和分頁閃亮亮（點過一次就不再閃）
+const BOMB_NEW_UNTIL = Date.parse("2026-11-22T23:59:59+08:00");
+const bombIsNew = () => GRADE === 3 && Date.now() < BOMB_NEW_UNTIL && !lsG("wh_bomb_seen");
+const NEW_RIB = () => bombIsNew() ? `<span class="cnewrib"><img src="${IMG}bomb_live.png" alt="">新任務！</span>` : "";
 // ---------- 首頁方塊（放在影片教室、寵物蛋下面） ----------
 const tile = document.createElement("button");
 tile.type = "button"; tile.className = "ctile hop"; tile.id = "ctile";
-tile.innerHTML = `<img class="ic" src="${IMG}tile.png" alt="" onerror="this.style.visibility='hidden'"><span class="tx"><b>計算挑戰</b><small id="ctileSub">每天 5 題，挑戰連續答對！</small></span><span class="go">›</span>`;
+tile.innerHTML = NEW_RIB() + `<img class="ic" src="${IMG}tile.png" alt="" onerror="this.style.visibility='hidden'"><span class="tx"><b>計算挑戰</b><small id="ctileSub">每天 5 題，挑戰連續答對！</small></span><span class="go">›</span>`;
 // 排版（SUNNY 2026-11-04：計算挑戰和影片教室都是正事，放在一起）：
 // 第一排「影片教室｜計算挑戰」並排；寵物蛋（好玩的）移到下面變成一條
 const tiles = el("tiles");
@@ -60,7 +64,7 @@ tile.onclick = () => openRoom();
 // 影片教室裡也放入口（平板 QR code &v=1 會直接進影片教室，看不到樹洞首頁）
 const vbar = document.createElement("button");
 vbar.type = "button"; vbar.className = "cvbar";
-vbar.innerHTML = `<img src="${IMG}tile.png" alt=""><span><b>計算挑戰</b><small id="cvbarSub">每天 5 題，挑戰連續答對！</small></span><i>›</i>`;
+vbar.innerHTML = NEW_RIB() + `<img src="${IMG}tile.png" alt=""><span><b>計算挑戰</b><small id="cvbarSub">每天 5 題，挑戰連續答對！</small></span><i>›</i>`;
 vbar.onclick = () => openRoom();
 const vbody = el("vbody"); if (vbody) { const pc = el("petcard3"); if (pc) vbody.insertBefore(vbar, pc); else vbody.prepend(vbar); }
 
@@ -473,10 +477,16 @@ const RANK_IMG = t => IMG + "bomb_rank" + ({ "見習隊員": 1, "特攻隊長": 
 function tabsHTML() {
   if (GRADE !== BOMB_GRADE) return "";
   return `<div class="ctabs"><button type="button" class="ctab${TAB === "calc" ? " on" : ""}" data-tab="calc"><img src="${IMG}tile.png" alt="">每日 5 題</button>
-    <button type="button" class="ctab bomb${TAB === "bomb" ? " on" : ""}" data-tab="bomb"><img src="${IMG}bomb_hero.png" alt="">拆彈特攻隊</button></div>`;
+    <button type="button" class="ctab bomb${TAB === "bomb" ? " on" : ""}${bombIsNew() ? " isnew" : ""}" data-tab="bomb"><img src="${IMG}bomb_hero.png" alt="">拆彈特攻隊${bombIsNew() ? '<span class="cnewb">NEW</span>' : ""}</button></div>`;
 }
 function bindTabs() {
-  room.querySelectorAll(".ctab").forEach(b => b.onclick = () => { if (b.dataset.tab === TAB) return; TAB = b.dataset.tab; lsS("wh_calc_tab", TAB); drawHome(false); });
+  room.querySelectorAll(".ctab").forEach(b => b.onclick = () => { if (b.dataset.tab === "bomb") bombSeen(); if (b.dataset.tab === TAB) return; TAB = b.dataset.tab; lsS("wh_calc_tab", TAB); drawHome(false); });
+}
+// 點過拆彈分頁 → 新上線提醒全部收起來
+function bombSeen() {
+  if (lsG("wh_bomb_seen")) return;
+  lsS("wh_bomb_seen", "1");
+  document.querySelectorAll(".cnewrib").forEach(x => x.remove());
 }
 async function loadBomb() {
   try { B = await api({ mode: "bomb_state", class: CH.id, name: myName() }); } catch (e) { B = { err: "net" }; }

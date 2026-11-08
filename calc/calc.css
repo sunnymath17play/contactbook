@@ -289,3 +289,14 @@
 .bres .cbtn{display:block;width:100%;margin-top:10px;}
 @keyframes bpop{0%{transform:scale(.3);}100%{transform:scale(1);}}
 @keyframes bshake{0%,100%{transform:translateX(0);}20%{transform:translateX(-10px) rotate(-6deg);}40%{transform:translateX(10px) rotate(6deg);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
+
+/* 💣 拆彈特攻隊新上線提醒（2026-11-08，11/22 自動停） */
+.ctile,.cvbar{position:relative;}
+.cnewrib{position:absolute;top:-10px;right:-4px;z-index:2;display:flex;align-items:center;gap:3px;background:linear-gradient(135deg,#FF7A3D,#E8462A);color:#fff;font-weight:900;font-size:13px;
+  padding:3px 9px 3px 4px;border-radius:999px;box-shadow:0 3px 8px rgba(232,70,42,.45);border:2px solid #fff;animation:cnewwig 1.6s ease-in-out infinite;transform-origin:80% 50%;pointer-events:none;}
+.cnewrib img{width:26px;height:26px;object-fit:contain;margin:-4px 0;}
+@keyframes cnewwig{0%,70%,100%{transform:rotate(0) scale(1);}75%{transform:rotate(-8deg) scale(1.08);}85%{transform:rotate(8deg) scale(1.08);}92%{transform:rotate(-4deg);}}
+.ctab.isnew{position:relative;animation:cnewglow 1.4s ease-in-out infinite;border-color:#FF9A5A;}
+.ctab.isnew img{animation:bwob 1.2s ease-in-out infinite;}
+@keyframes cnewglow{0%,100%{box-shadow:0 0 0 0 rgba(255,122,61,.65);}50%{box-shadow:0 0 0 9px rgba(255,122,61,0),0 0 18px 4px rgba(255,170,90,.55);}}
+.cnewb{position:absolute;top:-9px;right:6px;background:#E8462A;color:#fff;font-size:11px;font-weight:900;padding:1px 7px;border-radius:999px;border:2px solid #fff;letter-spacing:.5px;}
