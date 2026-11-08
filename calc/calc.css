@@ -300,3 +300,13 @@
 .ctab.isnew img{animation:bwob 1.2s ease-in-out infinite;}
 @keyframes cnewglow{0%,100%{box-shadow:0 0 0 0 rgba(255,122,61,.65);}50%{box-shadow:0 0 0 9px rgba(255,122,61,0),0 0 18px 4px rgba(255,170,90,.55);}}
 .cnewb{position:absolute;top:-9px;right:6px;background:#E8462A;color:#fff;font-size:11px;font-weight:900;padding:1px 7px;border-radius:999px;border:2px solid #fff;letter-spacing:.5px;}
+
+/* 🐾 寵物加點（2026-11-08） */
+.cpetweek{margin-top:8px;padding-top:8px;border-top:1px dashed #E3D6BD;font-size:14px;font-weight:800;color:#7A5A20;}
+.cpetweek b{color:#E67E22;font-size:17px;} .cpetweek small{display:block;font-size:12px;color:#9A8462;font-weight:700;margin-top:1px;}
+.ccard .cpetweek{margin-left:0;}
+.bhero + .cpetweek{background:#fff;border:0;border-radius:16px;padding:8px 12px;margin:-4px 0 12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.cpetcard{width:100%;max-width:330px;margin:6px auto 0;}
+.cpetcard iframe{display:block;width:100%;height:104px;border:0;background:transparent;}
+.rpet{font-size:16px !important;}
+.bres .bpet{margin:4px 0 2px;font-size:16px;font-weight:900;color:#B4471A;}

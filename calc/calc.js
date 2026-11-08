@@ -47,6 +47,11 @@ const ico = s => String(s).replace(/🔁|🛡\uFE0F?|💾|⭐/g, m => `<img clas
 // 💣 拆彈特攻隊新上線提醒：三年級、11/22 前、還沒點過拆彈分頁 → 方塊和分頁閃亮亮（點過一次就不再閃）
 const BOMB_NEW_UNTIL = Date.parse("2026-11-22T23:59:59+08:00");
 const bombIsNew = () => GRADE === 3 && Date.now() < BOMB_NEW_UNTIL && !lsG("wh_bomb_seen");
+// 🐾 計算挑戰 × 寵物蛋（2026-11-08）：全對／全拆自動幫寵物加點（後台算，每週最多 5 點）
+const PET_ICO = `<img class="cii" src="pets/img/egg_2.png" alt="">`;
+const petCard = () => typeof PETS_Q === "undefined" ? "" : `<div class="petcard cpetcard"><iframe src="pets/?${PETS_Q}card=1&t=${Date.now()}" title="我的寵物" scrolling="no"></iframe></div>`;
+const petLine = p => !p ? "" : p.pts ? `${PET_ICO}寵物 +${p.pts} 點！（這週 ${Math.min(p.week, p.cap)}／${p.cap}）` : p.full ? `${PET_ICO}這週的寵物點數已經滿 ${p.cap} 點囉！` : "";
+const petWeekHTML = X => X && X.petOn ? `<div class="cpetweek">${PET_ICO}這週幫寵物賺了 <b>${Math.min(X.petWeek || 0, X.petCap)}</b>／${X.petCap} 點<small>（全對、全拆會幫寵物加點）</small></div>` : "";
 const NEW_RIB = () => bombIsNew() ? `<span class="cnewrib"><img src="${IMG}bomb_live.png" alt="">新任務！</span>` : "";
 // ---------- 首頁方塊（放在影片教室、寵物蛋下面） ----------
 const tile = document.createElement("button");
@@ -152,7 +157,7 @@ function itemsHTML() {
       <div class="cit"><span class="ci">🔁</span><b>重做卡 ×${S.redo}</b><small>${full(S.redo) ? "已經存滿了" : `再蓋 ${redoNext} 個全對章送一張`}</small></div>
       <div class="cit"><span class="ci">🛡️</span><b>免歸零卡 ×${S.shield}</b><small>${full(S.shield) ? "已經存滿了" : `再連續答對 ${shieldNext} 題送一張`}</small></div>
       <div class="cit"><span class="ci">💾</span><b>存檔點 ${S.savePoint} 題</b><small>${S.savePoint ? "卡片用完時答錯，只退回這裡" : `連續到 ${S.saveEvery} 題就會存檔`}</small></div></div>
-    <div class="ccard ctotal"><div class="ct">⭐ 累積答對 <b>${S.total}</b> 題${S.title ? ` <span class="ctitle">${esc(S.title)}</span>` : ""}</div><div class="csmall">${nt}（答對的題數不會歸零）</div></div>`);
+    <div class="ccard ctotal"><div class="ct">⭐ 累積答對 <b>${S.total}</b> 題${S.title ? ` <span class="ctitle">${esc(S.title)}</span>` : ""}</div><div class="csmall">${nt}（答對的題數不會歸零）</div>${petWeekHTML(S)}</div>`);
 }
 function homeCheer() {
   if (!S.streak && !S.best) return "從第 1 題開始累積吧！在紙上慢慢算。";
@@ -406,11 +411,12 @@ function goodNews(r) {
   if (r.gotShield) a.push("🛡️ 連續 " + r.streak + " 題，送你一張免歸零卡！");
   if (r.saved) a.push("💾 存檔！之後答錯最多只退回 " + r.saved + " 題。");
   if (r.newTitle) a.push("⭐ 累積答對 " + r.total + " 題，升級成「" + esc(r.newTitle) + "」！");
+  if (r.pet) { a.push(petLine(r.pet)); if (r.pet.week != null) S.petWeek = r.pet.week; }
   return a.length ? "<small>" + a.join("<br>") + "</small>" : "";
 }
 function log(extra) { api(null, Object.assign({ mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, cells: Q.kid.map(r => r.join("")) }, extra)).catch(() => {}); }
 function right(r, head) {
-  Q.done = true; Q.wrong.clear(); Q.gotRedo = !!r.gotRedo;
+  Q.done = true; Q.wrong.clear(); Q.gotRedo = !!r.gotRedo; Q.pet = r.pet && r.pet.pts ? r.pet : null;
   const milestone = S.streak && S.streak % 10 === 0;
   drawQ({ html: `${head ? esc(head) + " " : "⭕ 答對了！"}連續 <b>${S.streak}</b> 題　${esc(milestone ? `${S.streak} 題了，好厲害！` : pick(CHEER.ok.filter(t => !/手上記/.test(t) || Q.p.type === "add" || /^mul/.test(Q.p.type))))}${goodNews(r)}`, cls: "ok" });
   updateTile();
@@ -452,12 +458,12 @@ function reward() {
   const m = document.createElement("div"); m.className = "creward";
   const n = S.stamps.length, st = ((n - 1) % STAMPS) + 1;
   m.innerHTML = `<div class="rw"><img class="rf" src="${IMG}reward_1.png" alt="" onerror="this.style.display='none'"><div class="rt">今天 5 題全對！</div>
-    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div>${Q && Q.gotRedo ? ico('<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>') : ""}<small>點一下關掉</small></div>`;
+    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div>${Q && Q.gotRedo ? ico('<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>') : ""}${Q && Q.pet ? `<div class="rs rpet">${petLine(Q.pet)}</div>${petCard()}` : ""}<small>點一下關掉</small></div>`;
   room.appendChild(m);
   // 4 格只播一次（約 1.8 秒）停在蓋章那一格；3.5 秒後自己關，也可以點一下關掉
   let f = 1, done = false; const tm = setInterval(() => { f += 1; const im = m.querySelector(".rf"); if (im) im.src = `${IMG}reward_${f}.png`; if (f >= 4) { clearInterval(tm); m.classList.add("stamped"); } }, 450);
   const close = () => { if (done) return; done = true; clearInterval(tm); m.remove(); drawHome(false); };
-  m.onclick = close; setTimeout(close, 3500);
+  m.onclick = close; setTimeout(close, Q && Q.pet ? 7000 : 3500);
 }
 
 // ---------- 💣 拆彈特攻隊（三年級除法，2026-11-08 SUNNY）：計算挑戰裡的第二個分頁，樹洞首頁不加任何東西 ----------
@@ -507,7 +513,7 @@ async function drawBomb(reload) {
   w.innerHTML = tabsHTML() + `
     <div class="ccard bhero"><img class="bh" src="${B.rank ? RANK_IMG(B.rank) : IMG + "bomb_hero.png"}" alt="">
       <div class="bht"><b>${B.rank ? esc(B.rank) : "拆彈特攻隊"}</b><span>已經拆除 <em>${B.total}</em> 顆炸彈</span>
-        <div class="cbar bbar"><i style="width:${pct}%"></i></div><small>${nr ? `再拆 ${nr.n - B.total} 顆 → 升級「${esc(nr.t)}」` : "最高等級了，你是傳奇！"}</small></div></div>
+        <div class="cbar bbar"><i style="width:${pct}%"></i></div><small>${nr ? `再拆 ${nr.n - B.total} 顆 → 升級「${esc(nr.t)}」` : "最高等級了，你是傳奇！"}</small></div></div>${petWeekHTML(B)}
     <div class="ctoday"><div class="ct">今天的 5 顆炸彈</div><div class="bbombs">${bombs}</div>
       ${left > 0 ? `<button class="cbtn big bgo" id="bgo">${done ? `出任務：拆第 ${done + 1} 顆` : "出任務！開始拆彈"}</button>` : `<div class="cdone">今天的炸彈都處理完了！明天再來出任務 💪</div>`}</div>
     <div class="ccard brk"><div class="ct">特攻隊徽章</div><div class="branks">${[[10, "見習隊員"], [50, "特攻隊長"], [100, "傳奇拆彈王"]].map(([n, t]) =>
@@ -559,6 +565,7 @@ async function cutWire() {
   BQ.busy = false;
   if (!r || (!r.ok && !r.dup)) { drawBombQ({ html: "現在送不出去，再按一次「剪線」。", cls: "warn" }); return; }
   B = Object.assign(B, r);
+  if (r.pet && r.pet.week != null) B.petWeek = r.pet.week;
   if (r.dup) return drawBomb(false);
   bombResult(r);
 }
@@ -569,6 +576,7 @@ function bombResult(r) {
   m.innerHTML = `<div class="box"><img class="bri" src="${IMG}bomb_${r.right ? "ok" : "boom"}.png" alt="">
     <h3>${r.right ? "拆彈成功！" : "噗～炸彈爆炸了！"}</h3>
     <p>${r.right ? `已經拆除 <b>${B.total}</b> 顆炸彈` : `這顆是<b>炸彈超人第${CN[p.type]}型</b>（${esc(tn)}），<br>回去看影片，下一顆一定拆得掉！`}</p>
+    ${r.pet ? `<div class="bpet">${petLine(r.pet)}</div>${r.pet.pts ? petCard() : ""}` : ""}
     ${r.newRank ? `<div class="bnew"><img src="${RANK_IMG(r.newRank)}" alt=""><b>升級成「${esc(r.newRank)}」！</b></div>` : ""}
     ${!r.right && r.vid && typeof window.play === "function" ? `<button type="button" class="cbtn gray bvid" id="bvid">📺 看第${CN[p.type]}型影片</button>` : ""}
     <button type="button" class="cbtn" id="bnext">${last ? "看今天的成果" : "下一顆 →"}</button></div>`;
