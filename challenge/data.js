@@ -1118,7 +1118,7 @@ window.CHALLENGES={
   "title": "真分數、假分數、帶分數怎麼分？",
   "unit": "分數",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "八分之八（8/8）是哪一個家族？",
