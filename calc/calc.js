@@ -1,6 +1,7 @@
 /* ============================================================
    🧮 樹洞「計算挑戰」（三、四年級，2026-11-03 SUNNY 的點子）
    每天 5 題，紙上算、網頁打答案；第一次按「完成」就對才算「連續答對」
+   2026-11-10 ⏭️跳題（只開放四年級）：連續 10／30／60 題起每天可跳 1／2／3 題；最近答錯過的運算不能跳（規則由後台算）
    2026-11-07 道具：🔁重做卡（蓋 3 章送 1）、🛡️免歸零卡（連續 20 題送 1）、💾存檔點（50/100/150）、⭐累積答對稱號（規則都由後台算）
    第一次錯：紅格子＋一句提示（進位照 SUNNY「記在手上」，不畫小小進位數字）；第二次錯：一步一步動畫教
    當天 5 題全對：獎勵動畫＋蓋一個浩克章；連續答對 200 題：計算王獎狀（請找 SUNNY 領取獎品，一人最多 2 張）
@@ -34,16 +35,44 @@ const RULES = [
   "🛡️ <b>免歸零卡</b>：每連續答對 20 題送 1 張。答錯（或重做也錯）時自動用掉一張，連續題數保住。",
   "💾 <b>存檔點</b>：連續到 50、100、150 題會存檔。兩種卡都用完時答錯，只退回存檔點，不會回到 0。",
   "⭐ <b>累積答對</b>：答對的題數一直加、不會歸零；到 50、100、200 題升級稱號。兩種卡最多各存 3 張。",
+  ...(GRADE === 4 ? ["⏭️ <b>跳題</b>：連續答對 10 題起，每天可以跳過 1 題；30 題起 2 題、60 題起 3 題。跳過的題目連續不加也不斷。<b>最近算錯過的那種題目不能跳</b>，要多練習喔！"] : []),
   "連續答對 <b>200 題</b> → 得到「計算王獎狀」，請找 SUNNY 領取獎品。",
   "拿到獎狀後，連續題數從 0 重新開始；<b>每個人最多領 2 次獎品</b>。",
   "哪一天沒做，連續題數不會變。",
   "要打自己的本名；換手機、換平板，紀錄都接得上。",
 ];
 const STAMPS = 12;   // 浩克章 stamp_1.png ~ stamp_12.png（阿居畫），照順序輪流蓋
-// 道具圖示（阿居畫，2026-11-07；原圖 img\_原圖_items_阿居.png，cut_items.cjs 切）：文字裡的 🔁🛡️💾⭐ 一律換成圖
-const ICO = { "🔁": "redo", "🛡": "shield", "💾": "save", "⭐": "total" };
-const ico = s => String(s).replace(/🔁|🛡\uFE0F?|💾|⭐/g, m => `<img class="cii" src="${IMG}item_${ICO[m.replace(/\uFE0F/g, "")]}.png" alt="">`);
+// 道具圖示（阿居畫；2026-11-10 SUNNY 嫌沒辨識度→整組重畫成不同輪廓：img\_原圖_items2_阿居.png、_原圖_skip_阿居.png，cut_items.cjs 切）：文字裡的 🔁🛡️💾⭐⏭️ 一律換成圖
+const ICO = { "🔁": "redo", "🛡": "shield", "💾": "save", "⭐": "total", "⏭": "skip" };
+const ico = s => String(s).replace(/🔁|🛡\uFE0F?|💾|⭐|⏭️?/g, m => `<img class="cii" src="${IMG}item_${ICO[m.replace(/\uFE0F/g, "")]}.png" alt="">`);
 
+// ⏭️ 跳題（四年級）：能不能跳第 idx 題（後台會再檢查一次）
+const OPN = { add: "加法", sub: "減法", mul: "乘法", div: "除法" };
+const opOf = p => /÷/.test(p.text) ? "div" : /×/.test(p.text) ? "mul" : /－/.test(p.text) ? "sub" : "add";
+function skipInfo(idx) {
+  if (GRADE !== 4 || !S || !S.skipMax || !SET || idx > S.perDay || S.first.length !== idx - 1 || S.pend) return null;
+  const used = S.skipUsed || 0, left = S.skipMax - used;
+  if (left <= 0 || S.perDay - used - 1 < 2) return null;
+  const op = opOf(SET[idx - 1]);
+  return (S.weak || []).indexOf(op) >= 0 ? { weak: OPN[op] } : { left };
+}
+const weakHTML = w => `<div class="cweak">浩克發現你最近的<b>${w}</b>有算錯，${w}要多練習喔～這題不能跳。</div>`;
+async function doSkip(idx, btn) {
+  if (btn && !btn.dataset.arm) { btn.dataset.arm = "1"; btn.textContent = "確定跳過？再按一次"; return; }
+  if (btn) { btn.disabled = true; btn.textContent = "跳過中…"; }
+  let r;
+  try { r = await api(null, { mode: "calc", classId: CH.id, name: myName(), idx, skip: true }); } catch (e) { r = null; }
+  if (!r || !r.ok) {
+    if (r) S = Object.assign(S, r, { ok: true });
+    modal(ico(`<h3>⏭️ 這題不能跳</h3>`) + `<p>${r && r.err === "skip_weak" ? "這種題目你最近有算錯，要多練習喔～" : r && r.err === "skip_pend" ? "先把重做卡的那一題重做完。" : r ? "今天能跳的題目用完了。" : "網路好像斷了，等一下再試。"}</p>`, "好", () => Q ? drawQ() : drawHome(false));
+    return;
+  }
+  S = Object.assign(S, r);
+  Q = Q || {}; Q.gotRedo = !!r.gotRedo; Q.pet = r.pet && r.pet.pts ? r.pet : null;
+  updateTile();
+  if (r.stamp) { drawHome(false); setTimeout(reward, 300); return; }
+  if (idx < S.perDay) startQ(idx + 1); else drawHome(false);
+}
 // 💣 拆彈特攻隊新上線提醒：三年級、11/22 前、還沒點過拆彈分頁 → 方塊和分頁閃亮亮（點過一次就不再閃）
 const BOMB_NEW_UNTIL = Date.parse("2026-11-22T23:59:59+08:00");
 const bombIsNew = () => GRADE === 3 && Date.now() < BOMB_NEW_UNTIL && !lsG("wh_bomb_seen");
@@ -123,7 +152,7 @@ async function drawHome(reload) {
   }
   if (TAB === "bomb") return drawBomb(reload || !B);   // 💣 拆彈特攻隊分頁（三年級）
   const doneN = S.first.length, left = S.perDay - doneN, pct = Math.min(100, Math.round(S.streak / S.goal * 100));
-  const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < doneN ? (S.first[i] ? "ok" : "no") : i === doneN ? "now" : ""}"></i>`).join("");
+  const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < doneN ? (S.first[i] === 2 ? "skip" : S.first[i] ? "ok" : "no") : i === doneN ? "now" : ""}"></i>`).join("");
   // 打綽號／去姓的名字也認得，但提醒孩子打本名（SUNNY 2026-11-06：記得提醒小孩）；一鍵改成本名
   const typed = String(myName() || "").replace(/姸/g, "妍").replace(/[^一-鿿A-Za-z]/g, "").toLowerCase(), realName = /^測試/.test(S.key) ? "" : S.key;
   const nameTip = realName && typed !== realName ? `<div class="cnametip">浩克認出你是 <b>${esc(realName)}</b> 😊 下次記得打<b>本名</b>喔！<button class="cbtn" id="cfixname">改成本名</button></div>` : "";
@@ -133,7 +162,8 @@ async function drawHome(reload) {
       <div class="ccheer">${esc(homeCheer())}</div></div>
     <div class="ctoday"><div class="ct">今天的 5 題 <span class="cdots">${dots}</span></div>
       ${S.pend && S.pend === doneN ? `<button class="cbtn big" id="credo">🔁 重做第 ${doneN} 題（已用重做卡）</button>` : ""}
-      ${left > 0 ? `<button class="cbtn big${S.pend && S.pend === doneN ? " gray" : ""}" id="cgo">${doneN ? `繼續第 ${doneN + 1} 題` : "開始今天的 5 題"}</button>` : S.pend && S.pend === doneN ? "" : `<div class="cdone">今天做完了！明天再來挑戰 💪</div>`}</div>
+      ${left > 0 ? `<button class="cbtn big${S.pend && S.pend === doneN ? " gray" : ""}" id="cgo">${doneN ? `繼續第 ${doneN + 1} 題` : "開始今天的 5 題"}</button>` : S.pend && S.pend === doneN ? "" : `<div class="cdone">今天做完了！明天再來挑戰 💪</div>`}
+      ${left > 0 && skipInfo(doneN + 1) ? (skipInfo(doneN + 1).weak ? weakHTML(skipInfo(doneN + 1).weak) : `<button class="cbtn big gray" id="cskip">${ico("⏭️")} 跳過第 ${doneN + 1} 題（還能跳 ${skipInfo(doneN + 1).left} 題）</button>`) : ""}</div>
     ${itemsHTML()}
     <div class="ccard"><div class="ct">我的集章卡 <small>（5 題全對蓋一個章）</small></div><div class="cstamps">${stampsHTML()}</div></div>
     <div class="ccard"><div class="ct">計算王獎狀 <small>已拿到 ${S.certs.length}／${S.maxCert} 張</small></div>
@@ -142,11 +172,12 @@ async function drawHome(reload) {
   bindTabs();
   if (el("cgo")) el("cgo").onclick = () => startQ(doneN + 1);
   if (el("credo")) el("credo").onclick = () => startQ(doneN, true);
+  if (el("cskip")) el("cskip").onclick = () => doSkip(doneN + 1, el("cskip"));
   if (el("cfixname")) el("cfixname").onclick = () => { if (typeof setMyName === "function") setMyName(realName); else lsS("wh_name", realName); drawHome(true); };
   el("crule").onclick = showRules;
   el("cpad").onclick = showPad;
   w.querySelectorAll(".ccert").forEach(b => b.onclick = () => showCert(+b.dataset.n));
-  if (!lsG("wh_calc_rules2")) { lsS("wh_calc_rules2", "1"); showRules(); }   // 2026-11-07 新增道具規則 → 每個孩子再看一次
+  if (!lsG("wh_calc_rules2") || GRADE === 4 && !lsG("wh_calc_rules3")) { lsS("wh_calc_rules2", "1"); lsS("wh_calc_rules3", "1"); showRules(); }   // 2026-11-10 四年級新增跳題規則 → 再看一次   // 2026-11-07 新增道具規則 → 每個孩子再看一次
 }
 function itemsHTML() {
   if (S.redo === undefined) return "";   // 後台還沒更新
@@ -156,6 +187,7 @@ function itemsHTML() {
   return ico(`<div class="ccard citems"><div class="ct">我的道具 <small>（答錯時會自動使用，各最多 ${S.itemMax} 張）</small></div>
       <div class="cit"><span class="ci">🔁</span><b>重做卡 ×${S.redo}</b><small>${full(S.redo) ? "已經存滿了" : `再蓋 ${redoNext} 個全對章送一張`}</small></div>
       <div class="cit"><span class="ci">🛡️</span><b>免歸零卡 ×${S.shield}</b><small>${full(S.shield) ? "已經存滿了" : `再連續答對 ${shieldNext} 題送一張`}</small></div>
+${GRADE === 4 && S.skipMax !== undefined ? `<div class="cit"><span class="ci">⏭️</span><b>跳題 每天 ${S.skipMax} 題</b><small>${S.skipNext ? `再連續答對 ${S.skipNext - S.streak} 題 → 每天可跳 ${S.skipMax + 1} 題` : "最多了，計算很穩定！"}</small></div>` : ""}
       <div class="cit"><span class="ci">💾</span><b>存檔點 ${S.savePoint} 題</b><small>${S.savePoint ? "卡片用完時答錯，只退回這裡" : `連續到 ${S.saveEvery} 題就會存檔`}</small></div></div>
     <div class="ccard ctotal"><div class="ct">⭐ 累積答對 <b>${S.total}</b> 題${S.title ? ` <span class="ctitle">${esc(S.title)}</span>` : ""}</div><div class="csmall">${nt}（答對的題數不會歸零）</div>${petWeekHTML(S)}</div>`);
 }
@@ -210,7 +242,7 @@ function drawQ(note) {
   note = Q.note;
   room.classList.add("qmode");
   const { L, p, idx } = Q, w = el("cwrap");
-  const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < S.first.length ? (S.first[i] ? "ok" : "no") : i === idx - 1 ? "now" : ""}"></i>`).join("");
+  const dots = Array.from({ length: S.perDay }, (_, i) => `<i class="${i < S.first.length ? (S.first[i] === 2 ? "skip" : S.first[i] ? "ok" : "no") : i === idx - 1 ? "now" : ""}"></i>`).join("");
   let g = `<div class="cgrid ${L.kind === "d" ? "div" : ""}" id="cgrid" style="grid-template-columns:repeat(${L.cols},var(--cs))">`;
   L.rows.forEach((row, r) => row.forEach((_, c) => {
     const given = C.isGiven(L, r), ch = Q.kid[r][c], k = r + "," + c;
@@ -228,7 +260,7 @@ function drawQ(note) {
       k === "del" ? `<button type="button" class="ck fn era" data-k="del">橡皮擦</button>` : k === "ok" ? `<button type="button" class="ck okk" data-k="ok">完成</button>`
       : `<button type="button" class="ck${k === "0" ? " zero" : ""}${k === "←" || k === "→" ? (ansMode && L.kind !== "d" ? " fn hid" : " fn") : ""}" data-k="${k}">${ansMode && L.kind === "d" && k === "←" ? "← 商" : ansMode && L.kind === "d" && k === "→" ? "餘數 →" : k}</button>`).join("")}</div>`;
   w.innerHTML = `<div class="cqs${Q.done ? " qdone" : ""}">
-    <div class="cqhead"><div class="cqtop"><span>第 ${idx}／${S.perDay} 題</span><span class="cdots">${dots}</span><span class="cs">連續 <b>${S.streak}</b></span></div>
+    <div class="cqhead"><div class="cqtop"><span>第 ${idx}／${S.perDay} 題</span><span class="cdots">${dots}</span><span class="cs">連續 <b>${S.streak}</b></span>${!Q.done && !Q.attempt && !Q.redo && skipInfo(idx) && !skipInfo(idx).weak ? `<button type="button" class="cskipq" id="cskipq">${ico("⏭️")} 跳過</button>` : ""}</div>
       <div class="cq">${esc(p.text.replace(/－/g, "−").replace(/＋/g, "+"))} ＝ ？</div></div>
     <div class="cmain"><div class="cgarea" id="cgarea">${Q.askSunny ? askHTML() : ansMode ? ansHTML() : `<div class="cgridbox">${g}</div>`}</div>
       <div class="cnote ${note && note.cls || "tip"}" id="cnote">${note ? ico(note.html) : esc(tip)}</div></div>
@@ -238,6 +270,7 @@ function drawQ(note) {
   w.querySelectorAll(".ck").forEach(b => b.onclick = () => b.dataset.k === "ok" ? submit() : key(b.dataset.k));
   w.querySelectorAll(".cscreen[data-f]").forEach(s => s.onclick = () => { if (Q.done || Q.L.kind !== "d") return; Q.field = s.dataset.f; drawQ(); });   // 除法：點「商」或「餘數」的框切換
   if (el("cnext")) el("cnext").onclick = nextQ;
+  if (el("cskipq")) el("cskipq").onclick = () => doSkip(idx, el("cskipq"));
   if (el("tnext")) el("tnext").onclick = () => Q.teachUI.go(1);
   if (el("tprev")) el("tprev").onclick = () => Q.teachUI.go(-1);
 }
@@ -372,6 +405,7 @@ async function submitAns() {
     S = Object.assign(S, r);
     const ok = r.graded ? r.graded.ok : chk.ok;
     if (ok) return right(r);
+    if (GRADE === 4) { const op = opOf(Q.p); S.weak = (S.weak || []).filter(x => x !== op).concat(op); }   // 算錯的運算：之後不能跳
     Q.redo = r.item === "redo";
     const after = missText(r);
     if (chk.field) {   // 只錯一位數（或除法只錯餘數）→ 指出來
@@ -457,7 +491,7 @@ function teach() {
 function reward() {
   const m = document.createElement("div"); m.className = "creward";
   const n = S.stamps.length, st = ((n - 1) % STAMPS) + 1;
-  m.innerHTML = `<div class="rw"><img class="rf" src="${IMG}reward_1.png" alt="" onerror="this.style.display='none'"><div class="rt">今天 5 題全對！</div>
+  m.innerHTML = `<div class="rw"><img class="rf" src="${IMG}reward_1.png" alt="" onerror="this.style.display='none'"><div class="rt">${S.first.indexOf(2) >= 0 ? "今天做的題目全對！" : "今天 5 題全對！"}</div>
     <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div>${Q && Q.gotRedo ? ico('<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>') : ""}${Q && Q.pet ? `<div class="rs rpet">${petLine(Q.pet)}</div>${petCard()}` : ""}<small>點一下關掉</small></div>`;
   room.appendChild(m);
   // 4 格只播一次（約 1.8 秒）停在蓋章那一格；3.5 秒後自己關，也可以點一下關掉
