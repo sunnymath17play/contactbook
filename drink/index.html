@@ -17,7 +17,8 @@ header p{margin:4px 0 0;font-size:15px;color:var(--ink)}
 h2{font-size:18px;margin:0 0 10px;color:var(--blue)}
 .menuimg{display:block;width:100%;height:150px;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line)}
 .hint{font-size:14px;color:var(--sub);margin:6px 0 0}
-.names{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.who{display:flex;gap:8px}.who input{flex:1;font-size:20px}
+.ok{border:0;border-radius:10px;background:var(--blue);color:#fff;font-size:18px;font-weight:700;padding:0 18px}
 button{font:inherit;cursor:pointer}
 .chip{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px 4px;font-size:17px;color:var(--ink)}
 .chip.on{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700}
@@ -62,8 +63,9 @@ input[type=text]{width:100%;font:inherit;padding:10px;border:2px solid var(--lin
   </div>
 
   <div class="card" id="whoCard">
-    <h2>是誰要點飲料？</h2>
-    <div class="names" id="names"></div>
+    <h2>請打孩子的全名</h2>
+    <div class="who"><input type="text" id="nameIn" maxlength="10" placeholder="例：王小明" autocomplete="off"><button class="ok" id="nameGo">確定</button></div>
+    <p class="hint" id="nameMsg">要打全名喔（三個字）</p>
   </div>
 
   <div id="main" class="hide">
@@ -98,9 +100,6 @@ input[type=text]{width:100%;font:inherit;padding:10px;border:2px solid var(--lin
 <script src="menu.js"></script>
 <script>
 var API = 'https://script.google.com/macros/s/AKfycbzsoH5_MbKFiXShX-b9VawDGmD3k8_Xh4La9dcyvcHNLk2GE-PJ4bnLDCmYULoiIjENZQ/exec';
-var NAMES = ['桓桓','Q妹','諺諺','晴晴','繹','凱凱','家吟','媗','妍妍','邦邦','睿睿','小魚兒','隼隼'];
-var test = /[?&]test=1/.test(location.search);
-if (test) NAMES = NAMES.concat(['測試任選','測試75','測試65','測試55']);
 
 var S = { name:'', budget:null, item:'', size:'', iceOnly:false, sugar:'', ice:'', closed:false };
 function $(id){ return document.getElementById(id); }
@@ -110,23 +109,25 @@ function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localSt
 $('menuThumb').onclick = function(){ $('ov').style.display='block'; };
 $('ovx').onclick = function(){ $('ov').style.display='none'; };
 
-NAMES.forEach(function(n){
-  var b = el('button','chip',n); b.onclick = function(){ choose(n); setTimeout(function(){ window.scrollTo({top:$('main').offsetTop-10,behavior:'smooth'}); },50); }; $('names').appendChild(b);
-});
+function go(){ var n=$('nameIn').value.replace(/\s+/g,''); if(!n){ $('nameMsg').textContent='請先打孩子的全名'; return; }
+  $('nameIn').blur(); choose(n); }
+$('nameGo').onclick=go;
+$('nameIn').addEventListener('keydown',function(e){ if(e.key==='Enter') go(); });
 
 function choose(n){
-  S.name=n; ls('drink_name', n);
-  [].forEach.call($('names').children, function(b){ b.classList.toggle('on', b.textContent===n); });
+  S.name=n;
   $('main').classList.add('hide'); $('done').classList.add('hide'); $('bar').classList.add('hide');
   $('budget').textContent='讀取中…'; $('main').classList.remove('hide');
   fetch(API+'?mode=who&name='+encodeURIComponent(n)).then(function(r){return r.json();}).then(function(d){
-    if(!d.ok){ $('budget').textContent='找不到這個名字，請跟 SUNNY 說'; return; }
+    if(!d.ok){ $('main').classList.add('hide'); $('nameMsg').textContent='找不到「'+n+'」，請確認是孩子的全名（三個字）'; return; }
+    ls('drink_name', n); $('nameIn').value=n; $('nameMsg').textContent='';
     S.budget=d.budget; S.closed=d.closed;
     $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+' 考 100 分　菜單全部任選');
     if(d.order) showMine(d.order); else $('mine').classList.add('hide');
     if(d.closed){ $('pick').classList.add('hide'); $('optCard').classList.add('hide');
       $('budget').textContent='已經收單囉，謝謝大家'; return; }
     $('pick').classList.remove('hide'); $('optCard').classList.remove('hide');
+    setTimeout(function(){ window.scrollTo({top:$('main').offsetTop-10,behavior:'smooth'}); },50);
     S.item=''; S.size=''; S.sugar=''; S.ice=''; $('note').value='';
     renderList(); renderOpts(); $('bar').classList.remove('hide'); upd();
   }).catch(function(){ $('budget').textContent='網路不穩，請再點一次名字'; });
@@ -198,7 +199,7 @@ $('go').onclick=function(){
   }).catch(function(){ b.disabled=false; b.textContent='送出'; $('sum').textContent='網路不穩，再按一次'; });
 };
 
-var last=ls('drink_name'); if(last && NAMES.indexOf(last)>=0) choose(last);
+var last=ls('drink_name'); if(last){ $('nameIn').value=last; choose(last); }
 </script>
 </body>
 </html>
