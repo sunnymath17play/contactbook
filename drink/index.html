@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>五B 期中慶功點飲料</title>
+<style>
+:root{--blue:#1f5fae;--blue2:#e8f0fb;--yellow:#ffe800;--orange:#f08a24;--ink:#1d2433;--sub:#5b6577;--line:#d9e1ec;--ok:#1f9d55}
+*{box-sizing:border-box}
+body{margin:0;background:#f6f8fc;color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:17px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px 120px}
+header{background:var(--yellow);padding:18px 16px 16px;text-align:center;position:relative}
+header h1{margin:0;font-size:23px;color:var(--blue)}
+header p{margin:4px 0 0;font-size:15px;color:var(--ink)}
+.logo{position:absolute;right:10px;top:10px;width:40px;height:40px;opacity:.9}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:14px}
+h2{font-size:18px;margin:0 0 10px;color:var(--blue)}
+.menuimg{display:block;width:100%;height:150px;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line)}
+.hint{font-size:14px;color:var(--sub);margin:6px 0 0}
+.names{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button{font:inherit;cursor:pointer}
+.chip{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px 4px;font-size:17px;color:var(--ink)}
+.chip.on{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700}
+.budget{font-size:19px;font-weight:700;text-align:center;padding:12px;border-radius:12px;background:var(--blue2);color:var(--blue)}
+.mine{border:2px solid var(--ok);background:#effaf3}
+.mine b{color:var(--ok)}
+.grp{margin-top:12px}
+.grp h3{font-size:15px;margin:0 0 6px;padding:4px 10px;background:var(--blue);color:#fff;border-radius:8px;display:inline-block}
+.row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eef2f7}
+.row:last-child{border-bottom:0}
+.row .nm{flex:1;font-size:17px}
+.sz{border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 8px;min-width:78px;font-size:15px}
+.sz.on{border-color:var(--orange);background:var(--orange);color:#fff;font-weight:700}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts .chip{padding:8px 14px}
+input[type=text]{width:100%;font:inherit;padding:10px;border:2px solid var(--line);border-radius:10px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.bar .in{max-width:560px;margin:0 auto}
+.go{width:100%;border:0;border-radius:14px;background:var(--orange);color:#fff;font-size:19px;font-weight:700;padding:14px}
+.go:disabled{background:#c9ced8}
+.sum{font-size:14px;color:var(--sub);text-align:center;margin-bottom:6px;min-height:20px}
+.done{text-align:center}
+.done .big{font-size:22px;font-weight:700;color:var(--ok)}
+.link{background:none;border:0;color:var(--blue);text-decoration:underline;padding:6px;font-size:16px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;overflow:auto;z-index:9;padding:12px}
+.ov img{width:100%;max-width:900px;display:block;margin:0 auto}
+.ov .x{position:fixed;top:10px;right:10px;background:#fff;border:0;border-radius:20px;padding:8px 16px;font-size:16px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header>
+  <img class="logo" src="logo.png" alt="">
+  <h1>五B 期中慶功</h1>
+  <p>謝謝孩子們的認真　SUNNY 請大家喝 50嵐</p>
+</header>
+<div class="wrap">
+
+  <div class="card">
+    <img class="menuimg" src="menu.jpg" alt="50嵐菜單" id="menuThumb">
+    <p class="hint">點照片看完整菜單（高屏區價格）</p>
+  </div>
+
+  <div class="card" id="whoCard">
+    <h2>是誰要點飲料？</h2>
+    <div class="names" id="names"></div>
+  </div>
+
+  <div id="main" class="hide">
+    <div class="card budget" id="budget"></div>
+    <div class="card mine hide" id="mine"></div>
+
+    <div class="card" id="pick">
+      <h2>選飲料和大小杯</h2>
+      <div id="list"></div>
+    </div>
+
+    <div class="card" id="optCard">
+      <h2>甜度</h2>
+      <div class="opts" id="sugar"></div>
+      <h2 style="margin-top:14px">冰塊</h2>
+      <div class="opts" id="ice"></div>
+      <h2 style="margin-top:14px">備註（可不填）</h2>
+      <input type="text" id="note" maxlength="40" placeholder="想跟 SUNNY 說的">
+    </div>
+  </div>
+
+  <div class="card done hide" id="done"></div>
+</div>
+
+<div class="bar hide" id="bar"><div class="in">
+  <div class="sum" id="sum"></div>
+  <button class="go" id="go" disabled>送出</button>
+</div></div>
+
+<div class="ov" id="ov"><button class="x" id="ovx">關閉</button><img src="menu.jpg" alt="50嵐菜單"></div>
+
+<script src="menu.js"></script>
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbzsoH5_MbKFiXShX-b9VawDGmD3k8_Xh4La9dcyvcHNLk2GE-PJ4bnLDCmYULoiIjENZQ/exec';
+var NAMES = ['桓桓','Q妹','諺諺','晴晴','繹','凱凱','家吟','媗','妍妍','邦邦','睿睿','小魚兒','隼隼'];
+var test = /[?&]test=1/.test(location.search);
+if (test) NAMES = NAMES.concat(['測試任選','測試75','測試65','測試55']);
+
+var S = { name:'', budget:null, item:'', size:'', iceOnly:false, sugar:'', ice:'', closed:false };
+function $(id){ return document.getElementById(id); }
+function el(tag, cls, txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function ls(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){ return null; } }
+
+$('menuThumb').onclick = function(){ $('ov').style.display='block'; };
+$('ovx').onclick = function(){ $('ov').style.display='none'; };
+
+NAMES.forEach(function(n){
+  var b = el('button','chip',n); b.onclick = function(){ choose(n); setTimeout(function(){ window.scrollTo({top:$('main').offsetTop-10,behavior:'smooth'}); },50); }; $('names').appendChild(b);
+});
+
+function choose(n){
+  S.name=n; ls('drink_name', n);
+  [].forEach.call($('names').children, function(b){ b.classList.toggle('on', b.textContent===n); });
+  $('main').classList.add('hide'); $('done').classList.add('hide'); $('bar').classList.add('hide');
+  $('budget').textContent='讀取中…'; $('main').classList.remove('hide');
+  fetch(API+'?mode=who&name='+encodeURIComponent(n)).then(function(r){return r.json();}).then(function(d){
+    if(!d.ok){ $('budget').textContent='找不到這個名字，請跟 SUNNY 說'; return; }
+    S.budget=d.budget; S.closed=d.closed;
+    $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+' 考 100 分　菜單全部任選');
+    if(d.order) showMine(d.order); else $('mine').classList.add('hide');
+    if(d.closed){ $('pick').classList.add('hide'); $('optCard').classList.add('hide');
+      $('budget').textContent='已經收單囉，謝謝大家'; return; }
+    $('pick').classList.remove('hide'); $('optCard').classList.remove('hide');
+    S.item=''; S.size=''; S.sugar=''; S.ice=''; $('note').value='';
+    renderList(); renderOpts(); $('bar').classList.remove('hide'); upd();
+  }).catch(function(){ $('budget').textContent='網路不穩，請再點一次名字'; });
+}
+
+function desc(o){ return o.item+'　'+(o.size==='L'?'大杯':'中杯')+' '+o.price+'元　'+o.sugar+'　'+o.ice+(o.note?'　（'+o.note+'）':''); }
+function showMine(o){
+  var m=$('mine'); m.innerHTML=''; m.classList.remove('hide');
+  m.appendChild(el('div',null,'已經點好了'));
+  var b=el('b',null,desc(o)); m.appendChild(b);
+  m.appendChild(el('div','hint','想換的話，在下面重新選一次送出就好'));
+}
+
+function renderList(){
+  var L=$('list'); L.innerHTML='';
+  MENU.forEach(function(g){
+    var rows=[];
+    g.items.forEach(function(it){
+      var ok=[]; if(!S.budget||it[1]<=S.budget) ok.push(['M',it[1]]); if(!S.budget||it[2]<=S.budget) ok.push(['L',it[2]]);
+      if(ok.length) rows.push([it,ok]);
+    });
+    if(!rows.length) return;
+    var box=el('div','grp'); box.appendChild(el('h3',null,g.group));
+    rows.forEach(function(r){
+      var row=el('div','row'); row.appendChild(el('div','nm',r[0][0]));
+      r[1].forEach(function(s){
+        var b=el('button','sz',(s[0]==='L'?'大杯 ':'中杯 ')+s[1]);
+        b.onclick=function(){ S.item=r[0][0]; S.size=s[0]; S.price=s[1];
+          var ic=!!g.iceOnly; if(ic!==S.iceOnly){ S.iceOnly=ic; S.ice=''; renderOpts(); }
+          [].forEach.call(document.querySelectorAll('.sz'),function(x){x.classList.remove('on');}); b.classList.add('on'); upd(); };
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+    });
+    L.appendChild(box);
+  });
+}
+
+function renderOpts(){
+  [['sugar',SUGAR],['ice',S.iceOnly?ICE_ONLY:ICE]].forEach(function(p){
+    var box=$(p[0]); box.innerHTML='';
+    p[1].forEach(function(v){
+      var b=el('button','chip'+(S[p[0]]===v?' on':''),v);
+      b.onclick=function(){ S[p[0]]=v; [].forEach.call(box.children,function(x){x.classList.toggle('on',x===b);}); upd(); };
+      box.appendChild(b);
+    });
+  });
+}
+
+function upd(){
+  var miss=[]; if(!S.item) miss.push('飲料'); if(!S.sugar) miss.push('甜度'); if(!S.ice) miss.push('冰塊');
+  $('sum').textContent = S.item ? (S.item+' '+(S.size==='L'?'大杯':'中杯')+' '+S.price+'元'+(S.sugar?'　'+S.sugar:'')+(S.ice?'　'+S.ice:'')) : '';
+  $('go').disabled = !!miss.length;
+  $('go').textContent = miss.length ? ('還要選：'+miss.join('、')) : '送出';
+}
+
+$('go').onclick=function(){
+  var b=$('go'); b.disabled=true; b.textContent='送出中…';
+  fetch(API,{method:'POST',body:JSON.stringify({name:S.name,item:S.item,size:S.size,sugar:S.sugar,ice:S.ice,note:$('note').value})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(!d.ok){ b.disabled=false; b.textContent='送出';
+      $('sum').textContent = d.err==='closed'?'已經收單囉':(d.err==='over'?'超過預算了，換一杯看看':'沒送成功，再按一次'); return; }
+    $('main').classList.add('hide'); $('bar').classList.add('hide');
+    var D=$('done'); D.innerHTML=''; D.classList.remove('hide');
+    D.appendChild(el('div','big','收到了'));
+    D.appendChild(el('p',null,S.name+'：'+desc(d.order)));
+    var again=el('button','link','想換一杯'); again.onclick=function(){ choose(S.name); }; D.appendChild(again);
+    window.scrollTo(0,D.offsetTop-20);
+  }).catch(function(){ b.disabled=false; b.textContent='送出'; $('sum').textContent='網路不穩，再按一次'; });
+};
+
+var last=ls('drink_name'); if(last && NAMES.indexOf(last)>=0) choose(last);
+</script>
+</body>
+</html>
