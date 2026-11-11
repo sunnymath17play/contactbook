@@ -60,7 +60,7 @@ input[type=text]{width:100%;font:inherit;padding:10px;border:2px solid var(--lin
 
   <div class="card">
     <img class="menuimg" src="menu.jpg" alt="50嵐菜單" id="menuThumb">
-    <p class="hint">點照片看完整菜單（高屏區價格）</p>
+    <p class="hint">點照片看完整菜單</p>
   </div>
 
   <div class="card" id="whoCard">
@@ -161,7 +161,7 @@ function renderList(){
       r[1].forEach(function(s){
         var b=el('button','sz',(s[0]==='L'?'大杯 ':'中杯 ')+s[1]);
         b.onclick=function(){ S.item=r[0][0]; S.size=s[0]; S.price=s[1];
-          var ic=!!g.iceOnly; if(ic!==S.iceOnly){ S.iceOnly=ic; S.ice=''; renderOpts(); }
+          var ic=!!r[0][3]; if(ic!==S.iceOnly){ S.iceOnly=ic; S.ice=''; renderOpts(); }
           [].forEach.call(document.querySelectorAll('.sz'),function(x){x.classList.remove('on');}); b.classList.add('on'); upd(); };
         row.appendChild(b);
       });
