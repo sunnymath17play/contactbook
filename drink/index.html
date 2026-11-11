@@ -119,10 +119,10 @@ function choose(n){
   $('main').classList.add('hide'); $('done').classList.add('hide'); $('bar').classList.add('hide');
   $('budget').textContent='讀取中…'; $('main').classList.remove('hide');
   fetch(API+'?mode=who&name='+encodeURIComponent(n)).then(function(r){return r.json();}).then(function(d){
-    if(!d.ok){ $('main').classList.add('hide'); $('nameMsg').textContent='找不到「'+n+'」，請確認是孩子的全名（三個字）'; return; }
+    if(!d.ok){ $('main').classList.add('hide'); $('nameMsg').textContent='找不到「'+n+'」，請確認是孩子的全名'; return; }
     ls('drink_name', n); $('nameIn').value=n; $('nameMsg').textContent='';
     S.budget=d.budget; S.closed=d.closed;
-    $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+' 考 100 分　菜單全部任選');
+    $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+(/淑芬|SUNNY/i.test(n)?'':' 考 100 分')+'　菜單全部任選');
     if(d.order) showMine(d.order); else $('mine').classList.add('hide');
     if(d.closed){ $('pick').classList.add('hide'); $('optCard').classList.add('hide');
       $('budget').textContent='已經收單囉，謝謝大家'; return; }
