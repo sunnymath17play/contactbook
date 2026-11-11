@@ -306,16 +306,16 @@ function wallItems(){
 }
 const md = d => { const m = String(d || "").split("-"); return m.length === 3 ? `${+m[1]}/${+m[2]}` : ""; };
 async function calcCertURL(c, info, name){   // 計算王獎狀（calc.js 的畫法）
-  const bg = await loadImg(info.bg), logo = await loadImg(info.logo).catch(() => null);
+  const bg = await loadImg(c.n > 1 && info.bg2 ? info.bg2 : info.bg), logo = await loadImg(info.logo).catch(() => null);
   const cv = document.createElement("canvas"); cv.width = bg.naturalWidth; cv.height = bg.naturalHeight;
-  const x = cv.getContext("2d"); x.drawImage(bg, 0, 0); window.CALC_DRAW_CERT(x, cv.width, cv.height, logo, name, c.n, c.date, info.goal);
+  const x = cv.getContext("2d"); x.drawImage(bg, 0, 0); window.CALC_DRAW_CERT(x, cv.width, cv.height, logo, name, c, info.goal);
   return cv.toDataURL("image/jpeg", 0.88);
 }
 async function wall(){
   const name = (lsGet("wh_name") || "").trim();
   const items = wallItems();
   let calc = null; try { calc = window.CALC_CERTS && window.CALC_DRAW_CERT ? await window.CALC_CERTS() : null; } catch (e) {}
-  const calcs = calc && calc.certs ? calc.certs.map(c => ({ key: "__calc_" + c.n, calc: c, date: c.date, title: `計算王獎狀 第 ${c.n} 張` })) : [];
+  const calcs = calc && calc.certs ? calc.certs.map(c => ({ key: "__calc_" + c.n, calc: c, date: c.date, title: c.n > 1 ? "傳奇計算王獎狀" : "計算王獎狀" })) : [];
   const all = items.concat(calcs), seen = new Set(wallSeen()), total = all.length;
   const grands = items.filter(i => i.grand), smalls = items.filter(i => !i.grand);
   const units = [...new Set(smalls.map(i => i.unit))];

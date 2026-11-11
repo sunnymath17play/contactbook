@@ -36,7 +36,7 @@ const RULES = [
   "💾 <b>存檔點</b>：連續到 50、100、150 題會存檔。兩種卡都用完時答錯，只退回存檔點，不會回到 0。",
   "⭐ <b>累積答對</b>：答對的題數一直加、不會歸零；到 50、100、200 題升級稱號。兩種卡最多各存 3 張。",
   ...(GRADE === 4 ? ["⏭️ <b>跳題</b>：連續答對 10 題起，每天可以跳過 1 題；30 題起 2 題、60 題起 3 題。跳過的題目連續不加也不斷。<b>最近算錯過的那種題目不能跳</b>，要多練習喔！"] : []),
-  "連續答對 <b>200 題</b> → 得到「計算王獎狀」，請找 SUNNY 領取獎品。",
+  "連續答對 <b>200 題</b> → 得到「計算王獎狀」＋開寶箱抽禮物，截圖找 SUNNY 領！再連續答對 200 題 → 「傳奇計算王獎狀」，禮物兩個選一個。",
   "拿到獎狀後，連續題數從 0 重新開始；<b>每個人最多領 2 次獎品</b>。",
   "哪一天沒做，連續題數不會變。",
   "要打自己的本名；換手機、換平板，紀錄都接得上。",
@@ -167,7 +167,7 @@ async function drawHome(reload) {
     ${itemsHTML()}
     <div class="ccard"><div class="ct">我的集章卡 <small>（5 題全對蓋一個章）</small></div><div class="cstamps">${stampsHTML()}</div></div>
     <div class="ccard"><div class="ct">計算王獎狀 <small>已拿到 ${S.certs.length}／${S.maxCert} 張</small></div>
-      ${S.certs.length ? S.certs.map(c => `<button class="ccert" data-n="${c.n}">🏆 第 ${c.n} 張（${c.date.slice(5).replace("-", "/")}）</button>`).join("") : `<div class="csmall">連續答對 ${S.goal} 題就能拿到，再找 SUNNY 領獎品！</div>`}</div>
+      ${S.certs.length ? S.certs.map(c => `<button class="ccert" data-n="${c.n}">🏆 ${c.n > 1 ? "傳奇" : ""}計算王獎狀（${c.date.slice(5).replace("-", "/")}）${c.gift ? `　🎁 ${esc(c.gift)}` : c.opts ? "　🎁 還沒選禮物，點我選！" : ""}</button>`).join("") : `<div class="csmall">連續答對 ${S.goal} 題就能拿到，再找 SUNNY 領獎品！</div>`}</div>
     <div class="cfoot"><button class="crule" id="crule">📜 挑戰規則</button><button class="crule" id="cpad">📲 用平板做</button></div>`;
   bindTabs();
   if (el("cgo")) el("cgo").onclick = () => startQ(doneN + 1);
@@ -627,40 +627,80 @@ document.addEventListener("keydown", e => {
   else if (k === "Enter") { e.preventDefault(); bombKey("ok"); }
 });
 
-// ---------- 計算王獎狀（阿居設計；字的位置在 CERT） ----------
-const CERT = { img: "cert_calc.jpg", logo: "logo.png" };
+// ---------- 計算王獎狀（阿居設計；字的位置在 drawCert）----------
+// 第 1 張＝計算王（金藍 cert_calc.jpg）、第 2 張＝傳奇計算王（紫金 cert_legend.jpg）；獎品不印在獎狀上（開寶箱另外給）
+const CERT = { img: "cert_calc.jpg", img2: "cert_legend.jpg", logo: "logo_cert.png" };
+const certImg = n => n > 1 ? CERT.img2 : CERT.img;
 function loadImg(src) { return new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; }); }
-// 獎狀上的字（阿居畫的底圖 1024×1536：中間米白空白、右下角是浩克，字避開浩克）
+// 獎狀上的字（底圖 1024×1536：中間米白空白、右下角是浩克，字避開浩克）
+// c = { n, date, no(全部班級編號), from(開始日), days(共幾天), run(最長連續幾天) }；舊獎狀沒有的欄位就不印
 const rocDate = d => { const [y, m, dd] = d.split("-").map(Number); return `${y - 1911} 年 ${m} 月 ${dd} 日`; };
-function drawCert(x, W, H, logo, name, n, date, goal) {
-  const F = '"Baloo 2","PingFang TC","Microsoft JhengHei",sans-serif';
+const rocMD = d => { const [y, m, dd] = d.split("-").map(Number); return `${y - 1911}/${m}/${dd}`; };
+function drawCert(x, W, H, logo, name, c, goal) {
+  const F = '"Baloo 2","Nunito","DFYuanStd-W7","PingFang TC","Microsoft JhengHei",sans-serif';
+  const leg = c.n > 1, ink = leg ? "#3D1A5B" : "#1E3A5F", deep = leg ? "#2A0F42" : "#0F2A4A", soft = leg ? "#6A4C82" : "#4A6280";
   const t = (s, px, py, size, color, align, weight) => { x.font = `${weight || 900} ${Math.round(W * size)}px ${F}`; x.fillStyle = color; x.textAlign = align || "center"; x.fillText(s, W * px, H * py); };
-  if (logo) { const lh = H * 0.045, lw = lh * logo.width / logo.height; x.drawImage(logo, W * 0.12, H * 0.205, lw, lh); }
-  t("計算王獎狀", 0.5, 0.31, 0.10, "#1E3A5F");
-  t(name, 0.5, 0.385, 0.088, "#0F2A4A");
-  x.fillStyle = "#D4A017"; x.fillRect(W * 0.25, H * 0.402, W * 0.5, H * 0.003);
-  t(`連續答對 ${goal} 題計算`, 0.5, 0.455, 0.05, "#1E3A5F", "center", 800);
-  t("又快又準，特頒此狀！", 0.5, 0.498, 0.05, "#1E3A5F", "center", 800);
-  t("請找SUNNY領取獎品", 0.5, 0.552, 0.056, "#C0392B");
-  t(`第 ${n} 張`, 0.30, 0.625, 0.04, "#B7791F");
-  t(rocDate(date), 0.30, 0.668, 0.032, "#4A6280", "center", 800);
-  t("SUNNY", 0.30, 0.705, 0.036, "#1E3A5F");
+  // LOGO 檔是白底 → multiply 讓白色融進米白底
+  if (logo) { const lh = H * 0.05, lw = lh * logo.width / logo.height; x.save(); x.globalCompositeOperation = "multiply"; x.drawImage(logo, W * 0.11, H * 0.198, lw, lh); x.restore(); }
+  t(leg ? "傳奇計算王獎狀" : "計算王獎狀", 0.5, 0.305, leg ? 0.085 : 0.10, ink);
+  t(name, 0.5, 0.38, 0.088, deep);
+  x.fillStyle = "#D4A017"; x.fillRect(W * 0.25, H * 0.397, W * 0.5, H * 0.003);
+  t(`連續答對 ${goal} 題計算`, 0.5, 0.437, 0.052, ink, "center", 800);
+  t(leg ? "再次挑戰成功，堅持到底！" : "又快又準，特頒此狀！", 0.5, 0.478, 0.052, ink, "center", 800);
+  // SUNNY 2026-11-11：版面要乾淨、要寫出領什麼獎品；不寫「第 N 張」／編號／天數（孩子看不懂）
+  if (c.gift) t(`獎品：${c.gift}`, 0.47, 0.532, 0.06, "#C0392B");
+  else if (!c.opts) t("請找SUNNY領取獎品", 0.47, 0.532, 0.056, "#C0392B");
+  t(rocDate(c.date), 0.28, 0.65, 0.034, soft, "center", 800);
+  t("SUNNY", 0.28, 0.692, 0.04, ink);
 }
 if (typeof window !== "undefined") window.CALC_DRAW_CERT = drawCert;
-// 獎狀牆（challenge.js）拿計算王獎狀：{ certs:[{n,date}], goal, bg, logo }
-window.CALC_CERTS = async () => { if (!S || !S.ok) await loadState(); return S && S.ok ? { certs: S.certs || [], goal: S.goal, bg: IMG + CERT.img, logo: IMG + CERT.logo } : null; };
+// 獎狀牆（challenge.js）拿計算王獎狀：{ certs:[{n,date,no,from,days,run}], goal, bg, bg2, logo }
+window.CALC_CERTS = async () => { if (!S || !S.ok) await loadState(); return S && S.ok ? { certs: S.certs || [], goal: S.goal, bg: IMG + CERT.img, bg2: IMG + CERT.img2, logo: IMG + CERT.logo } : null; };
+// ---------- 開寶箱（阿居設計：關著晃動 → 發光 → 打開＋禮物；點一下可跳過）----------
+// 第 1 張：後台已抽好 c.gift；第 2 張（傳奇）：c.opts 兩個讓孩子選一個 → mode=calc_gift
+function openChest(c, then) {
+  const m = document.createElement("div"); m.className = "cmodal cchest";
+  m.innerHTML = `<div class="box"><h3>${c.n > 1 ? "傳奇寶箱" : "神祕寶箱"}</h3><div class="cchest-stage"><img id="chImg" class="shake" src="${IMG}chest_closed.png" alt="寶箱"></div><div id="chMsg" class="cchest-msg">點寶箱可以直接打開喔！</div></div>`;
+  room.appendChild(m);
+  const img = m.querySelector("#chImg"), msg = m.querySelector("#chMsg"), timers = [];
+  let opened = false;
+  const finish = () => {
+    if (opened) return; opened = true; timers.forEach(clearTimeout);
+    img.className = "pop"; img.src = IMG + "chest_open.png";
+    if (c.opts && c.opts.length) {
+      msg.innerHTML = `寶箱裡有兩個禮物，選一個你最想要的！<div class="cchest-pick">${c.opts.map(o => `<button class="cbtn" type="button" data-g="${esc(o)}">🎁 ${esc(o)}</button>`).join("")}</div>`;
+      msg.querySelectorAll("[data-g]").forEach(b => b.onclick = async () => {
+        msg.querySelectorAll("button").forEach(x => x.disabled = true);
+        try {
+          const r = await api(null, { mode: "calc_gift", classId: CH.id, name: myName(), n: c.n, pick: b.dataset.g });
+          if (r && r.ok !== false) { S = r; m.remove(); then(); return; }
+        } catch (e) {}
+        msg.querySelectorAll("button").forEach(x => x.disabled = false);
+        msg.insertAdjacentHTML("beforeend", `<div class="csmall">網路不穩，再按一次</div>`);
+      });
+    } else {
+      msg.innerHTML = `你抽到：<b class="cchest-gift">${esc(c.gift || "神祕禮物")}</b>`;
+      const ok = document.createElement("button"); ok.className = "cbtn"; ok.type = "button"; ok.textContent = "看我的獎狀";
+      ok.onclick = () => { m.remove(); then(); }; msg.appendChild(ok);
+    }
+  };
+  img.onclick = finish;
+  timers.push(setTimeout(() => { img.src = IMG + "chest_glow.png"; img.className = "shake fast"; msg.textContent = "寶箱在發光……"; }, 1400));
+  timers.push(setTimeout(finish, 3000));
+}
 async function showCert(n, fresh, after) {
-  const c = S.certs.find(x => x.n === n); if (!c) return;
+  let c = S.certs.find(x => x.n === n); if (!c) return;
+  if (fresh || c.opts) { return openChest(c, () => showCert(n, false, after)); }   // 先開寶箱（傳奇還沒選禮物也是）→ 獎狀印上獎品
   let url = "";
   try {
-    const bg = await loadImg(IMG + CERT.img), logo = await loadImg(IMG + CERT.logo).catch(() => null), W = bg.naturalWidth, H = bg.naturalHeight, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const bg = await loadImg(IMG + certImg(c.n)), logo = await loadImg(IMG + CERT.logo).catch(() => null), W = bg.naturalWidth, H = bg.naturalHeight, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
     const x = cv.getContext("2d"); x.drawImage(bg, 0, 0);
-    drawCert(x, W, H, logo, myName(), c.n, c.date, S.goal);
+    drawCert(x, W, H, logo, myName(), c, S.goal);
   url = cv.toDataURL("image/jpeg", 0.92);
   } catch (e) {}
   const html = url ? `<img class="ccertimg" src="${url}" alt="計算王獎狀">`
-    : `<div class="ccertbox"><div class="t">🏆 計算王獎狀</div><div class="n">${esc(myName())}</div><div>連續答對 ${S.goal} 題，計算又快又準！</div><div class="k">第 ${c.n} 張</div><div class="p">請找SUNNY領取獎品</div><div class="d">${c.date}　SUNNY</div></div>`;
-  modal((fresh ? `<h3>🎉 你拿到計算王獎狀了！</h3>` : "") + html + `<div class="csmall">截圖給 SUNNY 看，就能領獎品喔！（每個人最多 ${S.maxCert} 次）</div>`, "好！", () => { if (after) after(); else drawHome(false); });
+    : `<div class="ccertbox"><div class="t">🏆 ${c.n > 1 ? "傳奇" : ""}計算王獎狀</div><div class="n">${esc(myName())}</div><div>連續答對 ${S.goal} 題，計算又快又準！</div><div class="p">${c.gift ? "獎品：" + esc(c.gift) : "請找SUNNY領取獎品"}</div><div class="d">${c.date}　SUNNY</div></div>`;
+  modal(`<h3>🎉 ${c.n > 1 ? "傳奇" : ""}計算王獎狀</h3>` + html + `<div class="csmall">截圖給 SUNNY 看，就能領獎品喔！（每個人最多 ${S.maxCert} 次）</div>`, "好！", () => { if (after) after(); else drawHome(false); });
 }
 
 // 樹洞首頁打開就先抓一次狀態（方塊上顯示連續題數）

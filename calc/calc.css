@@ -316,3 +316,16 @@
 .cskipq{border:none;border-radius:999px;padding:4px 10px;background:#E7EEF5;color:#4A6280;font:900 14px var(--font);cursor:pointer;touch-action:manipulation;}
 .cskipq:disabled{opacity:.6;}
 #cskip{font-size:16px;min-height:46px;white-space:nowrap;padding:8px 10px;}
+/* 開寶箱（2026-11-11） */
+.cchest .box{overflow:hidden;}
+.cchest-stage{height:min(60vw,240px);display:flex;align-items:center;justify-content:center;overflow:visible;}
+.cchest-stage img{height:100%;width:auto;max-width:100%;object-fit:contain;cursor:pointer;touch-action:manipulation;}
+.cchest-stage img.shake{animation:chShake .5s ease-in-out infinite;transform-origin:50% 90%;}
+.cchest-stage img.shake.fast{animation-duration:.22s;}
+.cchest-stage img.pop{animation:chPop .45s ease-out;}
+@keyframes chShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+@keyframes chPop{0%{transform:scale(.85)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.cchest-msg{min-height:64px;margin-top:8px;font-weight:900;font-size:18px;color:#5B2A86;}
+.cchest-gift{display:block;font-size:30px;color:#C0392B;margin:6px 0 4px;animation:chPop .45s ease-out;}
+.cchest-pick{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+.cchest-pick .cbtn{margin-top:0;min-width:120px;}
