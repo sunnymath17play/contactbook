@@ -1270,7 +1270,7 @@ window.CHALLENGES={
   "title": "不用算也能比大小",
   "unit": "數學好好玩",
   "order": 1,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "比大小：25×31 和 24×32，哪一個比較大？",
