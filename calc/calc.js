@@ -24,6 +24,7 @@ const why = m => { if (!/[?&]chtest=1/.test(location.search)) return; const d = 
 if (typeof CH === "undefined" || !CH) { why("連結裡的班級代號不對"); return; }
 if (typeof CalcCore === "undefined") { why("出題程式沒有載入，請重新整理"); return; }
 const GRADE = 3 + (schoolYear() - CH.y);
+const SKIP_GRADES = [3, 4];   // ⏭️ 跳題：2026-11-10 四年級、2026-11-11 SUNNY 開放三年級（後台 CALC_SKIP_GRADES 要一樣）
 if (CALC_GRADES.indexOf(GRADE) < 0) { why("這個班不是三、四年級"); return; }
 if (!CALC_OPEN && !TESTER) { why("測試記號沒有存起來（瀏覽器可能是無痕模式）"); return; }
 if (qs("preview") === "1") return;
@@ -35,7 +36,7 @@ const RULES = [
   "🛡️ <b>免歸零卡</b>：每連續答對 20 題送 1 張。答錯（或重做也錯）時自動用掉一張，連續題數保住。",
   "💾 <b>存檔點</b>：連續到 50、100、150 題會存檔。兩種卡都用完時答錯，只退回存檔點，不會回到 0。",
   "⭐ <b>累積答對</b>：答對的題數一直加、不會歸零；到 50、100、200 題升級稱號。兩種卡最多各存 3 張。",
-  ...(GRADE === 4 ? ["⏭️ <b>跳題</b>：連續答對 10 題起，每天可以跳過 1 題；30 題起 2 題、60 題起 3 題。跳過的題目連續不加也不斷。<b>最近算錯過的那種題目不能跳</b>，要多練習喔！"] : []),
+  ...(SKIP_GRADES.includes(GRADE) ? ["⏭️ <b>跳題</b>：連續答對 10 題起，每天可以跳過 1 題；30 題起 2 題、60 題起 3 題。跳過的題目連續不加也不斷。<b>最近算錯過的那種題目不能跳</b>，要多練習喔！"] : []),
   "連續答對 <b>200 題</b> → 得到「計算王獎狀」＋開寶箱抽禮物，截圖找 SUNNY 領！再連續答對 200 題 → 「傳奇計算王獎狀」，禮物兩個選一個。",
   "拿到獎狀後，連續題數從 0 重新開始；<b>每個人最多領 2 次獎品</b>。",
   "哪一天沒做，連續題數不會變。",
@@ -50,7 +51,7 @@ const ico = s => String(s).replace(/🔁|🛡\uFE0F?|💾|⭐|⏭️?/g, m => `<
 const OPN = { add: "加法", sub: "減法", mul: "乘法", div: "除法" };
 const opOf = p => /÷/.test(p.text) ? "div" : /×/.test(p.text) ? "mul" : /－/.test(p.text) ? "sub" : "add";
 function skipInfo(idx) {
-  if (GRADE !== 4 || !S || !S.skipMax || !SET || idx > S.perDay || S.first.length !== idx - 1 || S.pend) return null;
+  if (!SKIP_GRADES.includes(GRADE) || !S || !S.skipMax || !SET || idx > S.perDay || S.first.length !== idx - 1 || S.pend) return null;
   const used = S.skipUsed || 0, left = S.skipMax - used;
   if (left <= 0 || S.perDay - used - 1 < 2) return null;
   const op = opOf(SET[idx - 1]);
@@ -177,7 +178,7 @@ async function drawHome(reload) {
   el("crule").onclick = showRules;
   el("cpad").onclick = showPad;
   w.querySelectorAll(".ccert").forEach(b => b.onclick = () => showCert(+b.dataset.n));
-  if (!lsG("wh_calc_rules2") || GRADE === 4 && !lsG("wh_calc_rules3")) { lsS("wh_calc_rules2", "1"); lsS("wh_calc_rules3", "1"); showRules(); }   // 2026-11-10 四年級新增跳題規則 → 再看一次   // 2026-11-07 新增道具規則 → 每個孩子再看一次
+  if (!lsG("wh_calc_rules2") || GRADE === 4 && !lsG("wh_calc_rules3") || GRADE === 3 && !lsG("wh_calc_rules4")) { lsS("wh_calc_rules2", "1"); lsS("wh_calc_rules3", "1"); lsS("wh_calc_rules4", "1"); showRules(); }   // 2026-11-11 三年級開放跳題 → 三年級再看一次   // 2026-11-10 四年級新增跳題規則 → 再看一次   // 2026-11-07 新增道具規則 → 每個孩子再看一次
 }
 function itemsHTML() {
   if (S.redo === undefined) return "";   // 後台還沒更新
@@ -187,7 +188,7 @@ function itemsHTML() {
   return ico(`<div class="ccard citems"><div class="ct">我的道具 <small>（答錯時會自動使用，各最多 ${S.itemMax} 張）</small></div>
       <div class="cit"><span class="ci">🔁</span><b>重做卡 ×${S.redo}</b><small>${full(S.redo) ? "已經存滿了" : `再蓋 ${redoNext} 個全對章送一張`}</small></div>
       <div class="cit"><span class="ci">🛡️</span><b>免歸零卡 ×${S.shield}</b><small>${full(S.shield) ? "已經存滿了" : `再連續答對 ${shieldNext} 題送一張`}</small></div>
-${GRADE === 4 && S.skipMax !== undefined ? `<div class="cit"><span class="ci">⏭️</span><b>跳題 每天 ${S.skipMax} 題</b><small>${S.skipNext ? `再連續答對 ${S.skipNext - S.streak} 題 → 每天可跳 ${S.skipMax + 1} 題` : "最多了，計算很穩定！"}</small></div>` : ""}
+${SKIP_GRADES.includes(GRADE) && S.skipMax !== undefined ? `<div class="cit"><span class="ci">⏭️</span><b>跳題 每天 ${S.skipMax} 題</b><small>${S.skipNext ? `再連續答對 ${S.skipNext - S.streak} 題 → 每天可跳 ${S.skipMax + 1} 題` : "已經是最高等級了！"}</small></div>` : ""}
       <div class="cit"><span class="ci">💾</span><b>存檔點 ${S.savePoint} 題</b><small>${S.savePoint ? "卡片用完時答錯，只退回這裡" : `連續到 ${S.saveEvery} 題就會存檔`}</small></div></div>
     <div class="ccard ctotal"><div class="ct">⭐ 累積答對 <b>${S.total}</b> 題${S.title ? ` <span class="ctitle">${esc(S.title)}</span>` : ""}</div><div class="csmall">${nt}（答對的題數不會歸零）</div>${petWeekHTML(S)}</div>`);
 }
@@ -405,7 +406,7 @@ async function submitAns() {
     S = Object.assign(S, r);
     const ok = r.graded ? r.graded.ok : chk.ok;
     if (ok) return right(r);
-    if (GRADE === 4) { const op = opOf(Q.p); S.weak = (S.weak || []).filter(x => x !== op).concat(op); }   // 算錯的運算：之後不能跳
+    if (SKIP_GRADES.includes(GRADE)) { const op = opOf(Q.p); S.weak = (S.weak || []).filter(x => x !== op).concat(op); }   // 算錯的運算：之後不能跳
     Q.redo = r.item === "redo";
     const after = missText(r);
     if (chk.field) {   // 只錯一位數（或除法只錯餘數）→ 指出來
