@@ -18,6 +18,7 @@ h2{font-size:18px;margin:0 0 10px;color:var(--blue)}
 .menuimg{display:block;width:100%;height:150px;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line)}
 .hint{font-size:14px;color:var(--sub);margin:6px 0 0}
 .who{display:flex;gap:8px}.who input{flex:1;font-size:20px}
+.tch{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
 .ok{border:0;border-radius:10px;background:var(--blue);color:#fff;font-size:18px;font-weight:700;padding:0 18px}
 button{font:inherit;cursor:pointer}
 .chip{border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px 4px;font-size:17px;color:var(--ink)}
@@ -66,6 +67,7 @@ input[type=text]{width:100%;font:inherit;padding:10px;border:2px solid var(--lin
     <h2>請打孩子的全名</h2>
     <div class="who"><input type="text" id="nameIn" maxlength="10" placeholder="例：王小明" autocomplete="off"><button class="ok" id="nameGo">確定</button></div>
     <p class="hint" id="nameMsg">要打全名喔（三個字）</p>
+    <div class="tch"><button class="chip" data-n="淑芬老師">淑芬老師</button><button class="chip" data-n="SUNNY">SUNNY</button></div>
   </div>
 
   <div id="main" class="hide">
@@ -112,6 +114,7 @@ $('ovx').onclick = function(){ $('ov').style.display='none'; };
 function go(){ var n=$('nameIn').value.replace(/\s+/g,''); if(!n){ $('nameMsg').textContent='請先打孩子的全名'; return; }
   $('nameIn').blur(); choose(n); }
 $('nameGo').onclick=go;
+[].forEach.call(document.querySelectorAll('.tch .chip'),function(b){ b.onclick=function(){ $('nameIn').value=''; choose(b.dataset.n); }; });
 $('nameIn').addEventListener('keydown',function(e){ if(e.key==='Enter') go(); });
 
 function choose(n){
@@ -120,7 +123,9 @@ function choose(n){
   $('budget').textContent='讀取中…'; $('main').classList.remove('hide');
   fetch(API+'?mode=who&name='+encodeURIComponent(n)).then(function(r){return r.json();}).then(function(d){
     if(!d.ok){ $('main').classList.add('hide'); $('nameMsg').textContent='找不到「'+n+'」，請確認是孩子的全名'; return; }
-    ls('drink_name', n); $('nameIn').value=n; $('nameMsg').textContent='';
+    var isT=/^(淑芬老師|SUNNY)$/.test(n);
+    ls('drink_name', n); $('nameIn').value=isT?'':n; $('nameMsg').textContent='';
+    [].forEach.call(document.querySelectorAll('.tch .chip'),function(b){ b.classList.toggle('on', b.dataset.n===n); });
     S.budget=d.budget; S.closed=d.closed;
     $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+(/淑芬|SUNNY/i.test(n)?'':' 考 100 分')+'　菜單全部任選');
     if(d.order) showMine(d.order); else $('mine').classList.add('hide');
