@@ -48,6 +48,13 @@ input[type=text]{width:100%;font:inherit;padding:10px;border:2px solid var(--lin
 .ov img{width:100%;max-width:900px;display:block;margin:0 auto}
 .ov .x{position:fixed;top:10px;right:10px;background:#fff;border:0;border-radius:20px;padding:8px 16px;font-size:16px}
 .hide{display:none}
+.cf{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+.cfb{background:#fff;border-radius:16px;padding:20px 16px;max-width:420px;width:100%;text-align:center}
+.cft{font-size:20px;font-weight:700;color:var(--blue)}
+.cfo{white-space:pre-line;margin:12px 0;font-size:18px;font-weight:700}
+.cfw{color:#d1342f;font-weight:700;font-size:17px;margin-bottom:16px}
+.cfbtn{display:flex;gap:10px}.cfbtn button{flex:1;border-radius:12px;padding:13px;font-size:18px;font-weight:700}
+.cfn{background:#fff;border:2px solid var(--line);color:var(--ink)}.cfy{background:var(--orange);border:0;color:#fff}
 </style>
 </head>
 <body>
@@ -97,6 +104,12 @@ input[type=text]{width:100%;font:inherit;padding:10px;border:2px solid var(--lin
   <button class="go" id="go" disabled>送出</button>
 </div></div>
 
+<div class="cf" id="cf"><div class="cfb">
+  <div class="cft">確定要點這杯嗎？</div>
+  <div class="cfo" id="cfText"></div>
+  <div class="cfw">送出後就不能更改囉<br>請跟爸媽確認好再送出</div>
+  <div class="cfbtn"><button class="cfn" id="cfNo">再想想</button><button class="cfy" id="cfYes">確定送出</button></div>
+</div></div>
 <div class="ov" id="ov"><button class="x" id="ovx">關閉</button><img src="menu.jpg" alt="50嵐菜單"></div>
 
 <script src="menu.js"></script>
@@ -128,7 +141,9 @@ function choose(n){
     [].forEach.call(document.querySelectorAll('.tch .chip'),function(b){ b.classList.toggle('on', b.dataset.n===n); });
     S.budget=d.budget; S.closed=d.closed;
     $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+(/淑芬|SUNNY/i.test(n)?'':' 考 100 分')+'　菜單全部任選');
-    if(d.order) showMine(d.order); else $('mine').classList.add('hide');
+    if(d.order){ showMine(d.order); $('pick').classList.add('hide'); $('optCard').classList.add('hide'); $('bar').classList.add('hide');
+      setTimeout(function(){ window.scrollTo({top:$('main').offsetTop-10,behavior:'smooth'}); },50); return; }
+    $('mine').classList.add('hide');
     if(d.closed){ $('pick').classList.add('hide'); $('optCard').classList.add('hide');
       $('budget').textContent='已經收單囉，謝謝大家'; return; }
     $('pick').classList.remove('hide'); $('optCard').classList.remove('hide');
@@ -143,7 +158,7 @@ function showMine(o){
   var m=$('mine'); m.innerHTML=''; m.classList.remove('hide');
   m.appendChild(el('div',null,'已經點好了'));
   var b=el('b',null,desc(o)); m.appendChild(b);
-  m.appendChild(el('div','hint','想換的話，在下面重新選一次送出就好'));
+  m.appendChild(el('div','hint','已經送出，不能更改囉'));
 }
 
 function renderList(){
@@ -186,20 +201,27 @@ function upd(){
   var miss=[]; if(!S.item) miss.push('飲料'); if(!S.sugar) miss.push('甜度'); if(!S.ice) miss.push('冰塊');
   $('sum').textContent = S.item ? (S.item+' '+(S.size==='L'?'大杯':'中杯')+' '+S.price+'元'+(S.sugar?'　'+S.sugar:'')+(S.ice?'　'+S.ice:'')) : '';
   $('go').disabled = !!miss.length;
-  $('go').textContent = miss.length ? ('還要選：'+miss.join('、')) : '送出';
+  $('go').textContent = miss.length ? ('還要選：'+miss.join('、')) : '送出（送出後不能更改）';
 }
 
 $('go').onclick=function(){
+  $('cfText').textContent=S.name+'\n'+S.item+'　'+(S.size==='L'?'大杯':'中杯')+' '+S.price+'元\n'+S.sugar+'　'+S.ice+($('note').value.trim()?'　（'+$('note').value.trim()+'）':'');
+  $('cf').style.display='flex';
+};
+$('cfNo').onclick=function(){ $('cf').style.display='none'; };
+$('cfYes').onclick=function(){
+  $('cf').style.display='none';
   var b=$('go'); b.disabled=true; b.textContent='送出中…';
   fetch(API,{method:'POST',body:JSON.stringify({name:S.name,item:S.item,size:S.size,sugar:S.sugar,ice:S.ice,note:$('note').value})})
   .then(function(r){return r.json();}).then(function(d){
     if(!d.ok){ b.disabled=false; b.textContent='送出';
+      if(d.err==='done'){ choose(S.name); return; }
       $('sum').textContent = d.err==='closed'?'已經收單囉':(d.err==='over'?'超過預算了，換一杯看看':'沒送成功，再按一次'); return; }
     $('main').classList.add('hide'); $('bar').classList.add('hide');
     var D=$('done'); D.innerHTML=''; D.classList.remove('hide');
     D.appendChild(el('div','big','收到了'));
     D.appendChild(el('p',null,S.name+'：'+desc(d.order)));
-    var again=el('button','link','想換一杯'); again.onclick=function(){ choose(S.name); }; D.appendChild(again);
+    D.appendChild(el('p','hint','已經送出，不能更改囉'));
     window.scrollTo(0,D.offsetTop-20);
   }).catch(function(){ b.disabled=false; b.textContent='送出'; $('sum').textContent='網路不穩，再按一次'; });
 };
