@@ -110,6 +110,7 @@ const API = 'https://script.google.com/macros/s/AKfycbzV7KanxB2JDtmFqYjaUQP4G8-1
 // 有寵物蛋的班：打勾＝寵物蛋「作業」加點（點數照寵物蛋試算表「設定」）
 const PETS = {
   g3: 'https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec',
+  g4: 'https://script.google.com/macros/s/AKfycbx5jschGhp3mGCpd1cYjyuwpennPMy4Jtal5D4UwTcHNUR73UTDRKWY2qvz-Onad7c9/exec',
   g5b: 'https://script.google.com/macros/s/AKfycbxTqrjL43ZD31zvDHQxLAnpxq9FyXF87ns56Q_mVPbel4RiRj4I1A2GUCkWbN8i8dm12Q/exec',
 };
 const CLASSES = [['g3', '三年級'], ['g4', '四年級'], ['g5a', '五年級A'], ['g5b', '五年級B'], ['g6', '六年級']];
@@ -354,7 +355,7 @@ async function login(given) {
 function loginPrompt() { const k = prompt('管理密碼'); if (k) login(k); }
 if (S.key) { load(); loadWatch(); } else render();
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611021613';
+const VER = '202611121720';
 async function checkNew() {
   if (VER.startsWith('__')) return;
   try {
