@@ -10,7 +10,7 @@
 <script>
 // 各班自己的主畫面圖示和名稱（SUNNY 2026-10-28：五B要跟三年級分開）。三年級沿用彩虹蛋。
 (function(){ var q=location.search, c=(q.match(/[?&]c=([^&]+)/)||[])[1], adm=/[?&]admin/.test(q);
-  var ICON={"2024b":"img/icon_egg_2024b.png"}, NAME={"2024b":"五B寵物蛋"};
+  var ICON={"2024b":"img/icon_egg_2024b.png"}, NAME={"2024b":"五B寵物蛋","2025":"四年級寵物蛋"};
   if(ICON[c]){ document.getElementById("ico").href=ICON[c]; document.getElementById("aico").href=ICON[c]; }
   document.getElementById("aname").content=(NAME[c]||(c?"寵物蛋":"三年級寵物蛋"))+(adm?"加點":"");
 })();
@@ -181,6 +181,7 @@ nav button span{display:block;font-size:26px}
 // ep 空白＝那班還沒架好後端，頁面會顯示「準備中」；本機測試加 ?mock 用假後端（管理密碼 test）。
 const CLASSES = {
   "2026":  {y:2026, v:0, ep:"https://script.google.com/macros/s/AKfycbxSHBtA4ROD4VT6JHD89K68ZCq-l8QAbAjMa8n4LCacEurO1hWzhrPn80TuTGGLz1fM/exec"},
+  "2025":  {y:2025, v:0, ep:"https://script.google.com/macros/s/AKfycbx5jschGhp3mGCpd1cYjyuwpennPMy4Jtal5D4UwTcHNUR73UTDRKWY2qvz-Onad7c9/exec"},   // 四年級：試算表「四年級寵物蛋」（2026-11-12 架好）
   "2024b": {y:2024, v:2, ep:"https://script.google.com/macros/s/AKfycbxTqrjL43ZD31zvDHQxLAnpxq9FyXF87ns56Q_mVPbel4RiRj4I1A2GUCkWbN8i8dm12Q/exec"}   // 五年級B：試算表「五年級B寵物蛋」（2026-10-28 架好）
 };
 const CLS = CLASSES[new URLSearchParams(location.search).get("c")] ? new URLSearchParams(location.search).get("c") : "2026";
@@ -321,7 +322,7 @@ async function apiPost(body){
 }
 // 本機測試用的假後端（規則跟 Apps Script 一樣；ENDPOINT 清空就會用這個；管理密碼 test）
 const mock = (()=>{
-  const ROSTER = CLS==="2024b" ? ['顏紹桓','林欣品','郭秉諺','王奕晴','郭尚繹','廖奕凱','林家吟','溫智媗','鍾向妍','趙邦盛','梁恆睿','林家妤','趙二隼'] : ['陳映榤','王寶儀','黃宥甄','陳宥蓉','鄭丞佑','盧柏丞','崔守勝','許恩碩','曹睿軒','高子宸','張宇希','張晴媗','陳韋衡','黃丞毅','芮可可','鄭又榤','鄭宇勝','楊羽菁','鄭凱元'];
+  const ROSTER = CLS==="2025" ? ['詹曜羽','曾彥蓁','曾少澤','黃詠暄','呂席攸','郭曜宇','黃韋綾','張詠樂','蔡昀容','陳霈恩','楊凱文','林宗佑','蔡柏丞','張睿秩','張巧蕾','邵旭緯','何苡瑄','張彤安','吳雨柔','方雨涵','許祐碩','謝程宇'] : CLS==="2024b" ? ['顏紹桓','林欣品','郭秉諺','王奕晴','郭尚繹','廖奕凱','林家吟','溫智媗','鍾向妍','趙邦盛','梁恆睿','林家妤','趙二隼'] : ['陳映榤','王寶儀','黃宥甄','陳宥蓉','鄭丞佑','盧柏丞','崔守勝','許恩碩','曹睿軒','高子宸','張宇希','張晴媗','陳韋衡','黃丞毅','芮可可','鄭又榤','鄭宇勝','楊羽菁','鄭凱元'];
   const RN={dragon:5,cat:5,dog:4,bunny:4,penguin:4,bear:4,owl:4,unicorn:4};
   const db = () => LS.get("mockdb2") || {kids:ROSTER.map(f=>({full:f,name:f.slice(1),eggs:[],pets:[],routes:[],pn:""})), log:[], cfg:{...DEF_CFG}};
   const save = d => LS.set("mockdb2", d);
