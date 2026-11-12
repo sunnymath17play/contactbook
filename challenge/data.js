@@ -1321,7 +1321,7 @@ window.CHALLENGES={
   "title": "1加到100不用一個一個加",
   "unit": "數學好好玩",
   "order": 2,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "把 1＋2＋3＋4＋5 的樓梯複製一個、倒過來拼起來，每一行有幾個方塊？",
@@ -1373,7 +1373,7 @@ window.CHALLENGES={
   "title": "奇數加起來會變正方形",
   "unit": "數學好好玩",
   "order": 3,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "1＋3＋5＋7＋9＋11，這樣一直加，答案是多少？",
@@ -1422,7 +1422,7 @@ window.CHALLENGES={
   "title": "浩克讀心術：答案都是5",
   "unit": "數學好好玩",
   "order": 4,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "你心裡想的數是 7，照浩克的步驟算：乘以 2、加 10、除以 2、再減掉 7，最後會是多少？",
@@ -1471,7 +1471,7 @@ window.CHALLENGES={
   "title": "1089 數字魔術",
   "unit": "數學好好玩",
   "order": 5,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "魔術裡，三位數倒過來相減以後，下面哪一個答案不可能出現？",
@@ -1520,7 +1520,7 @@ window.CHALLENGES={
   "title": "握手要握幾次",
   "unit": "數學好好玩",
   "order": 6,
-  "draft": true,
+  "draft": false,
   "qs": [
    {
     "q": "6 個小朋友，每兩個人握一次手，總共要握幾次？",
