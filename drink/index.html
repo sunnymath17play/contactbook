@@ -135,11 +135,11 @@ function choose(n){
   $('budget').textContent='讀取中…'; $('main').classList.remove('hide');
   fetch(API+'?mode=who&name='+encodeURIComponent(n)).then(function(r){return r.json();}).then(function(d){
     if(!d.ok){ $('main').classList.add('hide'); $('nameMsg').textContent='找不到「'+n+'」，請確認是孩子的全名'; return; }
-    var isT=/^(淑芬老師|EMMA(老師)?|SUNNY)$/i.test(n);
+    var isT=/^(淑芬老師|(EMMA|LINA)(老師)?|SUNNY)$/i.test(n);
     ls('drink_name', n); $('nameIn').value=isT?'':n; $('nameMsg').textContent='';
     [].forEach.call(document.querySelectorAll('.tch .chip'),function(b){ b.classList.toggle('on', b.dataset.n===n); });
     S.budget=d.budget; S.closed=d.closed;
-    $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+(/淑芬|EMMA|SUNNY/i.test(n)?'':' 考 100 分')+'　菜單全部任選');
+    $('budget').textContent = d.budget ? (n+' 可以選 '+d.budget+' 元以內的飲料') : (n+(/淑芬|EMMA|LINA|SUNNY/i.test(n)?'':' 考 100 分')+'　菜單全部任選');
     if(d.order){ showMine(d.order); $('pick').classList.add('hide'); $('optCard').classList.add('hide'); $('bar').classList.add('hide');
       setTimeout(function(){ window.scrollTo({top:$('main').offsetTop-10,behavior:'smooth'}); },50); return; }
     $('mine').classList.add('hide');
