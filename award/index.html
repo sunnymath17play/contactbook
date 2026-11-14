@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>頒獎典禮</title>
+<!-- 頒獎投影片網頁版（有音樂）。名單放在網址 # 後面，不存在網頁裡；連結由 程式碼\頒獎投影片\web.cjs 產生 -->
+<style>
+@font-face{font-family:'Huninn';src:url(huninn.woff2) format('woff2');font-display:block}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;touch-action:manipulation}
+body{font-family:'Huninn','DFYuanBold-B5',sans-serif}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center;overflow:hidden}
+.s{position:absolute;inset:0;background:#FFB347 center/cover no-repeat;opacity:0;transition:opacity .5s;pointer-events:none}
+.s.on{opacity:1}
+.logo{position:absolute;right:36px;bottom:28px;height:70px;opacity:.95}
+.t{position:absolute;left:0;right:0;text-align:center}
+.names{position:absolute;display:grid;justify-items:center;align-content:center;row-gap:22px;column-gap:80px}
+.nm{opacity:0;transform:scale(.3)}
+.nm.pop{animation:pop .55s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes pop{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
+.who{opacity:0;transform:scale(.2) rotate(-6deg)}
+.who.pop{animation:big .8s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes big{0%{opacity:0;transform:scale(.2) rotate(-6deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+.q{transition:opacity .3s}
+.q.shake{animation:shake .12s infinite}
+@keyframes shake{0%{transform:translateX(-6px)}50%{transform:translateX(6px)}100%{transform:translateX(-6px)}}
+.cf{position:absolute;top:-40px;width:22px;height:34px;border-radius:4px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(1200px) rotate(720deg)}}
+#start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4vh;background:radial-gradient(#FFD27A,#E8701A);color:#7A2500;z-index:9;font-family:'Huninn',sans-serif}
+#start h1{font-size:9vh;letter-spacing:.1em}
+#start p{font-size:4.5vh}
+#go{font-size:6vh;padding:2vh 7vh;border-radius:99px;border:none;background:#fff;color:#C2410C;box-shadow:0 1vh 0 #B8501A;font-family:inherit;opacity:.4}
+#go.ready{opacity:1;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.06)}}
+#mute{position:fixed;left:12px;top:12px;z-index:8;font-size:28px;background:rgba(255,255,255,.35);border:none;border-radius:50%;width:52px;height:52px;opacity:.35}
+#hint{position:fixed;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-size:15px;opacity:0;z-index:8;transition:opacity .6s;text-shadow:0 1px 3px #000}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<button id="mute">🔊</button>
+<div id="hint">點右邊＝下一步　點左邊＝上一頁</div>
+<div id="start"><h1 id="sttl">頒獎典禮</h1><p id="ssub">準備中…</p><button id="go">▶ 開始</button></div>
+<script>
+// ---------- 名單（從網址 # 解出來） ----------
+let D;
+try { const b = atob(location.hash.slice(1).replace(/-/g, '+').replace(/_/g, '/')); D = JSON.parse(new TextDecoder().decode(Uint8Array.from(b, c => c.charCodeAt(0)))); }
+catch (e) { D = null; }
+const $ = s => document.querySelector(s), stage = $('#stage');
+if (!D) { $('#ssub').textContent = '連結不完整，請用浩克給的連結打開'; $('#go').style.display = 'none'; throw 0; }
+D.n = D.n || []; D.f = D.f || [];
+document.title = D.g + ' ' + D.t + ' 頒獎典禮';
+$('#sttl').textContent = D.g + '　頒獎典禮';
+
+// ---------- 畫面縮放：1920×1080 塞進螢幕 ----------
+function fit() { const k = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(-50%,-50%) scale(${k})`; }
+addEventListener('resize', fit); fit();
+
+// ---------- 投影片（版面同 PDF 版 build.cjs） ----------
+const NOGLYPH = /[]/; // 字型缺字時填在這
+const nf = n => NOGLYPH.test(n) ? "font-family:'Noto Sans TC','PingFang TC',sans-serif;font-weight:900;" : '';
+const logo = '<img class="logo" src="img/logo.png">';
+const slides = []; // {el, music, steps, enter(), step(i)}
+function add(html, bg, o) { const el = document.createElement('div'); el.className = 's'; el.style.backgroundImage = `url(img/${bg}.jpg)`; el.innerHTML = html + logo; stage.appendChild(el); slides.push(Object.assign({ el, steps: 0 }, o)); return el; }
+const kindTxt = D.k === '獎學金' ? '獎學金頒發' : D.k === '獎品' ? '獎品頒發' : '獎學金＆獎品頒發';
+add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;letter-spacing:.2em">${D.g}</div>
+ <div class="t" style="top:430px;left:60px;font-size:118px;color:#C2410C;text-shadow:0 4px 0 #FFE3A3">${D.t}</div>
+ <div class="t" style="top:580px;left:60px;font-size:118px;color:#C2410C;text-shadow:0 4px 0 #FFE3A3">頒獎典禮</div>
+ <div class="t" style="top:752px;left:60px;font-size:64px;color:#8A1C00">${kindTxt}</div>`, 'bg_near', { music: 'open' });
+
+if (D.n.length) {
+  const k = D.n.length, two = k > 5, rows = two ? Math.ceil(k / 2) : k;
+  const fs = two ? (rows <= 4 ? 92 : 80) : (k <= 3 ? 120 : k <= 4 ? 105 : 92);
+  const el = add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;letter-spacing:.2em">${D.g}　閃耀之星</div>
+ <div class="names" style="left:420px;right:330px;top:320px;bottom:200px;grid-template-columns:${two ? '1fr 1fr' : '1fr'};grid-auto-flow:${two ? 'column' : 'row'};grid-template-rows:repeat(${rows},auto)">
+ ${D.n.map(n => `<div class="nm" style="color:#8A1C00;font-size:${fs}px;letter-spacing:.12em;${nf(n)}">${n}</div>`).join('')}</div>`, 'bg_near', {
+    music: 'list',
+    // 進這頁：名字一個一個跳出來，每個「叮」一聲
+    enter(back) { const ns = [...this.el.querySelectorAll('.nm')]; clearTimers();
+      if (back) { ns.forEach(x => x.classList.add('pop')); return; }
+      ns.forEach(x => x.classList.remove('pop'));
+      ns.forEach((x, i) => later(() => { x.classList.add('pop'); ding(i); }, 900 + i * 650));
+      later(() => { applause(2.5, .5); }, 900 + ns.length * 650); }
+  });
+}
+
+D.f.forEach(n => {
+  const el = add(`<div class="t" style="top:118px;font-size:52px;color:#9A3412;letter-spacing:.2em">${D.g}　${D.ft || '滿分榮耀'}</div>
+ <div class="t q" style="top:178px;font-size:170px;color:#8A1C00;letter-spacing:.14em;text-shadow:0 3px 0 #FFE89A">？？？</div>
+ <div class="t who" style="top:178px;font-size:${n.length > 3 ? 150 : 170}px;color:#8A1C00;letter-spacing:.14em;${nf(n)}text-shadow:0 3px 0 #FFE89A,0 0 14px rgba(255,255,255,.6)">${n}</div>`, 'bg_full', {
+    music: null, steps: 1,
+    enter(back) { const q = this.el.querySelector('.q'), w = this.el.querySelector('.who'); clearTimers(); q.classList.remove('shake');
+      if (back) { q.style.opacity = 0; w.classList.add('pop'); } else { q.style.opacity = 1; w.classList.remove('pop'); } },
+    // 點一下：打鼓 → 揭曉名字＋鏘＋喇叭＋掌聲＋彩帶
+    step() { const q = this.el.querySelector('.q'), w = this.el.querySelector('.who'); q.classList.add('shake'); busy = true;
+      const dur = drumRoll(2.6);
+      later(() => { q.classList.remove('shake'); q.style.opacity = 0; w.classList.add('pop'); crash(); fanfare(); applause(4, .9); confetti(); busy = false; }, dur * 1000); }
+  });
+});
+
+add(`<div class="t" style="top:60px;font-size:84px;color:#9A3412;letter-spacing:.12em;text-shadow:0 0 12px #fff,0 0 24px #fff">今天為他們鼓掌</div>
+ <div class="t" style="top:170px;font-size:132px;color:#B91C1C;letter-spacing:.06em;text-shadow:0 0 10px #fff,0 0 22px #fff,0 6px 0 #FFD27A">下一次，台上就是我！</div>
+ <div style="position:absolute;left:24px;bottom:14px;font-size:16px;color:rgba(80,30,0,.55);font-family:sans-serif">Music: Kevin MacLeod (incompetech.com) CC BY 4.0</div>`, 'bg_end', {
+  music: 'end', enter(back) { clearTimers(); if (!back) { later(() => applause(5, .8), 300); later(confetti, 300); } }
+});
+
+// ---------- 聲音 ----------
+let ac, master, muted = false, busy = false;
+const buf = {}, MUSIC_VOL = .55;
+let cur = null; // {name, src, g}
+function initAudio() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  master = ac.createGain(); master.connect(ac.destination);
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+}
+async function load(name) { const r = await fetch('music/' + name + '.mp3'); const a = await r.arrayBuffer(); buf[name] = await new Promise((ok, no) => ac.decodeAudioData(a, ok, no)); }
+function music(name) {
+  if (cur && cur.name === name) return;
+  if (cur) { const c = cur; c.g.gain.cancelScheduledValues(ac.currentTime); c.g.gain.setValueAtTime(c.g.gain.value, ac.currentTime); c.g.gain.linearRampToValueAtTime(0, ac.currentTime + 1.2); setTimeout(() => { try { c.src.stop(); } catch (e) {} }, 1400); cur = null; }
+  if (!name || !buf[name]) return;
+  const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf[name]; src.loop = true;
+  g.gain.setValueAtTime(0, ac.currentTime); g.gain.linearRampToValueAtTime(MUSIC_VOL, ac.currentTime + 1.5);
+  src.connect(g).connect(master); src.start(); cur = { name, src, g };
+}
+let noiseBuf;
+function noise() { if (!noiseBuf) { noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } const s = ac.createBufferSource(); s.buffer = noiseBuf; return s; }
+function env(node, t, a, peak, d) { const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + d); node.connect(g); g.connect(master); return g; }
+function ding(i) { const t = ac.currentTime, f = [1047, 1175, 1319, 1397, 1568, 1760, 1976, 2093][i % 8];
+  [1, 2.01].forEach((m, j) => { const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f * m; env(o, t, .005, j ? .08 : .25, .7); o.start(t); o.stop(t + .8); }); }
+function drumRoll(dur) { const t0 = ac.currentTime + .05; let t = t0;
+  while (t < t0 + dur) { const p = (t - t0) / dur, n = noise(), bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = .7;
+    n.connect(bp); env(bp, t, .002, .12 + .55 * p * p, .06); n.start(t, Math.random()); n.stop(t + .1); t += .045 - .012 * p; }
+  // 最後一下大鼓
+  const o = ac.createOscillator(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + .4); env(o, t, .005, 1, .5); o.start(t); o.stop(t + .6);
+  return t - ac.currentTime; }
+function crash() { const t = ac.currentTime, n = noise(), hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 4000; n.connect(hp); env(hp, t, .003, .5, 2.2); n.start(t); n.stop(t + 2.4); }
+function fanfare() { const t = ac.currentTime + .05, S = .14;
+  const notes = [[392, 0, S], [392, S, S], [392, 2 * S, S], [523, 3 * S, 1.6]];
+  const chord = [659, 784, 1047];
+  const brass = (f, st, d, v) => { const o = ac.createOscillator(), lp = ac.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.setValueAtTime(900, st); lp.frequency.linearRampToValueAtTime(3200, st + .06); o.connect(lp);
+    const g = ac.createGain(); g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(v, st + .03); g.gain.setValueAtTime(v * .8, st + d - .05); g.gain.linearRampToValueAtTime(0, st + d + .25); lp.connect(g); g.connect(master); o.start(st); o.stop(st + d + .3); };
+  notes.forEach(([f, s, d]) => { brass(f, t + s, d * .9, .13); brass(f / 2, t + s, d * .9, .07); });
+  chord.forEach(f => brass(f, t + 3 * S, 1.6, .07)); }
+let clapBuf;
+function applause(dur, vol) { // 一群人拍手：很多短短的「啪」疊在一起
+  const sr = ac.sampleRate, len = Math.floor(sr * dur), b = ac.createBuffer(2, len, sr);
+  for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); const claps = Math.floor(dur * 70);
+    for (let c = 0; c < claps; c++) { const st = Math.floor(Math.random() * (len - sr * .03)), a = .3 + Math.random() * .7, dec = sr * (.006 + Math.random() * .01);
+      for (let i = 0; i < sr * .03; i++) d[st + i] += (Math.random() * 2 - 1) * a * Math.exp(-i / dec); } }
+  const s = ac.createBufferSource(); s.buffer = b; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = .5; s.connect(bp);
+  const g = ac.createGain(), t = ac.currentTime; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * .35, t + .4); g.gain.setValueAtTime(vol * .35, t + dur - 1.2); g.gain.linearRampToValueAtTime(0, t + dur);
+  bp.connect(g); g.connect(master); s.start(t); }
+function confetti() { const C = ['#FFD700', '#FF6B35', '#E8384F', '#3BB273', '#2E86DE', '#FF9FF3', '#fff'], el = slides[idx].el;
+  for (let i = 0; i < 90; i++) { const c = document.createElement('div'); c.className = 'cf'; c.style.left = Math.random() * 1920 + 'px'; c.style.background = C[i % C.length];
+    c.style.animationDuration = 2.5 + Math.random() * 2.5 + 's'; c.style.animationDelay = Math.random() * .8 + 's'; el.appendChild(c); setTimeout(() => c.remove(), 6000); } }
+
+// ---------- 換頁 ----------
+let idx = -1, sub = 0, timers = [];
+const later = (f, ms) => timers.push(setTimeout(f, ms));
+function clearTimers() { timers.forEach(clearTimeout); timers = []; busy = false; }
+function show(i, back) {
+  if (i < 0 || i >= slides.length) return;
+  if (idx >= 0) slides[idx].el.classList.remove('on');
+  idx = i; sub = back ? slides[i].steps : 0; const s = slides[i]; s.el.classList.add('on');
+  music(s.music === undefined ? (cur && cur.name) : s.music);
+  if (s.enter) s.enter(back); else clearTimers();
+}
+function next() { if (busy) return; const s = slides[idx]; if (sub < s.steps) { sub++; s.step(sub); } else show(idx + 1); }
+function prev() { if (idx > 0) show(idx - 1, true); }
+stage.parentElement.addEventListener('pointerup', e => { if (!ac || e.target.closest('#mute,#start')) return; (e.clientX < innerWidth * .25 ? prev : next)(); });
+addEventListener('keydown', e => { if (!ac) return; if (['ArrowRight', 'ArrowDown', ' ', 'Enter', 'PageDown'].includes(e.key)) next(); if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) prev(); });
+$('#mute').onclick = () => { muted = !muted; master.gain.value = muted ? 0 : 1; $('#mute').textContent = muted ? '🔇' : '🔊'; };
+
+// ---------- 開始：先把字型、圖、音樂都載好 ----------
+let ready = false;
+Promise.all([document.fonts.load("100px 'Huninn'", D.g + D.t + D.n.join('') + D.f.join('')), ...['bg_near', 'bg_full', 'bg_end'].map(b => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = `img/${b}.jpg`; }))])
+  .then(() => { ready = true; $('#ssub').textContent = '準備好了，點「開始」'; $('#go').classList.add('ready'); });
+$('#go').onclick = async () => {
+  if (!ready || ac) return;
+  initAudio(); ac.resume(); // iPad 要在「點」的當下就解鎖聲音
+  { const s = ac.createBufferSource(); s.buffer = ac.createBuffer(1, 1, 22050); s.connect(ac.destination); s.start(0); }
+  $('#ssub').textContent = '音樂載入中…';
+  const el = document.documentElement; try { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch (e) {}
+  await Promise.all(['open', 'list', 'end'].map(n => load(n).catch(() => {})));
+  if (ac.state === 'suspended') await ac.resume();
+  $('#start').style.display = 'none'; show(0);
+  $('#hint').style.opacity = 1; setTimeout(() => $('#hint').style.opacity = 0, 4000);
+};
+</script>
+</body>
+</html>
