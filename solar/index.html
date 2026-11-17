@@ -196,7 +196,20 @@ async function load(){
 
 /* ---------- 快速判分（雜湊比對；算不算能量仍由後端決定） ---------- */
 const HSALT="solar5b";
-async function sha(str){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("").slice(0,20);}
+async function sha(str){if(!(window.crypto&&crypto.subtle))return sha256js(str);const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("").slice(0,20);}
+function sha256js(str){const u=unescape(encodeURIComponent(str)),K=[],H=[];let p=0,c=2;const rr=(x,n)=>(x>>>n)|(x<<(32-n));
+  const isP=n=>{for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;};
+  for(;p<64;c++)if(isP(c)){if(p<8)H[p]=(Math.pow(c,.5)%1)*4294967296|0;K[p++]=(Math.pow(c,1/3)%1)*4294967296|0;}
+  const w=[];let t=u+"";while(t.length%64-56)t+=" ";
+  for(let i=0;i<t.length;i++)w[i>>2]|=t.charCodeAt(i)<<((3-i%4)*8);
+  w[w.length]=(u.length*8/4294967296)|0;w[w.length]=u.length*8|0;
+  let h=H.slice(0,8);
+  for(let j=0;j<w.length;){const x=w.slice(j,j+=16),o=h.slice(0);
+    for(let i=0;i<64;i++){if(i>=16){const a=x[i-15],b=x[i-2];x[i]=(x[i-16]+(rr(a,7)^rr(a,18)^(a>>>3))+x[i-7]+(rr(b,17)^rr(b,19)^(b>>>10)))|0;}
+      const e=h[4],a=h[0],t1=(h[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&h[5])^(~e&h[6]))+K[i]+x[i])|0,t2=((rr(a,2)^rr(a,13)^rr(a,22))+((a&h[1])^(a&h[2])^(h[1]&h[2])))|0;
+      h=[(t1+t2)|0,a,h[1],h[2],(h[3]+t1)|0,e,h[5],h[6]];}
+    for(let i=0;i<8;i++)h[i]=(h[i]+o[i])|0;}
+  return h.map(v=>(v>>>0).toString(16).padStart(8,"0")).join("").slice(0,20);}
 function norm(s){return String(s==null?"":s).replace(/[\s　]+/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).replace(/[／∕]/g,"/").replace(/[．。]/g,".").replace(/(?:又|\+)/g,"又").replace(/[,，]/g,"").replace(/(公分|平方|公尺|公斤|分鐘|小時|個|班|株|件|天|元|秒|幾|圈|公里|倍)+$/g,"");}
 const gcd=(a,b)=>b?gcd(b,a%b):a;
 function frac(s){let m;if((m=/^(\d+)又(\d+)\/(\d+)$/.exec(s))){const d=+m[3];return d?{n:+m[1]*d+ +m[2],d}:null;}if((m=/^(\d+)\/(\d+)$/.exec(s))){return +m[2]?{n:+m[1],d:+m[2]}:null;}if((m=/^(\d+(?:\.\d+)?)$/.exec(s))){const dec=(m[1].split(".")[1]||"").length,d=Math.pow(10,dec);return{n:Math.round(+m[1]*d),d,dec:1};}return null;}
@@ -213,9 +226,10 @@ async function localJudge(q,ans){
 /* ---------- 答題 ---------- */
 let QZ=null;
 async function startQuiz(opt){
-  if(!NAME||!S.me||!S.me.known){window.scrollTo(0,0);return;}
-  const r=await api("mode=quiz&name="+encodeURIComponent(NAME)+(opt.unit?"&unit="+encodeURIComponent(opt.unit):"")+(opt.flash?"&flash=1":""));
-  if(!r.ok){alert("找不到你的名字");return;}
+  if(!NAME||!S.me||!S.me.known){window.scrollTo(0,0);toast("先在上面打你的本名，才能發電喔！");const n=$("nin");if(n)n.focus();return;}
+  let r;try{r=await api("mode=quiz&name="+encodeURIComponent(NAME)+(opt.unit?"&unit="+encodeURIComponent(opt.unit):"")+(opt.flash?"&flash=1":""));
+  }catch(e){toast("連線失敗，請重新整理再試一次");return;}
+  if(!r.ok){toast("找不到你的名字，請換名字重打本名");return;}
   if(!r.qs.length){toast(r.left<=0?"今天的能量發滿了，明天再來！":"這區的題目還沒開放");return;}
   QZ={qs:r.qs,i:0,res:[],gain:0,flash:!!opt.flash,t0:Date.now(),left:r.left,unit:opt.unit};
   $("quiz").classList.remove("hide");document.body.style.overflow="hidden";showQ();
