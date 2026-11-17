@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>浩克太陽能量站</title>
+<style>
+:root{--ink:#3a2a18;--sub:#8a6d4b;--orange:#ff8a1f;--green:#2e9e4f;--gold:#f5b800;--line:#f0dcc0;--bg:#fff8ec}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:18px}
+main{max-width:560px;margin:0 auto;padding:0 12px 90px}
+button{font:inherit;border:none;border-radius:16px;cursor:pointer}
+.hide{display:none!important}
+/* 場景 */
+.scene{position:relative;margin:0 -12px;overflow:hidden;background:#222;container-type:inline-size;aspect-ratio:3/2.15}
+.scene>*{position:absolute}
+.scene .sky{inset:0;transition:background 1.2s}
+.scene .sunimg{width:24cqw;left:38cqw;transition:top 1.5s ease,opacity .6s}
+.scene .cl{transition:transform 2s ease,opacity 1.5s}
+.scene .ground{left:0;bottom:0;width:100%;height:auto}
+.scene .dim{left:0;right:0;bottom:0;top:42cqw;background:#1a2a60;mix-blend-mode:multiply;transition:opacity 1.2s}
+.scene .bld{height:19cqw;width:auto;bottom:24cqw;filter:drop-shadow(0 1.2cqw .8cqw rgba(0,0,0,.25));transition:opacity .4s}
+.scene .hulk{left:1.5cqw;bottom:.5cqw;height:24cqw;width:auto;filter:drop-shadow(0 .8cqw .6cqw rgba(0,0,0,.3));transform-origin:50% 100%}
+.scene .beam{left:0;top:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:screen;opacity:0;transition:opacity 2s;pointer-events:none}
+.scene .beam.on{opacity:.9}
+.scene .ttl{left:0;right:0;top:8px;text-align:center;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45);font-weight:900;font-size:22px;letter-spacing:1px}
+.scene .stg{left:50%;transform:translateX(-50%);bottom:10px;background:rgba(255,255,255,.92);border-radius:999px;padding:5px 16px;font-weight:900;font-size:16px;color:#c26a1e;white-space:nowrap}
+.card{background:#fff;border-radius:20px;padding:14px 16px;margin:12px 0;box-shadow:0 2px 8px rgba(150,100,40,.12)}
+.event{background:linear-gradient(135deg,#fff3d6,#ffe2a8);border:2px solid #ffcf70}
+.event b{font-size:19px}.event p{margin:4px 0 8px;font-size:16px}
+.bar{height:16px;border-radius:99px;background:#f3e6cf;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#ffb347,#ff8a1f);border-radius:99px;transition:width .6s}
+.bar.gold i{background:linear-gradient(90deg,#ffd54a,#f5a600)}
+.units{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.unit{background:#fff;border:3px solid var(--line);border-radius:20px;padding:10px;text-align:center;position:relative}
+.unit img{height:84px;width:auto;max-width:100%;object-fit:contain;transition:.4s}
+.unit.lit{border-color:#ffc95e;background:#fffbe9}
+.unit.golden{border-color:var(--gold);background:linear-gradient(180deg,#fff6c9,#ffe27a)}
+.unit b{display:block;font-size:19px;margin:2px 0}.unit small{display:block;color:var(--sub);font-size:13.5px;margin-bottom:6px}
+.unit .go{width:100%;padding:10px;font-size:17px;font-weight:900;background:var(--orange);color:#fff;margin-top:8px}
+.unit.lock{opacity:.6}.unit.lock .go{background:#c9b99f}
+.unit .tag{position:absolute;top:6px;right:8px;font-size:13px;font-weight:900;color:#c26a1e}
+.flash{width:100%;padding:14px;font-size:19px;font-weight:900;background:#7b3ff2;color:#fff;margin-top:4px}
+.row{display:flex;gap:10px;align-items:center}
+.me h3{margin:0 0 4px;font-size:18px}.muted{color:var(--sub);font-size:15px}
+.nm{font-size:22px;padding:10px 12px;border:3px solid var(--line);border-radius:14px;width:100%;text-align:center;font-weight:bold}
+.big{display:block;width:100%;padding:14px;font-size:20px;font-weight:900;background:var(--orange);color:#fff;margin-top:10px}
+.ghost{background:none;color:var(--sub);text-decoration:underline;font-size:15px;padding:6px}
+/* 答題 */
+.quiz{position:fixed;inset:0;z-index:20;background:linear-gradient(180deg,#fff3d6,#ffe7b8);overflow:auto}
+.quiz .in{max-width:560px;margin:0 auto;padding:14px 14px 40px}
+.qtop{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.dots{display:flex;gap:6px;flex:1}.dots i{flex:1;height:10px;border-radius:99px;background:#f0dcc0}.dots i.on{background:var(--orange)}.dots i.ok{background:var(--green)}.dots i.no{background:#e57373}
+.qx{background:#fff;color:var(--sub);padding:8px 12px;font-size:15px;font-weight:700}
+.qcard{background:#fff;border-radius:22px;padding:16px;box-shadow:0 2px 10px rgba(150,100,40,.15)}
+.qcard.boss{border:4px solid #c0392b;background:#fff5f3}
+.qtag{display:inline-block;background:#c0392b;color:#fff;border-radius:99px;padding:2px 12px;font-size:14px;font-weight:900;margin-bottom:6px}
+.qtag.spot{background:#7b3ff2}
+.qtext{font-size:20px;line-height:1.55;font-weight:700;white-space:pre-wrap}
+.qfig{margin:8px 0;text-align:center}.qfig svg{max-width:100%;height:auto}
+.choices{display:grid;gap:10px;margin-top:12px}
+.choice{padding:14px;font-size:19px;font-weight:700;background:#fff3df;color:var(--ink);border:3px solid var(--line);text-align:left}
+.choice:active{background:#ffe1b8}
+.fillrow{display:flex;gap:8px;margin-top:12px}
+.fillin{flex:1;font-size:24px;padding:12px;border:3px solid var(--line);border-radius:14px;font-weight:bold;min-width:0}
+.helpers{display:flex;gap:8px;margin-top:8px}.helpers button{flex:1;padding:10px;background:#ffe9c8;font-size:19px;font-weight:800;color:#c26a1e}
+.ans{background:var(--orange);color:#fff;font-weight:900;font-size:20px;padding:0 18px}
+.fb{border-radius:18px;padding:14px;margin-top:12px;font-size:18px;line-height:1.55}
+.fb.ok{background:#e8f8ec;border:3px solid #7fcf94}.fb.bad{background:#fff1f0;border:3px solid #ffb3a8}
+.fb b{font-size:21px}
+.timer{font-weight:900;color:#7b3ff2;font-size:20px;min-width:52px;text-align:right}
+/* 慶祝 */
+.cele{position:fixed;inset:0;z-index:40;background:rgba(40,20,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+.cele .box{background:#fff;border-radius:28px;padding:22px 20px;text-align:center;max-width:420px;width:100%;position:relative;z-index:2;animation:pop .5s}
+.cele img{width:auto;max-width:200px;height:140px;object-fit:contain}
+.cele h2{margin:6px 0;font-size:26px;color:#c26a1e}.cele p{margin:6px 0;font-size:18px}
+.cele .rw{background:#fff3d6;border:3px dashed #ffb347;border-radius:16px;padding:10px;font-size:20px;font-weight:900;color:#c0392b;margin:10px 0}
+#conf{position:fixed;inset:0;z-index:41;pointer-events:none}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#2e9e4f;color:#fff;padding:10px 20px;border-radius:99px;font-weight:900;font-size:20px;z-index:30;animation:up 1.4s forwards}
+@keyframes up{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-24px)}}
+.panel{display:flex;gap:12px;align-items:center}.panel img{width:76px;flex:none}
+.bossimg{width:84px;float:right;margin:-6px -4px 0 6px}.defimg{width:110px;display:block;margin:6px auto}
+</style>
+</head>
+<body>
+<main id="app">
+  <div class="scene" id="scene"></div>
+  <div class="card event" id="event"></div>
+  <div class="card me" id="me"></div>
+  <div class="units" id="units"></div>
+  <div class="card"><button class="flash" id="flashBtn">⚡ 閃電 3 題（限時 60 秒）</button></div>
+  <p class="muted" style="text-align:center">全班一起答題發電，把數學王國一區一區點亮！</p>
+</main>
+
+<div class="quiz hide" id="quiz"><div class="in" id="quizIn"></div></div>
+<div class="cele hide" id="cele"></div>
+<canvas id="conf" class="hide"></canvas>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const Q=new URLSearchParams(location.search);
+const CLASSES={"2024b":{ep:"https://script.google.com/macros/s/AKfycbxqTm68WptgnmqFOVAXV9A9ZdImKRSV5dcQ7Mx1F2Hfi0SZnrLcRy2hktT5hQQTSgD6LQ/exec"}};
+const CID=Q.get("c")||"2024b", CFG=CLASSES[CID], EP=CFG&&CFG.ep;
+const IMG="../th/";
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let NAME=(Q.get("name")||ls.get("wh_name")||"").trim();
+let S=null;                 // 後端回來的全班狀態
+const DEMO=Q.get("demo");   // ?demo=N 只用來看畫面（N=階段 0~6）
+
+const api=async(q)=>{const r=await fetch(EP+"?"+q);return r.json();};
+const post=async(d)=>{const r=await fetch(EP,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(d)});return r.json();};
+
+/* ---------- 場景：太陽隨階段升起、烏雲散開、5 棟建築亮燈 ---------- */
+const UKEY={"五上06":"u06","五上07":"u07","五上08":"u08","五上09":"u09","五上10":"u10"};
+const bimg=(u,st)=>"img/"+UKEY[u]+"_"+st+".png";
+const stOf=u=>u.golden?"gold":u.lit?"on":"off";
+function sceneHTML(st,units){
+  const t=st/6;
+  const sky="linear-gradient(180deg,"+mix("#1b2438","#6fc6ff",t)+","+mix("#3a3558","#ffe9a8",t)+")";
+  const sunSrc=st<2?"sun_tired":st<5?"sun_awake":"sun_noon";
+  const sunTop=(40-34*t).toFixed(1);               // 低（山後）→高
+  const cl=Math.max(0,1-st/5.2), dx=(1-cl)*70;
+  const clouds=[["big",-4,3,34,-1],["mid",58,10,28,1],["small",30,22,18,-1],["big",70,0,32,1],["mid",-6,20,24,-1]];
+  let h='<div class="sky" style="background:'+sky+'"></div>';
+  h+='<img class="sunimg" src="img/'+sunSrc+'.png" style="top:'+sunTop+'cqw" alt="">';
+  clouds.forEach(([k,x,y,w,dir])=>{h+='<img class="cl" src="img/cloud_'+k+'.png" style="left:'+x+'cqw;top:'+y+'cqw;width:'+w+'cqw;opacity:'+(cl*.95).toFixed(2)+';transform:translateX('+(dir*dx).toFixed(0)+'cqw)" alt="">';});
+  h+='<img class="ground" src="img/ground.png" alt="">';
+  h+='<div class="dim" style="opacity:'+(.62*(1-t)).toFixed(2)+'"></div>';
+  units.forEach((u,i)=>{h+='<img class="bld" src="'+bimg(u.u,stOf(u))+'" style="left:'+(2.4+i*19.1).toFixed(1)+'cqw;bottom:'+(i%2?22:25.5)+'cqw;z-index:'+(i%2?3:2)+'" alt="">';});
+  const hk=st<2?"wake":st<4?"charge":st<5?"hero":"sun";
+  h+='<img class="hulk" src="img/hulk_'+hk+'.png" alt="" style="z-index:5">';
+  h+='<img class="beam'+(st>=6?" on":"")+'" src="img/beam.jpg" alt="">';
+  return h;
+}
+function mix(a,b,t){const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B=p(b);return "#"+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,"0")).join("");}
+
+/* ---------- 畫面 ---------- */
+function draw(){
+  if(!S) return;
+  const st=DEMO!=null?+DEMO:S.done, units=S.units;
+  const names=["停電中…","浩克起床","浩克充電","雲開了一半","浩克變身","太陽快出來了","太陽正午"];
+  $("scene").innerHTML=sceneHTML(st,units)+`<div class="ttl" style="z-index:9">浩克太陽能量站</div><div class="stg" style="z-index:9">${st?"第 "+st+" 階段・":""}${names[st]}</div>`;
+  const ev=S.event;
+  if(ev){const pct=ev.kind==="target"?Math.min(100,Math.round(ev.got*100/ev.target)):100;
+    $("event").innerHTML=`<b>📣 本週事件：${ev.name}</b><p>${ev.say||""}</p>`+(ev.kind==="target"?`<div class="bar${ev.done?" gold":""}"><i style="width:${pct}%"></i></div><div class="muted" style="margin-top:4px">${ev.done?"✅ 完成了！每區都加了能量":"全班本週已答對 "+ev.got+" / "+ev.target+" 題"}</div>`:"");}
+  $("units").innerHTML=units.map((u,i)=>{
+    const cls=u.golden?"golden":u.lit?"lit":"";const tgt=u.lit?u.gold:u.light;const pct=Math.min(100,Math.round(u.energy*100/tgt));
+    return `<div class="unit ${cls} ${u.open?"":"lock"}">${u.golden?'<span class="tag">金色！</span>':u.lit?'<span class="tag">亮燈！</span>':""}<img src="${bimg(u.u,stOf(u))}" alt=""><b>${u.name}</b>
+      ${u.open?`<small>${u.golden?"全金色":u.lit?"再升級成金色":"還沒亮燈"}</small><div class="bar ${u.lit?"gold":""}"><i style="width:${pct}%"></i></div><small style="margin:4px 0 0">${u.energy} / ${tgt} 能量</small><button class="go" data-u="${u.u}">去發電</button>`:`<small>${u.openOn.slice(5).replace("-","/")} 開放</small><button class="go" disabled>還沒開放</button>`}</div>`;}).join("");
+  document.querySelectorAll(".unit .go[data-u]").forEach(b=>b.onclick=()=>startQuiz({unit:b.dataset.u}));
+  drawMe();
+}
+function panelSVG(e){   // 我的太陽能板：能量越多越亮（格子逐一亮起）
+  const n=Math.min(9,Math.floor(e/20));let c="";
+  for(let i=0;i<9;i++){const x=6+(i%3)*26,y=6+Math.floor(i/3)*20;c+=`<rect x="${x}" y="${y}" width="24" height="18" rx="3" fill="${i<n?(e>=200?'#ffd34d':'#79c0ff'):'#d9dde6'}" stroke="#44506b" stroke-width="1.5"/>`;}
+  return `<svg viewBox="0 0 90 70">${c}<rect x="40" y="64" width="10" height="6" fill="#44506b"/></svg>`;
+}
+function drawMe(){
+  const me=S.me;
+  if(!NAME||!me||!me.known){
+    $("me").innerHTML=`<h3>你是誰？</h3><div class="muted" style="margin-bottom:8px">打上你的本名，就能一起發電！</div><input class="nm" id="nin" placeholder="我的名字" value="${NAME||""}"><button class="big" id="nok">好！</button>${NAME&&me&&!me.known?'<div class="muted" style="color:#c0392b;margin-top:8px">找不到這個名字，請打你的本名（或名字）喔。</div>':""}`;
+    $("nok").onclick=()=>{NAME=$("nin").value.trim();if(NAME){ls.set("wh_name",NAME);load();}};return;
+  }
+  $("me").innerHTML=`<div class="panel"><img src="img/${me.energy>=200?"sun_noon":me.energy>=40?"sun_awake":"sun_tired"}.png" alt=""><div style="flex:1"><h3>${me.name.slice(1)}，你好！</h3><div class="muted">我發了 <b>${me.energy}</b> 塊能量・今天還可以發 <b>${me.left}</b> 塊</div>
+    <div class="muted">${me.bossToday?"✅ 今天打倒魔王了":"🎯 今日任務：打倒 1 隻烏雲魔王"}</div><button class="ghost" id="chg">不是我？換名字</button></div></div>`;
+  $("chg").onclick=()=>{NAME="";ls.set("wh_name","");S.me=null;drawMe();};
+}
+async function load(){
+  if(!EP){$("app").innerHTML="<p>這個班級還沒開放。</p>";return;}
+  try{S=await api("mode=battle"+(NAME?"&name="+encodeURIComponent(NAME):""));}catch(e){$("units").innerHTML='<p class="muted">連線失敗，請稍後再試。</p>';return;}
+  draw();
+  const seen=+(ls.get("sol_seen_"+CID)||0);
+  if(S.done>seen&&S.me&&S.me.known){ls.set("sol_seen_"+CID,S.done);if(seen||S.done>0)celebrate({title:"第 "+S.done+" 階段完成！",sub:S.stages[S.done-1].name,reward:S.stages[S.done-1].reward,img:"hulk_hero.png"});}
+}
+
+/* ---------- 答題 ---------- */
+let QZ=null;
+async function startQuiz(opt){
+  if(!NAME||!S.me||!S.me.known){window.scrollTo(0,0);return;}
+  const r=await api("mode=quiz&name="+encodeURIComponent(NAME)+(opt.unit?"&unit="+encodeURIComponent(opt.unit):"")+(opt.flash?"&flash=1":""));
+  if(!r.ok){alert("找不到你的名字");return;}
+  if(!r.qs.length){toast(r.left<=0?"今天的能量發滿了，明天再來！":"這區的題目還沒開放");return;}
+  QZ={qs:r.qs,i:0,res:[],gain:0,flash:!!opt.flash,t0:Date.now(),left:r.left,unit:opt.unit};
+  $("quiz").classList.remove("hide");document.body.style.overflow="hidden";showQ();
+  if(QZ.flash){QZ.timer=setInterval(()=>{const s=60-Math.floor((Date.now()-QZ.t0)/1000);const el=$("tm");if(el)el.textContent=Math.max(0,s)+"秒";if(s<=0){clearInterval(QZ.timer);endQuiz("時間到！");}},500);}
+}
+function showQ(){
+  const q=QZ.qs[QZ.i];
+  const dots=QZ.qs.map((_,k)=>`<i class="${QZ.res[k]===1?"ok":QZ.res[k]===0?"no":k===QZ.i?"on":""}"></i>`).join("");
+  let h=`<div class="qtop"><button class="qx" id="qx">✕ 離開</button><div class="dots">${dots}</div>${QZ.flash?'<div class="timer" id="tm"></div>':""}</div><div class="qcard${q.boss?" boss":""}">`;
+  if(q.boss)h+=`<img class="bossimg" src="img/boss_boss.png" alt=""><span class="qtag">烏雲魔王題（答對 3 塊能量）</span>`;
+  if(q.spot)h+=`<span class="qtag spot">🔍 找錯誤</span>`;
+  h+=`<div class="qtext">${esc(q.q.replace("【魔王題】",""))}</div>`+(q.f?`<div class="qfig">${q.f}</div>`:"");
+  if(q.t==="choice")h+=`<div class="choices">${q.c.map(c=>`<button class="choice" data-a="${esc(c)}">${esc(c)}</button>`).join("")}</div>`;
+  else h+=`<div class="fillrow"><input class="fillin" id="fin" inputmode="text" autocomplete="off" placeholder="寫答案"><button class="ans" id="fok">送出</button></div><div class="helpers"><button data-ins="又">又</button><button data-ins="/">／</button><button data-ins=".">．</button></div>`;
+  h+=`<div id="fb"></div></div>`;
+  $("quizIn").innerHTML=h;
+  $("qx").onclick=()=>endQuiz();
+  document.querySelectorAll(".choice").forEach(b=>b.onclick=()=>submit(b.dataset.a));
+  if(q.t!=="choice"){const f=$("fin");f.focus();$("fok").onclick=()=>submit(f.value);f.onkeydown=e=>{if(e.key==="Enter")submit(f.value);};document.querySelectorAll("[data-ins]").forEach(b=>b.onclick=()=>{f.value+=b.dataset.ins;f.focus();});}
+}
+let busy=false;
+async function submit(ans){
+  if(busy||!QZ||QZ.res[QZ.i]!==undefined)return;const q=QZ.qs[QZ.i];busy=true;
+  let r;try{r=await post({mode:"answer",name:NAME,id:q.id,ans});}catch(e){busy=false;toast("連線失敗，再按一次");return;}
+  busy=false;
+  if(r.retry){toast("先寫答案喔");return;}
+  if(r.reduce){$("fb").innerHTML=`<div class="fb bad"><b>數字對了！</b><br>請約成最簡分數再送出一次。</div>`;return;}
+  if(!r.ok){toast("出錯了："+(r.err||""));return;}
+  document.querySelectorAll(".choice,.ans").forEach(b=>b.disabled=true);
+  QZ.res[QZ.i]=r.correct?1:0;QZ.gain+=r.gain||0;
+  const last=QZ.i>=QZ.qs.length-1;
+  $("fb").innerHTML=r.correct?`<div class="fb ok">${q.boss?'<img class="defimg" src="img/boss_defeated.png" alt=""><b>魔王被打敗了，變成害羞的小白雲！</b><br>':""}<b>✅ 答對了！${r.gain?" ⚡ +"+r.gain+" 能量":"（今天已經發滿了）"}</b><br>${esc(r.explain||"")}</div>`
+    :`<div class="fb bad"><b>❌ 這題答案是：${esc(r.answer||"")}</b><br>${esc(r.explain||"")}</div>`;
+  $("fb").innerHTML+=`<button class="big" id="nx">${last?"看結果":"下一題 ›"}</button>`;
+  const ev=[];
+  if(r.event)ev.push({title:"本週事件完成！",sub:r.event.name,reward:"每一區都加了 "+r.event.bonus+" 塊能量！",img:"sun_noon.png"});
+  if(r.golden)ev.push({title:r.unit.name+"升級成金色！",sub:"閃閃發亮",reward:"",img:UKEY[r.unit.u]+"_gold.png"});
+  else if(r.lit)ev.push({title:r.unit.name+"亮燈了！",sub:"全班好棒！",reward:"",img:UKEY[r.unit.u]+"_on.png"});
+  if(r.stageUp){ls.set("sol_seen_"+CID,r.stageUp);ev.push({title:"第 "+r.stageUp+" 階段完成！",sub:r.stage.name,reward:r.stage.reward,img:(r.stageUp>=5?"hulk_sun":r.stageUp>=4?"hulk_hero":r.stageUp>=2?"hulk_charge":"hulk_wake")+".png"});}
+  $("nx").onclick=async()=>{if(!ev.length){next();return;}for(const e of ev)await celebrate(e);next();};
+}
+function next(){if(QZ.i>=QZ.qs.length-1)return endQuiz();QZ.i++;showQ();}
+async function endQuiz(msg){
+  if(!QZ)return;clearInterval(QZ.timer);const z=QZ;QZ=null;
+  $("quiz").classList.add("hide");document.body.style.overflow="";
+  if(z.gain>0||z.res.length)toast((msg?msg+" ":"")+"這次發了 "+z.gain+" 塊能量！");
+  await load();
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function toast(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),1500);}
+
+/* ---------- 慶祝：彩帶＋對話框 ---------- */
+function celebrate(o){return new Promise(res=>{
+  const c=$("cele");c.innerHTML=`<div class="box"><img src="img/${o.img||"sun_noon.png"}" alt=""><h2>${o.title}</h2><p>${o.sub||""}</p>${o.reward?`<div class="rw">🎁 ${o.reward}</div>`:""}<button class="big" id="cok">太棒了！</button></div>`;
+  c.classList.remove("hide");confetti(true);
+  $("cok").onclick=()=>{c.classList.add("hide");confetti(false);res();};});}
+let cf=null;
+function confetti(on){
+  const cv=$("conf");if(!on){cv.classList.add("hide");cancelAnimationFrame(cf);return;}
+  cv.classList.remove("hide");cv.width=innerWidth;cv.height=innerHeight;const g=cv.getContext("2d");
+  const P=Array.from({length:110},()=>({x:Math.random()*cv.width,y:-Math.random()*cv.height,v:2+Math.random()*4,s:5+Math.random()*7,c:["#ff8a1f","#ffd34d","#2e9e4f","#4aa3ff","#e8267f"][Math.floor(Math.random()*5)],r:Math.random()*6}));
+  (function f(){g.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.v;p.r+=.1;if(p.y>cv.height)p.y=-10;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);g.restore();});cf=requestAnimationFrame(f);})();
+}
+
+$("flashBtn").onclick=()=>startQuiz({flash:true});
+if(DEMO!=null){NAME=NAME||"測試浩克";}
+load();
+</script>
+</body>
+</html>
