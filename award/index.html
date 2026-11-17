@@ -74,7 +74,7 @@ add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;lett
 function addNear() {
 if (D.n.length) {
   const k = D.n.length, two = k > 5, rows = two ? Math.ceil(k / 2) : k;
-  const fs = two ? (rows <= 4 ? 92 : 80) : (k <= 3 ? 120 : k <= 4 ? 105 : 92);
+  const fs = two ? (rows <= 4 ? 92 : rows <= 5 ? 80 : 68) : (k <= 3 ? 120 : k <= 4 ? 105 : 92);
   const el = add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;letter-spacing:.2em">${D.g}　閃耀之星</div>
  <div class="names" style="left:420px;right:330px;top:320px;bottom:200px;grid-template-columns:${two ? '1fr 1fr' : '1fr'};grid-auto-flow:${two ? 'column' : 'row'};grid-template-rows:repeat(${rows},auto)">
  ${D.n.map(n => `<div class="nm" style="color:#8A1C00;font-size:${fs}px;letter-spacing:.12em;${nf(n)}">${n}</div>`).join('')}</div>`, 'bg_near', {
