@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>太陽能量站後台</title>
+<style>
+body{margin:0;background:#fff8ec;color:#3a2a18;font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:16px}
+main{max-width:640px;margin:0 auto;padding:12px 12px 60px}
+h1{font-size:21px;margin:8px 0}
+.card{background:#fff;border-radius:16px;padding:12px 14px;margin:10px 0;box-shadow:0 2px 8px rgba(150,100,40,.12)}
+.bar{height:12px;border-radius:99px;background:#f3e6cf;overflow:hidden;margin:4px 0 8px}.bar i{display:block;height:100%;background:#ff8a1f}
+.u{display:flex;justify-content:space-between;font-weight:700}.u small{color:#8a6d4b;font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:15px}th,td{padding:7px 4px;text-align:center;border-bottom:1px solid #f0dcc0}
+th{color:#8a6d4b;font-size:13px}td:first-child,th:first-child{text-align:left}
+tr.z td{color:#bbb}.hot td:nth-child(2){color:#c26a1e;font-weight:900}
+input,button{font:inherit;padding:10px;border-radius:12px;border:2px solid #f0dcc0}button{background:#ff8a1f;color:#fff;border:0;font-weight:900}
+.muted{color:#8a6d4b;font-size:14px}
+</style></head><body><main>
+<h1>☀️ 太陽能量站後台</h1>
+<div id="login" class="card" hidden>管理密碼：<br><input id="k" type="password" inputmode="numeric" style="width:60%"> <button id="go">進入</button></div>
+<div id="app"></div>
+<p class="muted"><button id="rf" style="padding:6px 12px">重新整理</button> <span id="t"></span></p>
+</main>
+<script>
+const EP="https://script.google.com/macros/s/AKfycbxqTm68WptgnmqFOVAXV9A9ZdImKRSV5dcQ7Mx1F2Hfi0SZnrLcRy2hktT5hQQTSgD6LQ/exec";
+const $=i=>document.getElementById(i),ls={g:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+async function load(){
+  const key=ls.g("sol_admin_key");if(!key){$("login").hidden=false;return;}
+  $("app").innerHTML='<p class="muted">載入中…</p>';
+  let j;try{j=await (await fetch(EP+"?mode=admin&key="+encodeURIComponent(key))).json();}catch(e){$("app").innerHTML="<p>連線失敗，請再按重新整理。</p>";return;}
+  if(!j.ok){ls.s("sol_admin_key","");$("login").hidden=false;$("app").innerHTML="<p>密碼不對，請重新輸入。</p>";return;}
+  $("login").hidden=true;
+  const ev=j.event||{};
+  let h='<div class="card"><b>全班階段 '+j.done+' / 6</b>'+(ev.name?'<div class="muted">本週事件：'+esc(ev.name)+(ev.target?'　'+ev.got+' / '+ev.target:'')+'</div>':'')+'</div><div class="card">';
+  j.units.forEach(u=>{const t=u.lit?u.gold:u.light,p=Math.min(100,Math.round(u.energy*100/t));
+    h+='<div class="u"><span>'+esc(u.name)+(u.open?'':' <small>（未開放）</small>')+'</span><span>'+u.energy+' / '+t+'</span></div><div class="bar"><i style="width:'+p+'%"></i></div>';});
+  h+='</div><div class="card"><table><tr><th>姓名</th><th>能量</th><th>答對</th><th>答錯</th><th>天數</th><th>魔王</th><th>最近</th></tr>';
+  j.kids.forEach(k=>{const z=!k.right&&!k.wrong;
+    h+='<tr class="'+(z?'z':'')+(k.prize||(j.prizeNeed&&k.blocks>=j.prizeNeed)?' hot':'')+'"><td>'+esc(k.name)+'</td><td>'+k.blocks+'</td><td>'+k.right+'</td><td>'+k.wrong+'</td><td>'+k.days+'</td><td>'+k.boss+'</td><td>'+(k.last?k.last.slice(5):"-")+'</td></tr>';});
+  h+='</table></div>'+(j.prizeNeed?'<p class="muted">個人獎：'+esc(j.prize||"")+'（累積 '+j.prizeNeed+' 塊）</p>':'');
+  $("app").innerHTML=h;$("t").textContent="更新："+new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});
+}
+$("go").onclick=()=>{const v=$("k").value.trim();if(v){ls.s("sol_admin_key",v);load();}};
+$("rf").onclick=load;load();
+</script></body></html>
