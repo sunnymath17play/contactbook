@@ -11,11 +11,11 @@
 (function(){
 const CALC_OPEN = true;    // 2026-11-04 SUNNY：可以上架了（三、四年級孩子都看得到）
 const CALC_GRADES = [3, 4];
-// ⏰ 2027-01-15 計算挑戰＋拆彈特攻隊下架（SUNNY 2026-11-17 決定）：1/15 當天是最後一天；12/15 起首頁方塊顯示倒數；之後整個消失（測試連結 &chtest=1 還看得到）
-const END_AT = Date.parse("2027-01-15T23:59:59+08:00"), COUNT_FROM = Date.parse("2026-12-15T00:00:00+08:00");
+// ⏰ 2027-06-30 計算挑戰＋拆彈特攻隊下架（SUNNY 2026-11-17 決定）：6/30 當天是最後一天；5/30 起首頁方塊顯示倒數；之後整個消失（測試連結 &chtest=1 還看得到）
+const END_AT = Date.parse("2027-06-30T23:59:59+08:00"), COUNT_FROM = Date.parse("2027-05-30T00:00:00+08:00");
 const DAYS_LEFT = () => Math.max(1, Math.ceil((END_AT - Date.now()) / 86400000));
 const ENDED = () => Date.now() > END_AT;
-const endBanner = () => { const d = DAYS_LEFT(), hot = d <= 7; return `<div class="cend${hot ? " hot" : ""}">⏰ <b>計算挑戰・拆彈特攻隊</b>只到 <b>1 月 15 日</b>！${Date.now() >= COUNT_FROM ? `<em>還剩 ${d} 天</em>` : "<em>抓緊時間玩！</em>"}</div>`; };
+const endBanner = () => { const d = DAYS_LEFT(), hot = d <= 7; return `<div class="cend${hot ? " hot" : ""}">⏰ <b>計算挑戰・拆彈特攻隊</b>只到 <b>6 月 30 日</b>！${Date.now() >= COUNT_FROM ? `<em>還剩 ${d} 天</em>` : "<em>抓緊時間玩！</em>"}</div>`; };
 const IMG = "calc/img/";
 const lsG = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -36,7 +36,7 @@ if (!CALC_OPEN && !TESTER) { why("測試記號沒有存起來（瀏覽器可能�
 if (qs("preview") === "1") return;
 const C = window.CalcCore, CHEER = window.CALC_CHEER || { ok: ["答對了！"], streak: [], reset: ["沒關係，再來一次！"], stamp: ["今天 5 題全對！"] };
 const RULES = [
-  "⏰ <b>計算挑戰和拆彈特攻隊只到 2027 年 1 月 15 日</b>，之後就下架了。想拿計算王獎狀，要趕快開始、每天都做！",
+  "⏰ <b>計算挑戰和拆彈特攻隊只到 2027 年 6 月 30 日</b>，之後就下架了。想拿計算王獎狀，要趕快開始、每天都做！",
   "每天 5 題；做完就要等明天才有新題目。",
   "每一題<b>第一次按「完成」就對</b>，才算「連續答對」。",
   "🔁 <b>重做卡</b>：每蓋 3 個全對章送 1 張。答錯時自動用掉一張，再算一次；算對了，連續照樣 +1！",
@@ -516,7 +516,7 @@ const BOMB_GRADE = 3;
 let TAB = GRADE === BOMB_GRADE && lsG("wh_calc_tab") === "bomb" ? "bomb" : "calc";
 let B = null, BSET = null, BQ = null;
 const BOMB_RULES = [
-  "⏰ <b>拆彈特攻隊只到 2027 年 1 月 15 日</b>，之後就下架了，快來拆彈！",
+  "⏰ <b>拆彈特攻隊只到 2027 年 6 月 30 日</b>，之後就下架了，快來拆彈！",
   "每天 5 顆炸彈，都是<b>炸彈超人</b>教過的除法。",
   "先在紙上用炸彈超人的方法算，再把<b>商</b>和<b>餘數</b>打進來。",
   "每一顆只有<b>一次機會</b>：算對＝拆彈成功！算錯＝炸彈爆炸，回去看那一型的影片再練。",
