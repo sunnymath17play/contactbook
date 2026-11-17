@@ -176,7 +176,7 @@ function drawMe(){
     $("me").innerHTML=`<h3>你是誰？</h3><div class="muted" style="margin-bottom:8px">打上你的本名，就能一起發電！</div><input class="nm" id="nin" placeholder="我的名字" value="${NAME||""}"><button class="big" id="nok">好！</button>${NAME&&me&&!me.known?'<div class="muted" style="color:#c0392b;margin-top:8px">找不到這個名字，請打你的本名（或名字）喔。</div>':""}`;
     $("nok").onclick=()=>{NAME=$("nin").value.trim();if(NAME){ls.set("wh_name",NAME);load();}};return;
   }
-  $("me").innerHTML=`<div class="panel"><img src="img/${me.energy>=200?"sun_noon":me.energy>=40?"sun_awake":"sun_tired"}.png" alt=""><div style="flex:1"><h3>${/^測試/.test(me.name)?me.name.slice(2):me.name.slice(1)}，你好！</h3><div class="muted">我發了 <b>${me.energy}</b> 塊能量・今天還可以發 <b>${me.left}</b> 塊</div>
+  $("me").innerHTML=`<div class="panel"><img src="img/${me.energy>=200?"sun_noon":me.energy>=40?"sun_awake":"sun_tired"}.png" alt=""><div style="flex:1"><h3>${/^測試/.test(me.name)?me.name.slice(2):me.name==="SUNNY"?me.name:me.name.slice(1)}，你好！</h3><div class="muted">我發了 <b>${me.energy}</b> 塊能量・今天還可以發 <b>${me.left}</b> 塊</div>
     <div class="muted">${me.bossToday?"✅ 今天打倒魔王了":"🎯 今日任務：打倒 1 隻烏雲魔王"}</div><button class="ghost" id="chg">不是我？換名字</button></div></div>`;
   $("chg").onclick=()=>{NAME="";ls.set("wh_name","");S.me=null;drawMe();};
 }
