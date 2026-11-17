@@ -87,7 +87,21 @@ if (D.n.length) {
   });
 }
 
-D.f.forEach(n => {
+const grp = (D.g === '三年級' || D.g === '四年級') && D.f.length > 1;
+if (grp) {
+  const k = D.f.length, two = k > 3, rows = two ? Math.ceil(k / 2) : k, f = two ? 104 : 120;
+  add(`<div class="t" style="top:118px;font-size:52px;color:#9A3412;letter-spacing:.2em">${D.g}　${D.ft || '滿分榮耀'}</div>
+ <div class="t q" style="top:330px;font-size:170px;color:#8A1C00;letter-spacing:.14em;text-shadow:0 3px 0 #FFE89A">？？？</div>
+ <div class="names who" style="left:640px;right:220px;top:300px;bottom:230px;grid-template-columns:${two ? '1fr 1fr' : '1fr'};grid-auto-flow:${two ? 'column' : 'row'};grid-template-rows:repeat(${rows},auto)">
+ ${D.f.map(n => `<div style="color:#8A1C00;font-size:${f}px;letter-spacing:.12em;${nf(n)}text-shadow:0 3px 0 #FFE89A,0 0 14px rgba(255,255,255,.6)">${n}</div>`).join('')}</div>`, 'bg_full', {
+    music: null, steps: 1,
+    enter(back) { const q = this.el.querySelector('.q'), w = this.el.querySelector('.who'); clearTimers(); q.classList.remove('shake');
+      if (back) { q.style.opacity = 0; w.classList.add('pop'); } else { q.style.opacity = 1; w.classList.remove('pop'); } },
+    step() { const q = this.el.querySelector('.q'), w = this.el.querySelector('.who'); q.classList.add('shake'); busy = true;
+      const dur = drumRoll(2.6);
+      later(() => { q.classList.remove('shake'); q.style.opacity = 0; w.classList.add('pop'); crash(); fanfare(); applause(4, .9); confetti(); busy = false; }, dur * 1000); }
+  });
+} else D.f.forEach(n => {
   const el = add(`<div class="t" style="top:118px;font-size:52px;color:#9A3412;letter-spacing:.2em">${D.g}　${D.ft || '滿分榮耀'}</div>
  <div class="t q" style="top:178px;font-size:170px;color:#8A1C00;letter-spacing:.14em;text-shadow:0 3px 0 #FFE89A">？？？</div>
  <div class="t who" style="top:178px;font-size:${n.length > 3 ? 150 : 170}px;color:#8A1C00;letter-spacing:.14em;${nf(n)}text-shadow:0 3px 0 #FFE89A,0 0 14px rgba(255,255,255,.6)">${n}</div>`, 'bg_full', {
