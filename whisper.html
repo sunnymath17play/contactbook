@@ -678,7 +678,7 @@
   .vsgo{background:#E9763A;color:#fff;box-shadow:0 3px 0 #B2501E;}
   .vsok{background:#F3E2C4;color:#6B3A12;}
 </style>
-<link rel="stylesheet" href="calc/calc.css?v=1794581333103">
+<link rel="stylesheet" href="calc/calc.css?v=1794899468839">
 <link rel="stylesheet" href="challenge/challenge.css?v=1794581332844">
 </head>
 <body>
@@ -704,7 +704,7 @@
     <div class="videos" id="videos"><button class="vopen hop" type="button" data-vopen="1"><img class="ic" src="th/tv.png" alt=""><span class="tx"><b>影片教室</b><small>點我進去看講解影片</small></span><span class="go">›</span></button></div>
     <button class="ptile" type="button" id="ptile" hidden><img class="ic" src="pets/img/egg_2.png" alt=""><span class="tx"><b>我的寵物蛋</b><small id="ptileSub">打上本名就能領一顆蛋！</small></span><span class="go">›</span></button>
   </div>
-  <button class="stile" type="button" id="stile" hidden><img class="ic" src="th/solar_icon.png" alt=""><span class="tx"><b>浩克太陽能量站</b><small>數學王國停電了！全班答題幫浩克發電</small></span><span class="go">›</span></button>
+  <button class="stile" type="button" id="stile" hidden><img class="ic" src="th/solar_icon.png" alt=""><span class="tx"><b>浩克太陽能量站</b><small>數學王國停電了！全班答題幫浩克發電<br>⏰ 只到 1 月 31 日，快來玩！</small></span><span class="go">›</span></button>
   <div class="petcard" id="petcard"></div>
 
   <!-- 悄悄話（主角） -->
@@ -1610,7 +1610,8 @@ if(PETS_ON){
 
 /* ---------- ☀️ 浩克太陽能量站：全班答題發電（solar/；後端 程式碼神獸城gas5B） ---------- */
 const SOLAR_CLASSES = ["2024b"];   // 五年級B（2026-11-17 起試辦）
-const SOLAR_ON = !!CH && SOLAR_CLASSES.includes(CH.id) && qs("preview")!=="1";
+const SOLAR_END = Date.parse("2027-01-31T23:59:59+08:00");   // 2027-01-31 下架
+const SOLAR_ON = Date.now()<=SOLAR_END && !!CH && SOLAR_CLASSES.includes(CH.id) && qs("preview")!=="1";
 function openSolar(){ $("sframe").src="solar/?c="+CH.id+"&embed=1&t="+Date.now(); $("sroom").classList.add("show"); history.pushState({s:1},""); }
 function closeSolar(){ $("sroom").classList.remove("show"); $("sframe").src="about:blank"; }
 $("sback").onclick=()=>history.back();
@@ -1718,8 +1719,8 @@ $("send").onclick=async()=>{
 })();
 </script>
 <!-- 🧮 計算挑戰（三、四年級；程式在 calc/，由 程式碼\計算挑戰\build.cjs 產生） -->
-<script src="calc/calc_core.js?v=1794581333103"></script>
-<script src="calc/cheer.js?v=1794581333103"></script>
-<script src="calc/calc.js?v=1794581333103"></script>
+<script src="calc/calc_core.js?v=1794899468839"></script>
+<script src="calc/cheer.js?v=1794899468839"></script>
+<script src="calc/calc.js?v=1794899468839"></script>
 </body>
 </html>

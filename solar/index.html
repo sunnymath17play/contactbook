@@ -87,6 +87,7 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .intro .hero{display:flex;justify-content:center;gap:6px;align-items:flex-end}.intro .hero img{height:96px;width:auto}
 .intro .story{background:#fff3d6;border:3px dashed #ffb347;border-radius:18px;padding:10px 14px;font-size:18px;line-height:1.7;font-weight:700}
 .intro .rw{background:#f3f8ff;border-radius:14px;padding:6px 12px}
+.solend{margin:10px 12px 0;padding:10px 12px;border-radius:14px;background:#FFF1D6;border:3px solid #F5A623;color:#7A4A00;font-size:16px;font-weight:800;line-height:1.4;text-align:center}.solend em{display:block;font-style:normal;font-weight:900;font-size:20px;color:#D35400}.solend.hot{background:#FDE3E0;border-color:#E74C3C;color:#8E1B10}.solend.hot em{color:#C0392B}
 .helpbtn{display:block;margin:10px auto 0;background:#fff;border:3px solid #ffcf70;color:#c26a1e;font-weight:900;font-size:17px;padding:9px 20px}
 .panel{display:flex;gap:12px;align-items:center}.panel img{width:76px;flex:none}
 .bossimg{width:84px;float:right;margin:-6px -4px 0 6px}.defimg{width:110px;display:block;margin:6px auto}
@@ -94,6 +95,7 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 </head>
 <body>
 <main id="app">
+  <div class="solend" id="solend"></div>
   <div class="scene" id="scene"></div>
   <button class="helpbtn" id="helpBtn">❓ 遊戲說明（怎麼玩）</button>
   <div class="card event" id="event"></div>
@@ -178,7 +180,12 @@ function drawMe(){
     <div class="muted">${me.bossToday?"✅ 今天打倒魔王了":"🎯 今日任務：打倒 1 隻烏雲魔王"}</div><button class="ghost" id="chg">不是我？換名字</button></div></div>`;
   $("chg").onclick=()=>{NAME="";ls.set("wh_name","");S.me=null;drawMe();};
 }
+// ⏰ 2027-01-31 下架（SUNNY 2026-11-17）：1/31 當天是最後一天，一個月前（12/31）起顯示倒數
+const SOL_END=Date.parse("2027-01-31T23:59:59+08:00"),SOL_COUNT=Date.parse("2026-12-31T00:00:00+08:00");
+(function(){const e=document.getElementById("solend");if(!e)return;const d=Math.max(1,Math.ceil((SOL_END-Date.now())/86400000));
+  e.className="solend"+(d<=7?" hot":"");e.innerHTML="⏰ 浩克太陽能量站只到 <b>1 月 31 日</b>！"+(Date.now()>=SOL_COUNT?"<em>還剩 "+d+" 天，快把太陽升到正午！</em>":"<em>全班一起抓緊時間發電！</em>");})();
 async function load(){
+  if(Date.now()>SOL_END&&!/[?&]test=1/.test(location.search)&&!/^測試/.test((new URLSearchParams(location.search)).get("name")||"")){document.getElementById("app").innerHTML="<p style=\"text-align:center;padding:40px 16px;font-weight:800\">浩克太陽能量站已經結束囉，謝謝大家一起發電！</p>";return;}
   if(!EP){$("app").innerHTML="<p>這個班級還沒開放。</p>";return;}
   try{S=await api("mode=battle"+(NAME?"&name="+encodeURIComponent(NAME):""));}catch(e){$("units").innerHTML='<p class="muted">連線失敗，請稍後再試。</p>';return;}
   draw();

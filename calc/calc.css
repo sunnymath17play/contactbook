@@ -329,3 +329,9 @@
 .cchest-gift{display:block;font-size:30px;color:#C0392B;margin:6px 0 4px;animation:chPop .45s ease-out;}
 .cchest-pick{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
 .cchest-pick .cbtn{margin-top:0;min-width:120px;}
+
+/* ⏰ 下架倒數橫幅 */
+.cend{margin:8px 12px 0;padding:10px 12px;border-radius:12px;background:#FFF1D6;border:2px solid #F5A623;color:#7A4A00;font-size:15px;line-height:1.4;text-align:center}
+.cend em{display:block;font-style:normal;font-weight:900;font-size:18px;color:#D35400}
+.cend.hot{background:#FDE3E0;border-color:#E74C3C;color:#8E1B10}
+.cend.hot em{color:#C0392B}

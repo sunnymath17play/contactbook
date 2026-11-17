@@ -11,6 +11,11 @@
 (function(){
 const CALC_OPEN = true;    // 2026-11-04 SUNNY：可以上架了（三、四年級孩子都看得到）
 const CALC_GRADES = [3, 4];
+// ⏰ 2027-01-15 計算挑戰＋拆彈特攻隊下架（SUNNY 2026-11-17 決定）：1/15 當天是最後一天；12/15 起首頁方塊顯示倒數；之後整個消失（測試連結 &chtest=1 還看得到）
+const END_AT = Date.parse("2027-01-15T23:59:59+08:00"), COUNT_FROM = Date.parse("2026-12-15T00:00:00+08:00");
+const DAYS_LEFT = () => Math.max(1, Math.ceil((END_AT - Date.now()) / 86400000));
+const ENDED = () => Date.now() > END_AT;
+const endBanner = () => { const d = DAYS_LEFT(), hot = d <= 7; return `<div class="cend${hot ? " hot" : ""}">⏰ <b>計算挑戰・拆彈特攻隊</b>只到 <b>1 月 15 日</b>！${Date.now() >= COUNT_FROM ? `<em>還剩 ${d} 天</em>` : "<em>抓緊時間玩！</em>"}</div>`; };
 const IMG = "calc/img/";
 const lsG = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -26,10 +31,12 @@ if (typeof CalcCore === "undefined") { why("出題程式沒有載入，請重新
 const GRADE = 3 + (schoolYear() - CH.y);
 const SKIP_GRADES = [3, 4];   // ⏭️ 跳題：2026-11-10 四年級、2026-11-11 SUNNY 開放三年級（後台 CALC_SKIP_GRADES 要一樣）
 if (CALC_GRADES.indexOf(GRADE) < 0) { why("這個班不是三、四年級"); return; }
+if (ENDED() && !TESTER) return;   // 下架後整個不出現
 if (!CALC_OPEN && !TESTER) { why("測試記號沒有存起來（瀏覽器可能是無痕模式）"); return; }
 if (qs("preview") === "1") return;
 const C = window.CalcCore, CHEER = window.CALC_CHEER || { ok: ["答對了！"], streak: [], reset: ["沒關係，再來一次！"], stamp: ["今天 5 題全對！"] };
 const RULES = [
+  "⏰ <b>計算挑戰和拆彈特攻隊只到 2027 年 1 月 15 日</b>，之後就下架了。想拿計算王獎狀，要趕快開始、每天都做！",
   "每天 5 題；做完就要等明天才有新題目。",
   "每一題<b>第一次按「完成」就對</b>，才算「連續答對」。",
   "🔁 <b>重做卡</b>：每蓋 3 個全對章送 1 張。答錯時自動用掉一張，再算一次；算對了，連續照樣 +1！",
@@ -105,7 +112,7 @@ const vbody = el("vbody"); if (vbody) { const pc = el("petcard3"); if (pc) vbody
 
 const room = document.createElement("div");
 room.className = "vroom croom"; room.id = "croom";
-room.innerHTML = `<div class="vbar"><button class="vback" id="cback">← 回樹洞</button><h2>計算挑戰</h2></div><div class="cbody" id="cbody"><div class="cwrap" id="cwrap"></div></div>`;
+room.innerHTML = `<div class="vbar"><button class="vback" id="cback">← 回樹洞</button><h2>計算挑戰</h2></div><div class="cbody" id="cbody">${endBanner()}<div class="cwrap" id="cwrap"></div></div>`;
 document.body.appendChild(room);
 el("cback").onclick = () => history.back();
 window.addEventListener("popstate", () => { if (room.classList.contains("show")) closeRoom(); });
@@ -127,7 +134,8 @@ async function loadState() {
 }
 function updateTile() {
   const sub = el("ctileSub"); if (!sub || !S || !S.ok) return;
-  sub.textContent = S.first.length >= S.perDay ? `今天做完了！連續答對 ${S.streak} 題` : `連續 ${S.streak}／${S.goal} 題・今天還有 ${S.perDay - S.first.length} 題`;
+  const cd = Date.now() >= COUNT_FROM ? `⏰ 還剩 ${DAYS_LEFT()} 天・` : "";
+  sub.textContent = cd + (S.first.length >= S.perDay ? `今天做完了！連續答對 ${S.streak} 題` : `連續 ${S.streak}／${S.goal} 題・今天還有 ${S.perDay - S.first.length} 題`);
   const vs = el("cvbarSub"); if (vs) vs.textContent = sub.textContent;
 }
 function openRoom() { room.classList.add("show"); history.pushState({ c: 1 }, ""); Q = null; drawHome(true); }
@@ -508,6 +516,7 @@ const BOMB_GRADE = 3;
 let TAB = GRADE === BOMB_GRADE && lsG("wh_calc_tab") === "bomb" ? "bomb" : "calc";
 let B = null, BSET = null, BQ = null;
 const BOMB_RULES = [
+  "⏰ <b>拆彈特攻隊只到 2027 年 1 月 15 日</b>，之後就下架了，快來拆彈！",
   "每天 5 顆炸彈，都是<b>炸彈超人</b>教過的除法。",
   "先在紙上用炸彈超人的方法算，再把<b>商</b>和<b>餘數</b>打進來。",
   "每一顆只有<b>一次機會</b>：算對＝拆彈成功！算錯＝炸彈爆炸，回去看那一型的影片再練。",
