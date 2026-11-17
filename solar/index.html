@@ -79,6 +79,15 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#2e9e4f;color:#fff;padding:10px 20px;border-radius:99px;font-weight:900;font-size:20px;z-index:30;animation:up 1.4s forwards}
 @keyframes up{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-24px)}}
+.intro{position:fixed;inset:0;z-index:50;background:rgba(40,20,0,.75);overflow:auto;padding:14px}
+.intro .box{background:#fff;border-radius:26px;max-width:520px;margin:0 auto;padding:18px 18px 22px;animation:pop .4s}
+.intro h2{margin:4px 0 8px;font-size:24px;color:#c26a1e;text-align:center}
+.intro h3{margin:16px 0 6px;font-size:19px;color:#2b5fa8}
+.intro p,.intro li{font-size:17px;line-height:1.65;margin:4px 0}.intro ol,.intro ul{padding-left:22px;margin:4px 0}
+.intro .hero{display:flex;justify-content:center;gap:6px;align-items:flex-end}.intro .hero img{height:96px;width:auto}
+.intro .story{background:#fff3d6;border:3px dashed #ffb347;border-radius:18px;padding:10px 14px;font-size:18px;line-height:1.7;font-weight:700}
+.intro .rw{background:#f3f8ff;border-radius:14px;padding:6px 12px}
+.helpbtn{display:block;margin:10px auto 0;background:#fff;border:3px solid #ffcf70;color:#c26a1e;font-weight:900;font-size:17px;padding:9px 20px}
 .panel{display:flex;gap:12px;align-items:center}.panel img{width:76px;flex:none}
 .bossimg{width:84px;float:right;margin:-6px -4px 0 6px}.defimg{width:110px;display:block;margin:6px auto}
 </style>
@@ -86,6 +95,7 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 <body>
 <main id="app">
   <div class="scene" id="scene"></div>
+  <button class="helpbtn" id="helpBtn">❓ 遊戲說明（怎麼玩）</button>
   <div class="card event" id="event"></div>
   <div class="card me" id="me"></div>
   <div class="units" id="units"></div>
@@ -95,6 +105,7 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 
 <div class="quiz hide" id="quiz"><div class="in" id="quizIn"></div></div>
 <div class="cele hide" id="cele"></div>
+<div class="intro hide" id="intro"></div>
 <canvas id="conf" class="hide"></canvas>
 
 <script>
@@ -171,6 +182,7 @@ async function load(){
   if(!EP){$("app").innerHTML="<p>這個班級還沒開放。</p>";return;}
   try{S=await api("mode=battle"+(NAME?"&name="+encodeURIComponent(NAME):""));}catch(e){$("units").innerHTML='<p class="muted">連線失敗，請稍後再試。</p>';return;}
   draw();
+  if(!ls.get("sol_intro_"+CID)&&!DEMO)showIntro();
   const seen=+(ls.get("sol_seen_"+CID)||0);
   if(S.done>seen&&S.me&&S.me.known){ls.set("sol_seen_"+CID,S.done);if(seen||S.done>0)celebrate({title:"第 "+S.done+" 階段完成！",sub:S.stages[S.done-1].name,reward:S.stages[S.done-1].reward,img:"hulk_hero.png"});}
 }
@@ -278,6 +290,22 @@ function confetti(on){
   (function f(){g.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.v;p.r+=.1;if(p.y>cv.height)p.y=-10;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;g.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);g.restore();});cf=requestAnimationFrame(f);})();
 }
 
+function showIntro(){
+  const u=(S&&S.units&&S.units[0])||{light:250,gold:700};
+  const rw=(S?S.stages:[]).filter(g=>g.reward).map(g=>'<li><b>第 '+g.n+' 階段・'+g.name+'</b>：'+g.reward+'</li>').join("");
+  $("intro").innerHTML='<div class="box"><div class="hero"><img src="img/hulk_wake.png" alt=""><img src="img/sun_tired.png" alt=""><img src="img/boss_boss.png" alt=""></div>'+
+  '<h2>浩克太陽能量站</h2>'+
+  '<div class="story">數學王國停電了！⚡<br>烏雲把天空罩住，太陽沒有力氣升起來，浩克也睡著了。<br>全班一起答數學題，幫浩克發電，把王國的每個地方<b>一個一個點亮</b>，讓太陽升到<b>正午</b>！</div>'+
+  '<h3>🎮 怎麼玩</h3><ol><li>第一次先打上你的<b>本名</b>。</li><li>選一個地方（每個地方是一個單元），按<b>「去發電」</b>。</li><li>一次 6 題：5 題一般題＋1 題<b>烏雲魔王題</b>。</li><li><b>答對一題＝發 1 塊能量</b>給全班；魔王題答對<b>一次發 3 塊</b>。</li><li>答錯不扣分，會告訴你答案和講解，看懂就是賺到！</li><li>想快點玩？按<b>⚡閃電 3 題</b>，60 秒內答完。</li></ol>'+
+  '<h3>📏 規則</h3><ul><li>每個人<b>每天最多發 10 塊</b>能量，明天再來繼續。</li><li>同一題一天只有<b>第一次作答</b>算能量。</li><li>每週有<b>本週事件</b>（烏雲來襲、停電搶修…），全班一起達成會讓每個地方多加能量。</li><li>每個地方的題目會<b>陸續開放</b>，沒開放的先等一等。</li></ul>'+
+  '<h3>🏆 目標</h3><p>每個地方累積 <b>'+u.light+' 塊能量就亮燈</b>，累積 <b>'+u.gold+' 塊就升級成金色</b>。亮燈的地方越多，浩克越有力氣，太陽也升得越高；<b>5 個地方都變金色，太陽就升到正午</b>！</p>'+
+  (rw?'<h3>🎁 全班獎勵</h3><ul class="rw">'+rw+'</ul>':"")+
+  '<p class="muted" style="margin-top:10px">這是全班一起的挑戰，每個人答的每一題都有幫到大家。看不到排名，只要你認真答，就是在幫全班！</p>'+
+  '<button class="big" id="introOk">我知道了，開始發電！</button></div>';
+  $("intro").classList.remove("hide");document.body.style.overflow="hidden";$("intro").scrollTop=0;
+  $("introOk").onclick=()=>{$("intro").classList.add("hide");document.body.style.overflow="";ls.set("sol_intro_"+CID,"1");};
+}
+$("helpBtn").onclick=showIntro;
 $("flashBtn").onclick=()=>startQuiz({flash:true});
 if(DEMO!=null){NAME=NAME||"測試浩克";}
 load();
