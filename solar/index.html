@@ -175,6 +175,22 @@ async function load(){
   if(S.done>seen&&S.me&&S.me.known){ls.set("sol_seen_"+CID,S.done);if(seen||S.done>0)celebrate({title:"第 "+S.done+" 階段完成！",sub:S.stages[S.done-1].name,reward:S.stages[S.done-1].reward,img:"hulk_hero.png"});}
 }
 
+/* ---------- 快速判分（雜湊比對；算不算能量仍由後端決定） ---------- */
+const HSALT="solar5b";
+async function sha(str){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("").slice(0,20);}
+function norm(s){return String(s==null?"":s).replace(/[\s　]+/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248)).replace(/[／∕]/g,"/").replace(/[．。]/g,".").replace(/(?:又|\+)/g,"又").replace(/[,，]/g,"").replace(/(公分|平方|公尺|公斤|分鐘|小時|個|班|株|件|天|元|秒|幾|圈|公里|倍)+$/g,"");}
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function frac(s){let m;if((m=/^(\d+)又(\d+)\/(\d+)$/.exec(s))){const d=+m[3];return d?{n:+m[1]*d+ +m[2],d}:null;}if((m=/^(\d+)\/(\d+)$/.exec(s))){return +m[2]?{n:+m[1],d:+m[2]}:null;}if((m=/^(\d+(?:\.\d+)?)$/.exec(s))){const dec=(m[1].split(".")[1]||"").length,d=Math.pow(10,dec);return{n:Math.round(+m[1]*d),d,dec:1};}return null;}
+function canon(s){const a=norm(s),f=frac(a);if(!f)return a;const g=gcd(f.n,f.d)||1,n=f.n/g,d=f.d/g;return d===1?String(n):n+"/"+d;}
+async function localJudge(q,ans){
+  if(q.t==="choice")return {ok:(await sha(HSALT+q.id+"|"+ans))===q.h[0]};
+  const a=norm(ans);if(!a)return {empty:1};
+  const ok=q.h.includes(await sha(HSALT+q.id+"|"+canon(ans)));
+  if(!ok)return {ok:false};
+  const f=frac(a);if(f&&!f.dec&&f.d!==1&&gcd(f.n,f.d)!==1)return {ok:false,reduce:1};
+  return {ok:true};
+}
+
 /* ---------- 答題 ---------- */
 let QZ=null;
 async function startQuiz(opt){
@@ -201,31 +217,46 @@ function showQ(){
   document.querySelectorAll(".choice").forEach(b=>b.onclick=()=>submit(b.dataset.a));
   if(q.t!=="choice"){const f=$("fin");f.focus();$("fok").onclick=()=>submit(f.value);f.onkeydown=e=>{if(e.key==="Enter")submit(f.value);};document.querySelectorAll("[data-ins]").forEach(b=>b.onclick=()=>{f.value+=b.dataset.ins;f.focus();});}
 }
-let busy=false;
+let pending=0;
 async function submit(ans){
-  if(busy||!QZ||QZ.res[QZ.i]!==undefined)return;const q=QZ.qs[QZ.i];busy=true;
-  document.querySelectorAll(".choice,.ans").forEach(b=>b.disabled=true);$("fb").innerHTML='<div class="fb" style="background:#f4efe6;border:3px solid #e6dcc8">⏳ 判斷中…</div>';let r;try{r=await post({mode:"answer",name:NAME,id:q.id,ans});}catch(e){busy=false;toast("連線失敗，再按一次");return;}
-  busy=false;
-  if(r.retry){toast("先寫答案喔");document.querySelectorAll(".choice,.ans").forEach(b=>b.disabled=false);$("fb").innerHTML="";return;}
-  if(r.reduce){document.querySelectorAll(".ans").forEach(b=>b.disabled=false);$("fb").innerHTML=`<div class="fb bad"><b>數字對了！</b><br>請約成最簡分數再送出一次。</div>`;return;}
-  if(!r.ok){toast("出錯了："+(r.err||""));return;}
+  if(!QZ||QZ.res[QZ.i]!==undefined)return;const q=QZ.qs[QZ.i],idx=QZ.i;
+  const L=await localJudge(q,ans);
+  if(L.empty){toast("先寫答案喔");return;}
+  if(L.reduce){$("fb").innerHTML=`<div class="fb bad"><b>數字對了！</b><br>請約成最簡分數再送出一次。</div>`;return;}
   document.querySelectorAll(".choice,.ans").forEach(b=>b.disabled=true);
-  QZ.res[QZ.i]=r.correct?1:0;QZ.gain+=r.gain||0;
-  if(r.unit&&S){const u=S.units.find(x=>x.u===r.unit.u);if(u){u.energy=r.unit.energy;u.lit=u.energy>=u.light;u.golden=u.energy>=u.gold;}if(S.me)S.me.energy=(S.me.energy||0)+(r.gain||0),S.me.left=r.left;}
-  const last=QZ.i>=QZ.qs.length-1;
-  $("fb").innerHTML=r.correct?`<div class="fb ok">${q.boss?'<img class="defimg" src="img/boss_defeated.png" alt=""><b>魔王被打敗了，變成害羞的小白雲！</b><br>':""}<b>✅ 答對了！${r.gain?" ⚡ +"+r.gain+" 能量":"（今天已經發滿了）"}</b><br>${esc(r.explain||"")}</div>`
-    :`<div class="fb bad"><b>❌ 這題答案是：${esc(r.answer||"")}</b><br>${esc(r.explain||"")}</div>`;
-  $("fb").innerHTML+=`<button class="big" id="nx">${last?"看結果":"下一題 ›"}</button>`;
-  const ev=[];
-  if(r.event)ev.push({title:"本週事件完成！",sub:r.event.name,reward:"每一區都加了 "+r.event.bonus+" 塊能量！",img:"sun_noon.png"});
-  if(r.golden)ev.push({title:r.unit.name+"升級成金色！",sub:"閃閃發亮",reward:"",img:UKEY[r.unit.u]+"_gold.png"});
-  else if(r.lit)ev.push({title:r.unit.name+"亮燈了！",sub:"全班好棒！",reward:"",img:UKEY[r.unit.u]+"_on.png"});
-  if(r.stageUp){ls.set("sol_seen_"+CID,r.stageUp);ev.push({title:"第 "+r.stageUp+" 階段完成！",sub:r.stage.name,reward:r.stage.reward,img:(r.stageUp>=5?"hulk_sun":r.stageUp>=4?"hulk_hero":r.stageUp>=2?"hulk_charge":"hulk_wake")+".png"});}
-  $("nx").onclick=async()=>{if(!ev.length){next();return;}for(const e of ev)await celebrate(e);next();};
+  QZ.res[idx]=L.ok?1:0;
+  const last=idx>=QZ.qs.length-1;
+  // 立刻回饋（本機判斷）；講解和能量等後端回來再補
+  $("fb").innerHTML=(L.ok?`<div class="fb ok">${q.boss?'<img class="defimg" src="img/boss_defeated.png" alt=""><b>魔王被打敗了，變成害羞的小白雲！</b><br>':""}<b>✅ 答對了！</b><div id="fx" class="muted">⚡ 記錄中…</div></div>`:`<div class="fb bad"><b>❌ 這題不對</b><div id="fx" class="muted">⏳ 講解來了…</div></div>`)+`<button class="big" id="nx">${last?"看結果":"下一題 ›"}</button>`;
+  const evs=[];let nxReady=L.ok;   // 答對可以馬上下一題；答錯要等講解出來
+  const go=async()=>{if(!nxReady)return;if(last){await waitPending();}for(const e of evs.splice(0))await celebrate(e);next();};
+  $("nx").onclick=go;
+  if(!L.ok){$("nx").disabled=true;}
+  pending++;
+  post({mode:"answer",name:NAME,id:q.id,ans}).then(r=>{
+    pending--;
+    if(!r.ok){const e=$("fx");if(e)e.textContent="連線失敗，這題沒有記錄到";nxReady=true;if($("nx"))$("nx").disabled=false;return;}
+    if(r.retry||r.reduce){return;}
+    QZ&&(QZ.gain+=r.gain||0);
+    if(r.unit&&S){const u=S.units.find(x=>x.u===r.unit.u);if(u){u.energy=r.unit.energy;u.lit=u.energy>=u.light;u.golden=u.energy>=u.gold;}if(S.me)S.me.energy=(S.me.energy||0)+(r.gain||0),S.me.left=r.left;}
+    if(!!r.correct!==!!L.ok){QZ&&(QZ.res[idx]=r.correct?1:0);}   // 後端為準
+    const fx=$("fx");
+    if(fx&&QZ&&QZ.i===idx){
+      fx.className="";
+      fx.innerHTML=r.correct?(r.gain?"⚡ +"+r.gain+" 能量　":"（今天已經發滿了）　")+esc(r.explain||""):"這題答案是：<b>"+esc(r.answer||"")+"</b><br>"+esc(r.explain||"");
+      const box=fx.parentElement;box.className="fb "+(r.correct?"ok":"bad");
+    }
+    nxReady=true;if($("nx"))$("nx").disabled=false;
+    if(r.event)evs.push({title:"本週事件完成！",sub:r.event.name,reward:"每一區都加了 "+r.event.bonus+" 塊能量！",img:"sun_noon.png"});
+    if(r.golden)evs.push({title:r.unit.name+"升級成金色！",sub:"閃閃發亮",reward:"",img:UKEY[r.unit.u]+"_gold.png"});
+    else if(r.lit)evs.push({title:r.unit.name+"亮燈了！",sub:"全班好棒！",reward:"",img:UKEY[r.unit.u]+"_on.png"});
+    if(r.stageUp){ls.set("sol_seen_"+CID,r.stageUp);evs.push({title:"第 "+r.stageUp+" 階段完成！",sub:r.stage.name,reward:r.stage.reward,img:(r.stageUp>=5?"hulk_sun":r.stageUp>=4?"hulk_hero":r.stageUp>=2?"hulk_charge":"hulk_wake")+".png"});}
+  }).catch(()=>{pending--;const e=$("fx");if(e)e.textContent="連線失敗，這題沒有記錄到";nxReady=true;if($("nx"))$("nx").disabled=false;});
 }
+function waitPending(){return new Promise(r=>{const t=setInterval(()=>{if(pending<=0){clearInterval(t);r();}},150);});}
 function next(){if(QZ.i>=QZ.qs.length-1)return endQuiz();QZ.i++;showQ();}
 async function endQuiz(msg){
-  if(!QZ)return;clearInterval(QZ.timer);const z=QZ;QZ=null;
+  if(!QZ)return;clearInterval(QZ.timer);await waitPending();const z=QZ;QZ=null;
   $("quiz").classList.add("hide");document.body.style.overflow="";
   if(z.gain>0||z.res.length)toast((msg?msg+" ":"")+"這次發了 "+z.gain+" 塊能量！");
   draw();load();
