@@ -243,9 +243,10 @@ async function submit(ans){
     const fx=$("fx");
     if(fx&&QZ&&QZ.i===idx){
       fx.className="";
-      fx.innerHTML=r.correct?(r.gain?"⚡ +"+r.gain+" 能量　":"（今天已經發滿了）　")+esc(r.explain||""):"這題答案是：<b>"+esc(r.answer||"")+"</b><br>"+esc(r.explain||"");
+      fx.innerHTML=r.correct?(r.gain?"⚡ +"+r.gain+" 能量　":"（今天已經發滿了）　")+'<button class="ghost" id="exb" style="padding:0 4px">看講解 ▾</button><div id="exd" class="hide" style="margin-top:6px">'+esc(r.explain||"")+'</div>':"這題答案是：<b>"+esc(r.answer||"")+"</b><br>"+esc(r.explain||"");
       const box=fx.parentElement;box.className="fb "+(r.correct?"ok":"bad");
     }
+    if(r.correct&&$("exb"))$("exb").onclick=()=>{const d=$("exd");d.classList.toggle("hide");$("exb").textContent=d.classList.contains("hide")?"看講解 ▾":"收起講解 ▴";};
     nxReady=true;if($("nx"))$("nx").disabled=false;
     if(r.event)evs.push({title:"本週事件完成！",sub:r.event.name,reward:"每一區都加了 "+r.event.bonus+" 塊能量！",img:"sun_noon.png"});
     if(r.golden)evs.push({title:r.unit.name+"升級成金色！",sub:"閃閃發亮",reward:"",img:UKEY[r.unit.u]+"_gold.png"});
