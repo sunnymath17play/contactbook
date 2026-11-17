@@ -17,7 +17,7 @@ body{font-family:'Huninn','DFYuanBold-B5',sans-serif}
 .s.on{opacity:1}
 .logo{position:absolute;right:36px;bottom:28px;height:70px;opacity:.95}
 .t{position:absolute;left:0;right:0;text-align:center}
-.names{position:absolute;display:grid;justify-items:center;align-content:center;row-gap:22px;column-gap:80px}
+.names{white-space:nowrap;position:absolute;display:grid;justify-items:center;align-content:center;row-gap:22px;column-gap:80px}
 .nm{opacity:0;transform:scale(.3)}
 .nm.pop{animation:pop .55s cubic-bezier(.2,1.6,.4,1) forwards}
 @keyframes pop{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
@@ -63,8 +63,9 @@ addEventListener('resize', fit); fit();
 const NOGLYPH = /[]/; // 字型缺字時填在這
 const nf = n => NOGLYPH.test(n) ? "font-family:'Noto Sans TC','PingFang TC',sans-serif;font-weight:900;" : '';
 const logo = '<img class="logo" src="img/logo.png">';
+const IMG = D.v2 ? 'img/v2/' : 'img/'; // 浩克2.0 底圖（阿居重畫）：連結帶 v2:1 才用
 const slides = []; // {el, music, steps, enter(), step(i)}
-function add(html, bg, o) { const el = document.createElement('div'); el.className = 's'; el.style.backgroundImage = `url(img/${bg}.jpg)`; el.innerHTML = html + logo; stage.appendChild(el); slides.push(Object.assign({ el, steps: 0 }, o)); return el; }
+function add(html, bg, o) { const el = document.createElement('div'); el.className = 's'; el.style.backgroundImage = `url(${IMG}${bg}.jpg)`; el.innerHTML = html + logo; stage.appendChild(el); slides.push(Object.assign({ el, steps: 0 }, o)); return el; }
 const kindTxt = D.k === '獎學金' ? '獎學金頒發' : D.k === '獎品' ? '獎品頒發' : '獎學金＆獎品頒發';
 add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;letter-spacing:.2em">${D.g}</div>
  <div class="t" style="top:430px;left:60px;font-size:118px;color:#C2410C;text-shadow:0 4px 0 #FFE3A3">${D.t}</div>
@@ -73,10 +74,11 @@ add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;lett
 
 function addNear() {
 if (D.n.length) {
-  const k = D.n.length, two = k > 5, rows = two ? Math.ceil(k / 2) : k;
-  const fs = two ? (rows <= 4 ? 92 : rows <= 5 ? 80 : 68) : (k <= 3 ? 120 : k <= 4 ? 105 : 92);
-  const el = add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;letter-spacing:.2em">${D.g}　閃耀之星</div>
- <div class="names" style="left:420px;right:330px;top:320px;bottom:200px;grid-template-columns:${two ? '1fr 1fr' : '1fr'};grid-auto-flow:${two ? 'column' : 'row'};grid-template-rows:repeat(${rows},auto)">
+  let k = D.n.length, two = k > 5, rows = two ? Math.ceil(k / 2) : k, cols = two ? 2 : 1;
+  let fs = two ? (rows <= 4 ? 92 : rows <= 5 ? 80 : 68) : (k <= 3 ? 120 : k <= 4 ? 105 : 92);
+  if (D.v2) { rows = Math.min(k, 3); cols = Math.ceil(k / 3); fs = cols >= 4 ? 70 : cols == 3 ? 82 : cols == 2 ? 96 : 110; }
+  const el = add(`<div class="t" style="top:${D.v2 ? 150 : 132}px;left:${D.v2 ? 0 : 60}px;font-size:${D.v2 ? 76 : 84}px;color:#8A1C00;letter-spacing:.2em">${D.g}　閃耀之星</div>
+ <div class="names" style="left:${D.v2 ? 240 : 420}px;right:${D.v2 ? 460 : 330}px;top:${D.v2 ? 470 : 320}px;bottom:${D.v2 ? 200 : 200}px;grid-template-columns:${cols > 1 ? 'repeat(' + cols + ',1fr)' : '1fr'};grid-auto-flow:${cols > 1 ? 'column' : 'row'};grid-template-rows:repeat(${rows},auto)">
  ${D.n.map(n => `<div class="nm" style="color:#8A1C00;font-size:${fs}px;letter-spacing:.12em;${nf(n)}">${n}</div>`).join('')}</div>`, 'bg_near', {
     music: 'list',
     // 進這頁：名字一個一個跳出來，每個「叮」一聲
@@ -92,10 +94,11 @@ if (D.n.length) {
 function addFull() {
 const grp = (D.g === '三年級' || D.g === '四年級' || D.gp) && D.f.length > 1;
 if (grp) {
-  const k = D.f.length, two = k > 3, rows = two ? Math.ceil(k / 2) : k, f = two ? 104 : 120;
+  let k = D.f.length, two = k > 3, rows = two ? Math.ceil(k / 2) : k, f = two ? 104 : 120, gcols = two ? 2 : 1;
+  if (D.v2) { rows = k > 4 ? 2 : 1; gcols = Math.ceil(k / rows); f = gcols >= 4 ? 84 : gcols == 3 ? 100 : 130; }
   add(`<div class="t" style="top:118px;font-size:52px;color:#9A3412;letter-spacing:.2em">${D.g}　${D.ft || '滿分榮耀'}</div>
- <div class="t q" style="top:330px;font-size:170px;color:#8A1C00;letter-spacing:.14em;text-shadow:0 3px 0 #FFE89A">？？？</div>
- <div class="names who" style="left:640px;right:220px;top:300px;bottom:230px;grid-template-columns:${two ? '1fr 1fr' : '1fr'};grid-auto-flow:${two ? 'column' : 'row'};grid-template-rows:repeat(${rows},auto)">
+ <div class="t q" style="top:${D.v2 ? 480 : 330}px;font-size:170px;color:#8A1C00;letter-spacing:.14em;text-shadow:0 3px 0 #FFE89A">？？？</div>
+ <div class="names who" style="left:${D.v2 ? 520 : 640}px;right:${D.v2 ? 140 : 220}px;top:${D.v2 ? 470 : 300}px;bottom:${D.v2 ? 200 : 230}px;grid-template-columns:${D.v2 ? 'repeat(' + gcols + ',1fr)' : two ? '1fr 1fr' : '1fr'};grid-auto-flow:${D.v2 || two ? 'column' : 'row'};grid-template-rows:repeat(${rows},auto)">
  ${D.f.map(n => `<div style="color:#8A1C00;font-size:${f}px;letter-spacing:.12em;${nf(n)}text-shadow:0 3px 0 #FFE89A,0 0 14px rgba(255,255,255,.6)">${n}</div>`).join('')}</div>`, 'bg_full', {
     music: null, steps: 1,
     enter(back) { const q = this.el.querySelector('.q'), w = this.el.querySelector('.who'); clearTimers(); q.classList.remove('shake');
@@ -123,7 +126,7 @@ if (D.ff) { addFull(); addNear(); } else { addNear(); addFull(); } // 期末起�
 
 add(`<div class="t" style="top:60px;font-size:84px;color:#9A3412;letter-spacing:.12em;text-shadow:0 0 12px #fff,0 0 24px #fff">今天為他們鼓掌</div>
  <div class="t" style="top:170px;font-size:132px;color:#B91C1C;letter-spacing:.06em;text-shadow:0 0 10px #fff,0 0 22px #fff,0 6px 0 #FFD27A">下一次，台上就是我！</div>
- <div style="position:absolute;left:24px;bottom:14px;font-size:16px;color:rgba(80,30,0,.55);font-family:sans-serif">Music: Kevin MacLeod (incompetech.com) CC BY 4.0</div>`, 'bg_end', {
+ <div style="position:absolute;left:${D.v2 ? 520 : 24}px;bottom:14px;font-size:16px;color:${D.v2 ? "rgba(255,240,200,.85)" : "rgba(80,30,0,.55)"};font-family:sans-serif">Music: Kevin MacLeod (incompetech.com) CC BY 4.0</div>`, 'bg_end', {
   music: 'end', enter(back) { clearTimers(); if (!back) { later(() => applause(5, .8), 300); later(confetti, 300); } }
 });
 
@@ -196,7 +199,7 @@ $('#mute').onclick = () => { muted = !muted; master.gain.value = muted ? 0 : 1; 
 
 // ---------- 開始：先把字型、圖、音樂都載好 ----------
 let ready = false;
-Promise.all([document.fonts.load("100px 'Huninn'", D.g + D.t + D.n.join('') + D.f.join('')), ...['bg_near', 'bg_full', 'bg_end'].map(b => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = `img/${b}.jpg`; }))])
+Promise.all([document.fonts.load("100px 'Huninn'", D.g + D.t + D.n.join('') + D.f.join('')), ...['bg_near', 'bg_full', 'bg_end'].map(b => new Promise(r => { const im = new Image(); im.onload = im.onerror = r; im.src = `${IMG}${b}.jpg`; }))])
   .then(() => { ready = true; $('#ssub').textContent = '準備好了，點「開始」'; $('#go').classList.add('ready'); });
 $('#go').onclick = async () => {
   if (!ready || ac) return;
