@@ -71,6 +71,7 @@ add(`<div class="t" style="top:132px;left:60px;font-size:84px;color:#8A1C00;lett
  <div class="t" style="top:580px;left:60px;font-size:118px;color:#C2410C;text-shadow:0 4px 0 #FFE3A3">頒獎典禮</div>
  <div class="t" style="top:752px;left:60px;font-size:64px;color:#8A1C00">${kindTxt}</div>`, 'bg_near', { music: 'open' });
 
+function addNear() {
 if (D.n.length) {
   const k = D.n.length, two = k > 5, rows = two ? Math.ceil(k / 2) : k;
   const fs = two ? (rows <= 4 ? 92 : 80) : (k <= 3 ? 120 : k <= 4 ? 105 : 92);
@@ -87,6 +88,8 @@ if (D.n.length) {
   });
 }
 
+}
+function addFull() {
 const grp = (D.g === '三年級' || D.g === '四年級') && D.f.length > 1;
 if (grp) {
   const k = D.f.length, two = k > 3, rows = two ? Math.ceil(k / 2) : k, f = two ? 104 : 120;
@@ -114,6 +117,9 @@ if (grp) {
       later(() => { q.classList.remove('shake'); q.style.opacity = 0; w.classList.add('pop'); crash(); fanfare(); applause(4, .9); confetti(); busy = false; }, dur * 1000); }
   });
 });
+
+}
+if (D.ff) { addFull(); addNear(); } else { addNear(); addFull(); } // 期末起：滿分榮耀放前面（先頒獎學金/禮物）
 
 add(`<div class="t" style="top:60px;font-size:84px;color:#9A3412;letter-spacing:.12em;text-shadow:0 0 12px #fff,0 0 24px #fff">今天為他們鼓掌</div>
  <div class="t" style="top:170px;font-size:132px;color:#B91C1C;letter-spacing:.06em;text-shadow:0 0 10px #fff,0 0 22px #fff,0 6px 0 #FFD27A">下一次，台上就是我！</div>
