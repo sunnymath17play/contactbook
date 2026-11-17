@@ -1610,7 +1610,7 @@ if(PETS_ON){
 
 /* ---------- ☀️ 浩克太陽能量站：全班答題發電（solar/；後端 程式碼神獸城gas5B） ---------- */
 const SOLAR_CLASSES = ["2024b"];   // 五年級B（2026-11-17 起試辦）
-const SOLAR_ON = !!CH && SOLAR_CLASSES.includes(CH.id) && qs("solar")==="1";   // 試玩階段：網址加 &solar=1 才看得到（SUNNY 審過再全面開放）
+const SOLAR_ON = !!CH && SOLAR_CLASSES.includes(CH.id) && qs("preview")!=="1";
 function openSolar(){ $("sframe").src="solar/?c="+CH.id+"&embed=1&t="+Date.now(); $("sroom").classList.add("show"); history.pushState({s:1},""); }
 function closeSolar(){ $("sroom").classList.remove("show"); $("sframe").src="about:blank"; }
 $("sback").onclick=()=>history.back();
