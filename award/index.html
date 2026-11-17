@@ -90,7 +90,7 @@ if (D.n.length) {
 
 }
 function addFull() {
-const grp = (D.g === '三年級' || D.g === '四年級') && D.f.length > 1;
+const grp = (D.g === '三年級' || D.g === '四年級' || D.gp) && D.f.length > 1;
 if (grp) {
   const k = D.f.length, two = k > 3, rows = two ? Math.ceil(k / 2) : k, f = two ? 104 : 120;
   add(`<div class="t" style="top:118px;font-size:52px;color:#9A3412;letter-spacing:.2em">${D.g}　${D.ft || '滿分榮耀'}</div>
