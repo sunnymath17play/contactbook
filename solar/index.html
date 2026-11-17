@@ -16,11 +16,11 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .scene>*{position:absolute}
 .scene .sky{inset:0;transition:background 1.2s}
 .scene .sunimg{width:24cqw;left:38cqw;transition:top 1.5s ease,opacity .6s}
-.scene .cl{transition:transform 2s ease,opacity 1.5s}
+.scene .cl{transition:transform 2s ease,opacity 1.5s;will-change:transform,opacity}
 .scene .ground{left:0;bottom:0;width:100%;height:auto}
-.scene .dim{left:0;right:0;bottom:0;top:42cqw;background:#1a2a60;mix-blend-mode:multiply;transition:opacity 1.2s}
-.scene .bld{height:19cqw;width:auto;bottom:24cqw;filter:drop-shadow(0 1.2cqw .8cqw rgba(0,0,0,.25));transition:opacity .4s}
-.scene .hulk{left:1.5cqw;bottom:.5cqw;height:24cqw;width:auto;filter:drop-shadow(0 .8cqw .6cqw rgba(0,0,0,.3));transform-origin:50% 100%}
+.scene .dim{left:0;right:0;bottom:0;top:42cqw;background:#101c4a;transition:opacity 1.2s}
+.scene .bld{height:19cqw;width:auto;bottom:24cqw;transition:opacity .4s}
+.scene .hulk{left:1.5cqw;bottom:.5cqw;height:24cqw;width:auto;transform-origin:50% 100%}
 .scene .beam{left:0;top:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:screen;opacity:0;transition:opacity 2s;pointer-events:none}
 .scene .beam.on{opacity:.9}
 .scene .ttl{left:0;right:0;top:8px;text-align:center;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45);font-weight:900;font-size:22px;letter-spacing:1px}
@@ -204,13 +204,14 @@ function showQ(){
 let busy=false;
 async function submit(ans){
   if(busy||!QZ||QZ.res[QZ.i]!==undefined)return;const q=QZ.qs[QZ.i];busy=true;
-  let r;try{r=await post({mode:"answer",name:NAME,id:q.id,ans});}catch(e){busy=false;toast("連線失敗，再按一次");return;}
+  document.querySelectorAll(".choice,.ans").forEach(b=>b.disabled=true);$("fb").innerHTML='<div class="fb" style="background:#f4efe6;border:3px solid #e6dcc8">⏳ 判斷中…</div>';let r;try{r=await post({mode:"answer",name:NAME,id:q.id,ans});}catch(e){busy=false;toast("連線失敗，再按一次");return;}
   busy=false;
-  if(r.retry){toast("先寫答案喔");return;}
-  if(r.reduce){$("fb").innerHTML=`<div class="fb bad"><b>數字對了！</b><br>請約成最簡分數再送出一次。</div>`;return;}
+  if(r.retry){toast("先寫答案喔");document.querySelectorAll(".choice,.ans").forEach(b=>b.disabled=false);$("fb").innerHTML="";return;}
+  if(r.reduce){document.querySelectorAll(".ans").forEach(b=>b.disabled=false);$("fb").innerHTML=`<div class="fb bad"><b>數字對了！</b><br>請約成最簡分數再送出一次。</div>`;return;}
   if(!r.ok){toast("出錯了："+(r.err||""));return;}
   document.querySelectorAll(".choice,.ans").forEach(b=>b.disabled=true);
   QZ.res[QZ.i]=r.correct?1:0;QZ.gain+=r.gain||0;
+  if(r.unit&&S){const u=S.units.find(x=>x.u===r.unit.u);if(u){u.energy=r.unit.energy;u.lit=u.energy>=u.light;u.golden=u.energy>=u.gold;}if(S.me)S.me.energy=(S.me.energy||0)+(r.gain||0),S.me.left=r.left;}
   const last=QZ.i>=QZ.qs.length-1;
   $("fb").innerHTML=r.correct?`<div class="fb ok">${q.boss?'<img class="defimg" src="img/boss_defeated.png" alt=""><b>魔王被打敗了，變成害羞的小白雲！</b><br>':""}<b>✅ 答對了！${r.gain?" ⚡ +"+r.gain+" 能量":"（今天已經發滿了）"}</b><br>${esc(r.explain||"")}</div>`
     :`<div class="fb bad"><b>❌ 這題答案是：${esc(r.answer||"")}</b><br>${esc(r.explain||"")}</div>`;
@@ -227,7 +228,7 @@ async function endQuiz(msg){
   if(!QZ)return;clearInterval(QZ.timer);const z=QZ;QZ=null;
   $("quiz").classList.add("hide");document.body.style.overflow="";
   if(z.gain>0||z.res.length)toast((msg?msg+" ":"")+"這次發了 "+z.gain+" 塊能量！");
-  await load();
+  draw();load();
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function toast(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),1500);}
