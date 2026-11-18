@@ -230,7 +230,7 @@ async function startQuiz(opt){
   let r;try{r=await api("mode=quiz&name="+encodeURIComponent(NAME)+(opt.unit?"&unit="+encodeURIComponent(opt.unit):"")+(opt.flash?"&flash=1":""));
   }catch(e){toast("連線失敗，請重新整理再試一次");return;}
   if(!r.ok){toast("找不到你的名字，請換名字重打本名");return;}
-  if(!r.qs.length){toast(r.left<=0?"今天的能量發滿了，明天再來！":"這區的題目還沒開放");return;}
+  if(!r.qs.length){toast(r.left<=0?"今天的能量發滿了，明天再來！":r.allDone?"這區的題目你都答對了！去別區挑戰吧":"這區的題目還沒開放");return;}
   QZ={qs:r.qs,i:0,res:[],gain:0,flash:!!opt.flash,t0:Date.now(),left:r.left,unit:opt.unit};
   $("quiz").classList.remove("hide");document.body.style.overflow="hidden";showQ();
   if(QZ.flash){QZ.timer=setInterval(()=>{const s=60-Math.floor((Date.now()-QZ.t0)/1000);const el=$("tm");if(el)el.textContent=Math.max(0,s)+"秒";if(s<=0){clearInterval(QZ.timer);endQuiz("時間到！");}},500);}
