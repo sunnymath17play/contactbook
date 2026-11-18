@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>烏弄 UNOCHA 點飲料</title>
+<style>
+:root{--g:#1f5a45;--o:#c8621e;--ink:#1d2a25;--sub:#66756e;--line:#d8e2dc}
+*{box-sizing:border-box}
+body{margin:0;background:#f5f8f6;color:var(--ink);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:17px;line-height:1.45;padding-bottom:110px}
+header{background:var(--g);color:#fff;padding:16px;text-align:center}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;font-size:14px;opacity:.85}
+.wrap{max-width:600px;margin:0 auto;padding:0 12px}
+.tabs{position:sticky;top:0;z-index:5;background:#f5f8f6;display:flex;gap:6px;overflow-x:auto;padding:10px 0}
+.tabs button{flex:none;border:2px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;font:inherit;font-size:15px;cursor:pointer}
+.tabs button.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
+.item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.item .nm{flex:1}.item .nm b{font-size:18px}.item .nm small{display:block;color:var(--sub);font-size:13px}
+.tag{display:inline-block;font-size:12px;border-radius:6px;padding:0 6px;margin-left:4px;color:#fff;background:var(--o)}
+.tag.h{background:#d6452d}
+.pr{font-weight:700;color:var(--g);white-space:nowrap}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:#fff;width:100%;max-width:600px;border-radius:18px 18px 0 0;padding:16px;max-height:92vh;overflow:auto}
+.sheet h2{margin:0 0 8px;font-size:20px;color:var(--g)}
+.sheet h3{margin:12px 0 6px;font-size:15px;color:var(--sub)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts button{border:2px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:16px;cursor:pointer}
+.opts button.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
+.opts button:disabled{opacity:.35}
+.fix{font-size:14px;color:var(--o)}
+.act{display:flex;gap:10px;margin-top:16px}
+.act button{flex:1;border:0;border-radius:12px;padding:13px;font:inherit;font-size:18px;font-weight:700;cursor:pointer}
+.b1{background:#e6ebe8;color:var(--ink)}.b2{background:var(--o);color:#fff}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:10}
+.bar button{display:block;width:100%;max-width:600px;margin:0 auto;border:0;border-radius:14px;background:var(--g);color:#fff;font:inherit;font-size:19px;font-weight:700;padding:14px;cursor:pointer}
+.cl{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eef2ef}
+.cl .t{flex:1}.cl .t small{display:block;color:var(--sub);font-size:14px}
+.cl .x{border:0;background:none;color:#d6452d;font-size:15px;cursor:pointer}
+.tot{font-size:20px;font-weight:700;text-align:right;margin-top:10px}
+textarea{width:100%;height:130px;font:inherit;font-size:15px;border:2px solid var(--line);border-radius:10px;padding:8px;margin-top:10px}
+.note{font-size:13px;color:var(--sub);text-align:center;margin:14px 0}
+</style>
+</head>
+<body>
+<header><h1>烏弄 UNOCHA</h1><p>最靠近你的小茶館　點飲料</p></header>
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div id="list"></div>
+  <p class="note">價格以店內菜單為準　<a href="menu.jpg" target="_blank">看原始菜單</a></p>
+</div>
+<div class="bar"><button id="cartBtn">我的清單（0 杯）</button></div>
+<div class="mask" id="m1"><div class="sheet" id="s1"></div></div>
+<div class="mask" id="m2"><div class="sheet" id="s2"></div></div>
+
+<script>
+// [品名, 英文, 價格(單一=大杯 或 [中,大]), 特色]  h=可做熱飲 f=固定甜 fi=固定甜冰 r=推薦
+var MENU=[
+{g:'台灣原茶',items:[
+['手採阿里山金萱','Hand Picked Alishan Jinxuan Tea',45,'hr'],
+['名間鄉冬片仔','Winter Tea',35,'hr'],
+['台茶十八號紅玉','Ruby Black Tea',35,'hr'],
+['碧螺春綠','Biluochun Green Tea',35,'h'],
+['金萱烏龍','Jinxuan Oolong Tea',35,'h']]},
+{g:'原茶調飲',items:[
+['冬露冬片仔','Winter Tea + Wintermelon',45,'hf'],
+['杏仁凍冬片仔','Winter Tea with Almond Jelly',50,'r'],
+['春枝梅綠','Biluochun Green Tea with Plum',50,'h'],
+['養樂多綠茶','Biluochun Green Tea + Yakult',55,'']]},
+{g:'水果調飲',items:[
+['檸檬冬片仔','Winter Tea + Lemon',55,'hr'],
+['檸檬梅綠','Green Tea + Lemon & Plum',55,'h'],
+['蔗是冬片','Winter Tea + Sugarcane Juice',70,'r'],
+['蔗是檸檬綠','Green Tea + Sugarcane & Lemon',80,''],
+['蜜魯','Jinxuan Oolong + Peach Juice',60,'fir'],
+['蜜桃果粒紅玉','Ruby Black Tea + Peach Pulp',70,'fir'],
+['柚香金萱','Grapefruit Juice + Jinxuan Oolong',60,'r'],
+['柚粒金萱','Grapefruit Pulp + Jinxuan Oolong',75,''],
+['鮮橙冬片','Orange Juice + Winter Tea',60,'r']]},
+{g:'不失眠',items:[
+['不苦蕎麥茶','Buckwheat Tea',45,'hr'],
+['蕎麥冬露','Buckwheat + Wintermelon',55,'hf'],
+['不苦蕎麥鮮奶','Buckwheat Tea + Fresh Milk',65,'hr'],
+['黃金菊花茶','Chrysanthemum Tea',50,'hr'],
+['菊花冬露','Chrysanthemum + Wintermelon',60,'hf'],
+['抱抱冬瓜露','Wintermelon Drink',35,'hf'],
+['檸檬冬露','Wintermelon + Lemon',55,'hf'],
+['甘蔗冬露','Wintermelon + Sugarcane',75,'fr'],
+['黑糖鮮奶珍珠','Brown Sugar Pearl Milk',[65,85],'hf']]},
+{g:'香醇鮮乳',items:[
+['玉霞紅茶拿鐵','Ruby Black Tea Latte',[50,65],'hr'],
+['金萱烏龍拿鐵','Jinxuan Oolong Tea Latte',[50,65],'hr'],
+['珍珠紅茶拿鐵','Ruby Black Tea Latte + Pearl',[50,65],'h'],
+['杏仁凍紅茶拿鐵','Ruby Latte + Almond Jelly',[55,70],'r'],
+['金糖粿紅茶拿鐵','Ruby Latte + Golden Sugar Jelly Cake',[55,70],'r']]},
+{g:'醇奶特調',items:[
+['玉霞醇奶茶','Ruby Black Milk Tea',[40,55],'hr'],
+['珍珠醇奶茶','Ruby Black Milk Tea + Pearl',[40,55],'h'],
+['杏仁凍醇奶茶','Ruby Milk Tea + Almond Jelly',[45,60],''],
+['金糖粿醇奶茶','Ruby Milk Tea + Golden Sugar Jelly Cake',[45,60],'r']]},
+{g:'朵朵與可可',items:[
+['金萱烏龍朵朵','Jinxuan Oolong + Cheese Foam',60,'hr'],
+['紅玉朵朵','Ruby Black Tea + Cheese Foam',60,'hr'],
+['可可脆片莎莎','Cocoa Cereal Smoothie（冰沙）',110,'fi'],
+['可可脆片朵朵','Cocoa Cereal Smoothie + Cheese Foam',120,'fir'],
+['大人的可可拿鐵','Brown Sugar Mixed Cocoa Latte',[75,90],'hfr']]}
+];
+var ADD=[['珍珠',10],['椰果',10],['珍椰',10],['杏仁凍',15],['金糖粿',15],['寒天',15],['蜜桃果粒',15],['珍珠糖粿',15],['朵朵奶蓋',25]];
+var NOHOT=['杏仁凍','金糖粿','寒天','蜜桃果粒','珍珠糖粿']; // 菜單註明：此區溫熱飲不可加
+var SUGAR=['全糖','7分糖','5分糖','3分糖','1分糖','無糖'], ICE=['正常冰','少冰','微冰','去冰'], WARM=['常溫','溫','熱'];
+function isHot(){return cur.ice==='溫'||cur.ice==='熱';}
+var cart=[], cur=null, tab=0;
+function $(i){return document.getElementById(i);}
+function sizes(it){return Array.isArray(it[2])?[['M',it[2][0]],['L',it[2][1]]]:[['L',it[2]]];}
+function priceTxt(it){return Array.isArray(it[2])?it[2][0]+'/'+it[2][1]:it[2];}
+function has(it,c){return it[3].indexOf(c)>=0;}
+
+function drawTabs(){
+  $('tabs').innerHTML='';
+  MENU.forEach(function(m,i){var b=document.createElement('button');b.textContent=m.g;b.className=i===tab?'on':'';b.onclick=function(){tab=i;drawTabs();drawList();};$('tabs').appendChild(b);});
+}
+function drawList(){
+  var L=$('list');L.innerHTML='';
+  MENU[tab].items.forEach(function(it){
+    var d=document.createElement('div');d.className='item';
+    d.innerHTML='<div class="nm"><b>'+it[0]+'</b>'+(has(it,'h')?'<span class="tag h">可熱</span>':'')+(has(it,'r')?'<span class="tag">推薦</span>':'')+'<small>'+it[1]+'</small></div><div class="pr">'+priceTxt(it)+'</div>';
+    d.onclick=function(){openPick(it);};L.appendChild(d);
+  });
+}
+function openPick(it){
+  var sz=sizes(it);
+  cur={it:it,size:sz[sz.length-1][0],hot:false,sugar:has(it,'f')?'固定':'全糖',ice:has(it,'fi')?'固定':'正常冰',add:[]};
+  renderPick();$('m1').style.display='flex';
+}
+function calc(){
+  var p=0;sizes(cur.it).forEach(function(s){if(s[0]===cur.size)p=s[1];});
+  cur.add.forEach(function(a){ADD.forEach(function(x){if(x[0]===a)p+=x[1];});});
+  return p;
+}
+function btn(k,v,label,on,dis){return '<button '+(dis?'disabled ':'')+'data-k="'+k+'" data-v="'+v+'" class="'+(on?'on':'')+'">'+label+'</button>';}
+function renderPick(){
+  var it=cur.it,sz=sizes(it),fixS=has(it,'f'),fixI=has(it,'fi'),canHot=has(it,'h');
+  var h='<h2>'+it[0]+'</h2><h3>杯型</h3><div class="opts">';
+  if(sz.length>1)h+=sz.map(function(s){return btn('size',s[0],(s[0]==='M'?'中杯':'大杯')+' $'+s[1],cur.size===s[0]);}).join('');
+  else h+='<button class="on">大杯 $'+sz[0][1]+'</button>';
+  h+='</div>';
+  h+='<h3>甜度</h3>';
+  h+=fixS?'<div class="fix">這杯是固定甜度</div>':'<div class="opts">'+SUGAR.map(function(s){return btn('sugar',s,s,cur.sugar===s);}).join('')+'</div>';
+  h+='<h3>溫度</h3>';
+  if(fixI)h+='<div class="fix">這杯固定冰量</div>';
+  else h+='<div class="opts">'+ICE.concat(canHot?WARM:[]).map(function(s){return btn('ice',s,s,cur.ice===s);}).join('')+'</div>';
+  if(!fixI)h+='<h3>加料（可複選）</h3><div class="opts">'+ADD.map(function(a){return btn('add',a[0],a[0]+' +'+a[1],cur.add.indexOf(a[0])>=0,isHot()&&NOHOT.indexOf(a[0])>=0);}).join('')+'</div>';
+  h+='<div class="tot">'+calc()+' 元</div><div class="act"><button class="b1" id="pc">取消</button><button class="b2" id="pa">加入清單</button></div>';
+  $('s1').innerHTML=h;
+  [].forEach.call($('s1').querySelectorAll('[data-k]'),function(b){b.onclick=function(){
+    var k=b.dataset.k,v=b.dataset.v;
+    if(k==='add'){var i=cur.add.indexOf(v);if(i>=0)cur.add.splice(i,1);else cur.add.push(v);}
+    else{cur[k]=v;if(k==='ice'&&isHot())cur.add=cur.add.filter(function(a){return NOHOT.indexOf(a)<0;});}
+    renderPick();};});
+  $('pc').onclick=function(){$('m1').style.display='none';};
+  $('pa').onclick=function(){
+    cart.push({name:cur.it[0],size:cur.size,hot:false,sugar:cur.sugar,ice:cur.ice,add:cur.add.slice(),price:calc()});
+    $('m1').style.display='none';upd();};
+}
+function detail(o){
+  var d=[o.sugar,o.ice].filter(function(x){return x&&x!=='固定';});
+  return (o.size==='M'?'中杯':'大杯')+(d.length?'　'+d.join('/'):'')+(o.add.length?'　加'+o.add.join('、'):'');
+}
+function total(){return cart.reduce(function(a,b){return a+b.price;},0);}
+function upd(){$('cartBtn').textContent='我的清單（'+cart.length+' 杯）'+(cart.length?'　'+total()+' 元':'');}
+$('cartBtn').onclick=function(){renderCart();$('m2').style.display='flex';};
+function renderCart(){
+  var h='<h2>我的清單</h2>';
+  if(!cart.length)h+='<p>還沒有選飲料</p>';
+  cart.forEach(function(o,i){h+='<div class="cl"><div class="t">'+o.name+'<small>'+detail(o)+'</small></div><b>$'+o.price+'</b><button class="x" data-i="'+i+'">刪除</button></div>';});
+  h+='<div class="tot">共 '+cart.length+' 杯　'+total()+' 元</div>';
+  if(cart.length){
+    var txt=cart.map(function(o,i){return (i+1)+'. '+o.name+'　'+detail(o).replace(/　/g,' ')+' $'+o.price;}).join('\n')+'\n共 '+cart.length+' 杯 '+total()+' 元';
+    h+='<textarea id="tx" readonly></textarea>';
+    $('s2').innerHTML=h;$('tx').value=txt;
+  }else $('s2').innerHTML=h;
+  $('s2').insertAdjacentHTML('beforeend','<div class="act"><button class="b1" id="cc">繼續點</button>'+(cart.length?'<button class="b2" id="cp">複製清單</button>':'')+'</div>');
+  [].forEach.call($('s2').querySelectorAll('.x'),function(b){b.onclick=function(){cart.splice(+b.dataset.i,1);upd();renderCart();};});
+  $('cc').onclick=function(){$('m2').style.display='none';};
+  if($('cp'))$('cp').onclick=function(){var t=$('tx');t.select();try{navigator.clipboard.writeText(t.value);}catch(e){document.execCommand('copy');}$('cp').textContent='已複製 ✓';};
+}
+[$('m1'),$('m2')].forEach(function(m){m.onclick=function(e){if(e.target===m)m.style.display='none';};});
+drawTabs();drawList();
+</script>
+</body>
+</html>
