@@ -264,6 +264,9 @@ async function submit(ans){
   const evs=[];let nxReady=L.ok;   // 答對可以馬上下一題；答錯要等講解出來
   const go=async()=>{if(!nxReady)return;if(last){await waitPending();}for(const e of evs.splice(0))await celebrate(e);next();};
   $("nx").onclick=go;
+  {const hb=document.createElement("button");hb.className="ghost";hb.style.cssText="display:block;margin:6px auto 0;font-size:16px";hb.textContent="🙋 這題我還是不會（告訴 SUNNY）";
+   hb.onclick=()=>{hb.disabled=true;hb.textContent="✅ 已經告訴 SUNNY 了";post({mode:"flag",name:NAME,id:q.id}).catch(()=>{hb.disabled=false;hb.textContent="連線失敗，再按一次";});};
+   $("nx").after(hb);}
   if(!L.ok){$("nx").disabled=true;}
   pending++;
   post({mode:"answer",name:NAME,id:q.id,ans}).then(r=>{

@@ -43,6 +43,7 @@ async function load(){
   j.kids.forEach(k=>{const z=!k.right&&!k.wrong;
     h+='<tr class="'+(z?'z':'')+(k.prize||(j.prizeNeed&&k.blocks>=j.prizeNeed)?' hot':'')+'"><td>'+esc(k.name)+'</td><td>'+k.blocks+'</td><td>'+k.right+'</td><td>'+k.wrong+'</td><td>'+k.days+'</td><td>'+k.boss+'</td><td>'+(k.last?k.last.slice(5):"-")+'</td></tr>';});
   h+='</table></div>'+(j.prizeNeed?'<p class="muted">個人獎：'+esc(j.prize||"")+'（累積 '+j.prizeNeed+' 塊）</p>':'');
+  h+='<div class="card"><b>🙋 孩子說「還是不會」的題目</b>'+(j.flags&&j.flags.length?j.flags.map(f=>'<div style="border-top:1px solid #f0dcc0;margin-top:8px;padding-top:6px"><div class="muted">'+esc(f.u)+'　'+f.names.length+' 人：'+esc(f.names.join("、"))+'　'+esc(f.last.slice(5))+'</div><div>'+esc(f.q)+'</div><div class="muted">'+esc(f.id)+'</div></div>').join(""):'<div class="muted">目前沒有</div>')+'</div>';
   $("app").innerHTML=h;$("t").textContent="更新："+new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});
 }
 $("go").onclick=()=>{const v=$("k").value.trim();if(v){ls.s("sol_admin_key",v);load();}};
