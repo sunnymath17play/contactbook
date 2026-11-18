@@ -105,7 +105,6 @@ var MENU=[
 ['大人的可可拿鐵','Brown Sugar Mixed Cocoa Latte',[75,90],'hfr']]}
 ];
 var ADD=[['珍珠',10],['椰果',10],['珍椰',10],['杏仁凍',15],['金糖粿',15],['寒天',15],['蜜桃果粒',15],['珍珠糖粿',15],['朵朵奶蓋',25]];
-var NOHOT=['杏仁凍','金糖粿','寒天','蜜桃果粒','珍珠糖粿']; // 菜單註明：此區溫熱飲不可加
 var SUGAR=['全糖','7分糖','5分糖','3分糖','1分糖','無糖'], ICE=['正常冰','少冰','微冰','去冰'];
 var cart=[], cur=null, tab=0;
 function $(i){return document.getElementById(i);}
@@ -147,13 +146,13 @@ function renderPick(){
   h+='<h3>溫度</h3>';
   if(fixI)h+='<div class="fix">這杯固定冰量</div>';
   else h+='<div class="opts">'+ICE.map(function(s){return btn('ice',s,s,cur.ice===s);}).join('')+'</div>';
-  if(!fixI)h+='<h3>加料（可複選）</h3><div class="opts">'+ADD.map(function(a){return btn('add',a[0],a[0]+' +'+a[1],cur.add.indexOf(a[0])>=0,false&&NOHOT.indexOf(a[0])>=0);}).join('')+'</div>';
+  if(!fixI)h+='<h3>加料（可複選）</h3><div class="opts">'+ADD.map(function(a){return btn('add',a[0],a[0]+' +'+a[1],cur.add.indexOf(a[0])>=0);}).join('')+'</div>';
   h+='<div class="tot">'+calc()+' 元</div><div class="act"><button class="b1" id="pc">取消</button><button class="b2" id="pa">加入清單</button></div>';
   $('s1').innerHTML=h;
   [].forEach.call($('s1').querySelectorAll('[data-k]'),function(b){b.onclick=function(){
     var k=b.dataset.k,v=b.dataset.v;
     if(k==='add'){var i=cur.add.indexOf(v);if(i>=0)cur.add.splice(i,1);else cur.add.push(v);}
-    else{cur[k]=v;if(k==='ice'&&isHot())cur.add=cur.add.filter(function(a){return NOHOT.indexOf(a)<0;});}
+    else cur[k]=v;
     renderPick();};});
   $('pc').onclick=function(){$('m1').style.display='none';};
   $('pa').onclick=function(){
