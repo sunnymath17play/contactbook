@@ -106,8 +106,7 @@ var MENU=[
 ];
 var ADD=[['珍珠',10],['椰果',10],['珍椰',10],['杏仁凍',15],['金糖粿',15],['寒天',15],['蜜桃果粒',15],['珍珠糖粿',15],['朵朵奶蓋',25]];
 var NOHOT=['杏仁凍','金糖粿','寒天','蜜桃果粒','珍珠糖粿']; // 菜單註明：此區溫熱飲不可加
-var SUGAR=['全糖','7分糖','5分糖','3分糖','1分糖','無糖'], ICE=['正常冰','少冰','微冰','去冰'], WARM=['常溫','溫','熱'];
-function isHot(){return cur.ice==='溫'||cur.ice==='熱';}
+var SUGAR=['全糖','7分糖','5分糖','3分糖','1分糖','無糖'], ICE=['正常冰','少冰','微冰','去冰'];
 var cart=[], cur=null, tab=0;
 function $(i){return document.getElementById(i);}
 function sizes(it){return Array.isArray(it[2])?[['M',it[2][0]],['L',it[2][1]]]:[['L',it[2]]];}
@@ -122,7 +121,7 @@ function drawList(){
   var L=$('list');L.innerHTML='';
   MENU[tab].items.forEach(function(it){
     var d=document.createElement('div');d.className='item';
-    d.innerHTML='<div class="nm"><b>'+it[0]+'</b>'+(has(it,'h')?'<span class="tag h">可熱</span>':'')+(has(it,'r')?'<span class="tag">推薦</span>':'')+'<small>'+it[1]+'</small></div><div class="pr">'+priceTxt(it)+'</div>';
+    d.innerHTML='<div class="nm"><b>'+it[0]+'</b>'+(has(it,'r')?'<span class="tag">推薦</span>':'')+'<small>'+it[1]+'</small></div><div class="pr">'+priceTxt(it)+'</div>';
     d.onclick=function(){openPick(it);};L.appendChild(d);
   });
 }
@@ -138,7 +137,7 @@ function calc(){
 }
 function btn(k,v,label,on,dis){return '<button '+(dis?'disabled ':'')+'data-k="'+k+'" data-v="'+v+'" class="'+(on?'on':'')+'">'+label+'</button>';}
 function renderPick(){
-  var it=cur.it,sz=sizes(it),fixS=has(it,'f'),fixI=has(it,'fi'),canHot=has(it,'h');
+  var it=cur.it,sz=sizes(it),fixS=has(it,'f'),fixI=has(it,'fi');
   var h='<h2>'+it[0]+'</h2><h3>杯型</h3><div class="opts">';
   if(sz.length>1)h+=sz.map(function(s){return btn('size',s[0],(s[0]==='M'?'中杯':'大杯')+' $'+s[1],cur.size===s[0]);}).join('');
   else h+='<button class="on">大杯 $'+sz[0][1]+'</button>';
@@ -147,8 +146,8 @@ function renderPick(){
   h+=fixS?'<div class="fix">這杯是固定甜度</div>':'<div class="opts">'+SUGAR.map(function(s){return btn('sugar',s,s,cur.sugar===s);}).join('')+'</div>';
   h+='<h3>溫度</h3>';
   if(fixI)h+='<div class="fix">這杯固定冰量</div>';
-  else h+='<div class="opts">'+ICE.concat(canHot?WARM:[]).map(function(s){return btn('ice',s,s,cur.ice===s);}).join('')+'</div>';
-  if(!fixI)h+='<h3>加料（可複選）</h3><div class="opts">'+ADD.map(function(a){return btn('add',a[0],a[0]+' +'+a[1],cur.add.indexOf(a[0])>=0,isHot()&&NOHOT.indexOf(a[0])>=0);}).join('')+'</div>';
+  else h+='<div class="opts">'+ICE.map(function(s){return btn('ice',s,s,cur.ice===s);}).join('')+'</div>';
+  if(!fixI)h+='<h3>加料（可複選）</h3><div class="opts">'+ADD.map(function(a){return btn('add',a[0],a[0]+' +'+a[1],cur.add.indexOf(a[0])>=0,false&&NOHOT.indexOf(a[0])>=0);}).join('')+'</div>';
   h+='<div class="tot">'+calc()+' 元</div><div class="act"><button class="b1" id="pc">取消</button><button class="b2" id="pa">加入清單</button></div>';
   $('s1').innerHTML=h;
   [].forEach.call($('s1').querySelectorAll('[data-k]'),function(b){b.onclick=function(){
