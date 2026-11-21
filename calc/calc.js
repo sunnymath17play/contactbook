@@ -592,7 +592,7 @@ function drawBombQ(note) {
 function bombKey(k) {
   if (!BQ || BQ.busy) return;
   if (k === "ok") return cutWire();
-  const f = BQ.field, max = f === "q" ? 3 : 1;
+  const f = BQ.field, max = f === "q" ? 5 : 2;
   if (k === "←") BQ.field = "q"; else if (k === "→") BQ.field = "r";
   else if (k === "del") { if (!BQ[f] && f === "r") BQ.field = "q"; else BQ[f] = BQ[f].slice(0, -1); }
   else if (/^[0-9]$/.test(k) && BQ[f].length < max) BQ[f] += k;
