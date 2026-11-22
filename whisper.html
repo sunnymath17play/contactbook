@@ -594,6 +594,8 @@
   .vwide{position:relative;width:100%;display:flex;align-items:center;gap:10px;margin-bottom:10px;border:0;border-radius:20px;padding:10px 14px 10px 8px;cursor:pointer;
     font-family:var(--font);text-align:left;box-shadow:0 5px 12px rgba(200,120,30,.2);}
   .vwide.school{background:linear-gradient(90deg,#FFE3A0,#FFC870);}
+  .vwide.solar{background:linear-gradient(90deg,#FFD36B,#FF9F43);border:3px solid #F28C28;}
+  .vroom.ontop{z-index:32;}   /* 從太陽能量站點「看影片」：影片教室蓋在能量站上面 */
   .vwide.ask{background:linear-gradient(90deg,#DCEEFF,#BFE0FF);}
   .vwide img{width:64px;height:64px;flex:none;margin:-6px 0;}
   .vwide .ut{flex:1;display:flex;flex-direction:column;}
@@ -785,7 +787,7 @@
 
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
-<script src="v/list.js?v=1794845845357"></script>
+<script src="v/list.js?v=1795333093406"></script>
 <script src="challenge/data.js?v=1794581332844"></script>
 <script src="challenge/challenge.js?v=1794581332844"></script>
 <script>
@@ -1178,7 +1180,7 @@ document.addEventListener("submit",e=>{
   else { drawRoom(); syncProgress(); }
 });
 const CNUM="一二三四五六七八九十";
-const SRCS=[["講義A","講義A","th/bookblue.png"],["講義B","講義B","th/bookblue.png"],["評量","評量","th/exam.png"],["單元複習","單元複習","th/books.png"],["校卷複習","校卷複習・必考常考題","th/school.png"]];
+const SRCS=[["講義A","講義A","th/bookblue.png"],["講義B","講義B","th/bookblue.png"],["評量","評量","th/exam.png"],["單元複習","單元複習","th/books.png"],["校卷複習","校卷複習・必考常考題","th/school.png"],["太陽能量站","☀️ 太陽能量站・題目講解","th/solar_icon.png"]];
 // 題目出處（講義A p124#6／講義B p30#2／期中評量一#5／期末評量二#3／單元複習01#4）
 // → {src 哪一類, key 哪一份, page 頁, order 排序, label 給孩子看的字}
 function srcOf(v){
@@ -1197,6 +1199,8 @@ function srcOf(v){
   }
   // 校卷複習：學校考卷常錯、必考常考的題目（照單元排）
   if(q==="校卷複習") return {src:"校卷複習",key:"校卷複習",page:0,order:0,label:"校卷必考"+(v.unit?`・${v.unit}`:"")};
+  // 太陽能量站：孩子在能量站按「還是不會」的題目做的講解（太陽能量站#題目編號，2026-11-22）
+  if(/^太陽能量站/.test(q)) return {src:"太陽能量站",key:"太陽能量站",page:0,order:0,label:"☀️ 太陽能量站"};
   return {src:"其他",key:"",page:0,order:1e9,label:q};
 }
 const srcRank=s=>{const i=SRCS.findIndex(x=>x[0]===s);return i<0?9:i;};
@@ -1242,6 +1246,7 @@ function vTitle(v){
   const m=/^(.*?)（([^（）]*)）\s*$/.exec(v.title||""), main=m?m[1]:(v.title||""), part=m?m[2]:"", s=srcOf(v);
   const sub=s.src==="評量"||s.src==="單元複習" ? s.key+(part?" "+part:"")
     : s.src==="校卷複習" ? "校卷必考"+(part?"・"+part:"")
+    : s.src==="太陽能量站" ? "☀️ 太陽能量站"+(part?"・"+part:"")
     : s.src.startsWith("講義") ? s.label : (part||v.unit||"");
   return {main,sub};
 }
@@ -1379,6 +1384,8 @@ function drawRoom(){
             :`<button type="button" class="vask" data-ask="1">🙋 我要問 SUNNY</button>`}</div>`;
   }else if(VIEW==="home"){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
+    let solarOn=false; try{ solarOn=SOLAR_ON; }catch(e){}   // 只有玩能量站的班才放專區（其他班照樣在單元裡看得到）
+    const solar=solarOn?VIDS.filter(v=>srcOf(v).src==="太陽能量站"):[];
     const isHulk=v=>/浩克/.test(v.unit||""), hulk=VIDS.filter(isHulk), onlyHulk=hulk.length&&hulk.length===VIDS.length;   // 2026-11-08：只有浩克介紹（換季後）→ 不顯示空的最新影片／選單元
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
@@ -1394,12 +1401,14 @@ function drawRoom(){
       <div class="vunits">${units().filter(([u])=>!/浩克/.test(u)).map(([u,vs],i)=>{ const c=UNIT_COLORS[i%UNIT_COLORS.length], p=unitProg(vs,seen);
         return `<button class="vunit" type="button" data-unit="${escH(u)}" style="background:${c[0]}">${fresh(vs)?'<span class="vdot">新</span>':""}
           <img src="${iconOf(u)}" alt=""><span class="ut"><b>${escH(u)}</b>${bar(p,c[1])}<small>${p.t} ${p.n}/${p.d}</small></span><span class="go" style="color:${c[1]}">›</span></button>`; }).join("")}</div>
+      ${solar.length?`<button class="vwide solar" type="button" data-unit="__solar">${fresh(solar)?'<span class="vdot">新</span>':""}<img src="th/solar_icon.png" alt="">
+        <span class="ut"><b>☀️ 太陽能量站・題目講解</b><small>${solar.length} 部，能量站卡住的題目看這裡！</small></span><span class="go">›</span></button>`:""}
       ${school.length?`<button class="vwide school" type="button" data-unit="__school">${fresh(school)?'<span class="vdot">新</span>':""}<img src="th/school.png" alt="">
         <span class="ut"><b>校卷複習・必考常考題</b><small>${school.length} 部，考試前一定要看！</small></span><span class="go">›</span></button>`:""}
       ${ask.length?`<button class="vwide ask" type="button" data-unit="__ask">${fresh(ask)?'<span class="vdot">新</span>':""}<img src="th/envelope.png" alt="">
         <span class="ut"><b>同學問過的題目</b><small>${ask.length} 部，別人問的你可能也想知道</small></span><span class="go">›</span></button>`:""}
       <div class="vfind2"><div class="vfh"><img src="th/search.png" alt=""><b>卡在哪裡？</b><span>找講義的頁數</span></div>
-        <div class="vsrc" id="vsrc">${SRCS.filter(([k])=>k!=="校卷複習").map(([k,t,ic])=>`<button type="button" class="vsrcb" data-src="${k}"><img src="${ic}" alt="">${t}</button>`).join("")}</div>
+        <div class="vsrc" id="vsrc">${SRCS.filter(([k])=>k!=="校卷複習"&&k!=="太陽能量站").map(([k,t,ic])=>`<button type="button" class="vsrcb" data-src="${k}"><img src="${ic}" alt="">${t}</button>`).join("")}</div>
         <div id="vfindBox"></div>
         <div class="vfind-out" id="vfindOut"></div></div>
       ${hulk.length&&!onlyHulk?`<button class="vhulk" type="button" data-unit="${escH(hulk[0].unit)}"><img src="th/hulkwave.png" alt="">認識浩克 ›</button>`:""}`;
@@ -1409,8 +1418,9 @@ function drawRoom(){
   }else if(VIEW==="__bomb"){
     w.innerHTML=bombHTML();
   }else{
-    const isAsk=VIEW==="__ask", isSchool=VIEW==="__school";
+    const isAsk=VIEW==="__ask", isSolar=VIEW==="__solar", isSchool=VIEW==="__school"||isSolar;
     const vs=isAsk?VIDS.filter(v=>v.type==="ask")
+      :isSolar?VIDS.filter(v=>srcOf(v).src==="太陽能量站")
       :isSchool?VIDS.filter(v=>srcOf(v).src==="校卷複習")
       :VIDS.filter(v=>(v.unit||"其他")===VIEW);
     vs.sort(isSchool?(a,b)=>String(a.unit).localeCompare(String(b.unit),"zh-Hant"):bySrc);
@@ -1420,8 +1430,8 @@ function drawRoom(){
       body+=line(v); });
     if(isSchool) body=vs.map(line).join("");   // 校卷複習本身就一類，不用再分段
     const c=UNIT_COLORS[Math.max(0,units().findIndex(([u])=>u===VIEW))%UNIT_COLORS.length], p=unitProg(vs,seen);
-    w.innerHTML=`<div class="vuhead"><img src="${isAsk?"th/envelope.png":isSchool?"th/school.png":iconOf(VIEW)}" alt="">
-      <b>${isAsk?"同學問過的題目":isSchool?"校卷複習":escH(VIEW)}</b><span class="up"><small>${p.t} <em>${p.n}</em>/${p.d}</small>${bar(p,c[1])}</span></div>`+body;
+    w.innerHTML=`<div class="vuhead"><img src="${isAsk?"th/envelope.png":isSolar?"th/solar_icon.png":isSchool?"th/school.png":iconOf(VIEW)}" alt="">
+      <b>${isAsk?"同學問過的題目":isSolar?"☀️ 太陽能量站・題目講解":isSchool?"校卷複習":escH(VIEW)}</b><span class="up"><small>${p.t} <em>${p.n}</em>/${p.d}</small>${bar(p,c[1])}</span></div>`+body;
   }
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
   $("petcard3").style.display=VIEW==="home"?"":"none";
@@ -1507,7 +1517,7 @@ function play(id){
 }
 // 手機「返回」＝回上一層：單元清單 → 影片教室首頁 → 樹洞
 function openRoom(){ VIEW="home"; drawRoom(); $("vroom").classList.add("show"); history.pushState({v:"home"},""); }
-function closeRoom(){ if(window.CHAL) CHAL.close(); $("vroom").classList.remove("show"); $("vplayer").innerHTML=""; $("vplayer").classList.remove("show"); renderVideos(VIDS); }
+function closeRoom(){ if(window.CHAL) CHAL.close(); $("vroom").classList.remove("show","ontop"); $("vplayer").innerHTML=""; $("vplayer").classList.remove("show"); renderVideos(VIDS); }
 window.addEventListener("popstate",e=>{
   if(!$("vroom").classList.contains("show")) return;
   if(e.state&&e.state.v==="home"){ VIEW="home"; drawRoom(); } else closeRoom();
@@ -1615,7 +1625,14 @@ const SOLAR_ON = Date.now()<=SOLAR_END && !!CH && SOLAR_CLASSES.includes(CH.id) 
 function openSolar(){ $("sframe").src="solar/?c="+CH.id+"&embed=1&t="+Date.now(); $("sroom").classList.add("show"); history.pushState({s:1},""); }
 function closeSolar(){ $("sroom").classList.remove("show"); $("sframe").src="about:blank"; }
 $("sback").onclick=()=>history.back();
-window.addEventListener("popstate",()=>{ if($("sroom").classList.contains("show")) closeSolar(); });
+window.addEventListener("popstate",e=>{ if($("sroom").classList.contains("show") && !(e.state&&e.state.s)) closeSolar(); });   // 從影片教室按返回 → 回到能量站，不要一起關
+// 能量站題目下面「📺 看浩克講解影片」：影片教室蓋在能量站上面播那支，返回就回到題目（2026-11-22）
+window.addEventListener("message",e=>{
+  if(e.origin!==location.origin || !e.data || !e.data.solarPlay) return;
+  const id=String(e.data.solarPlay);
+  $("vroom").classList.add("ontop"); openRoom();
+  if(VIDS.some(v=>v.id===id)){ VIEW="__solar"; drawRoom(); play(id); }
+});
 if(SOLAR_ON){ $("stile").hidden=false; $("stile").onclick=openSolar; }
 
 /* ---------- 每天只能說一次 ---------- */
