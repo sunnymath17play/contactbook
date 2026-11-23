@@ -183,7 +183,7 @@ function drawMe(){
     $("me").innerHTML=`<h3>你是誰？</h3><div class="muted" style="margin-bottom:8px">打上你的本名，就能一起發電！</div><input class="nm" id="nin" placeholder="我的名字" value="${NAME||""}"><button class="big" id="nok">好！</button>${NAME&&me&&!me.known?'<div class="muted" style="color:#c0392b;margin-top:8px">找不到這個名字，請打你的本名（或名字）喔。</div>':""}`;
     $("nok").onclick=()=>{NAME=$("nin").value.trim();if(NAME){ls.set("wh_name",NAME);load();}};return;
   }
-  $("me").innerHTML=`<div class="panel"><img src="img/${me.energy>=200?"sun_noon":me.energy>=40?"sun_awake":"sun_tired"}.png" alt=""><div style="flex:1"><h3>${/^測試/.test(me.name)?me.name.slice(2):me.name==="SUNNY"?me.name:me.name.slice(1)}，你好！</h3><div class="muted">我發了 <b>${me.energy}</b> 塊能量・今天還可以發 <b>${me.left}</b> 塊</div>
+  $("me").innerHTML=`<div class="panel"><img src="img/${me.energy>=200?"sun_noon":me.energy>=40?"sun_awake":"sun_tired"}.png" alt=""><div style="flex:1"><h3>${/^測試/.test(me.name)?me.name.slice(2):me.name==="SUNNY"?me.name:me.name.slice(1)}，你好！</h3><div class="muted">我發了 <b>${me.energy}</b> 塊能量・${me.left>0?`今天還可以發 <b>${me.left}</b> 塊`:"今天的電充滿了⚡ 還可以繼續練功！"}</div>
     <div class="muted">${me.bossToday?"✅ 今天打倒魔王了":"🎯 今日任務：打倒 1 隻烏雲魔王"}</div><button class="ghost" id="chg">不是我？換名字</button></div></div>`;
   $("chg").onclick=()=>{NAME="";ls.set("wh_name","");S.me=null;drawMe();};
 }
@@ -237,15 +237,16 @@ async function startQuiz(opt){
   let r;try{r=await api("mode=quiz&name="+encodeURIComponent(NAME)+(opt.unit?"&unit="+encodeURIComponent(opt.unit):"")+(opt.flash?"&flash=1":""));
   }catch(e){toast("連線失敗，請重新整理再試一次");return;}
   if(!r.ok){toast("找不到你的名字，請換名字重打本名");return;}
-  if(!r.qs.length){toast(r.left<=0?"今天的能量發滿了，明天再來！":r.allDone?"這區的題目你都答對了！去別區挑戰吧":"這區的題目還沒開放");return;}
-  QZ={qs:r.qs,i:0,res:[],gain:0,flash:!!opt.flash,t0:Date.now(),left:r.left,unit:opt.unit};
+  if(!r.qs.length){toast(r.allDone?"這區的題目你都答對了！去別區挑戰吧":"這區的題目還沒開放");return;}
+  QZ={qs:r.qs,i:0,res:[],gain:0,flash:!!opt.flash,t0:Date.now(),left:r.left,unit:opt.unit,practice:!!r.practice};
+  if(QZ.practice)toast("今天的電充滿了⚡ 現在是練功時間！");
   $("quiz").classList.remove("hide");document.body.style.overflow="hidden";showQ();
   if(QZ.flash){QZ.timer=setInterval(()=>{const s=60-Math.floor((Date.now()-QZ.t0)/1000);const el=$("tm");if(el)el.textContent=Math.max(0,s)+"秒";if(s<=0){clearInterval(QZ.timer);endQuiz("時間到！");}},500);}
 }
 function showQ(){
   const q=QZ.qs[QZ.i];
   const dots=QZ.qs.map((_,k)=>`<i class="${QZ.res[k]===1?"ok":QZ.res[k]===0?"no":k===QZ.i?"on":""}"></i>`).join("");
-  let h=`<div class="qtop"><button class="qx" id="qx">✕ 離開</button><div class="dots">${dots}</div>${QZ.flash?'<div class="timer" id="tm"></div>':""}</div><div class="qcard${q.boss?" boss":""}">`;
+  let h=`<div class="qtop"><button class="qx" id="qx">✕ 離開</button><div class="dots">${dots}</div>${QZ.flash?'<div class="timer" id="tm"></div>':""}</div>${QZ.practice?'<div class="muted" style="text-align:center;font-weight:800;margin:4px 0">🥋 練功中（不加能量）</div>':""}<div class="qcard${q.boss?" boss":""}">`;
   if(q.boss)h+=`<img class="bossimg" src="img/boss_boss.png" alt=""><span class="qtag">烏雲魔王題（答對 3 塊能量）</span>`;
   if(q.spot)h+=`<span class="qtag spot">🔍 找錯誤</span>`;
   h+=`<div class="qtext">${esc(q.q.replace("【魔王題】",""))}</div>`+(q.f?`<div class="qfig">${q.f}</div>`:"");
@@ -294,7 +295,7 @@ async function submit(ans){
     const fx=$("fx");
     if(fx&&QZ&&QZ.i===idx){
       fx.className="";
-      fx.innerHTML=r.correct?(r.gain?"⚡ +"+r.gain+" 能量　":"（今天已經發滿了）　")+'<button class="ghost" id="exb" style="padding:0 4px">看講解 ▾</button><div id="exd" class="hide" style="margin-top:6px">'+esc(r.explain||"")+'</div>':"這題答案是：<b>"+esc(r.answer||"")+"</b><br>"+esc(r.explain||"");
+      fx.innerHTML=r.correct?(r.gain?"⚡ +"+r.gain+" 能量　":"🥋 練功成功　")+'<button class="ghost" id="exb" style="padding:0 4px">看講解 ▾</button><div id="exd" class="hide" style="margin-top:6px">'+esc(r.explain||"")+'</div>':"這題答案是：<b>"+esc(r.answer||"")+"</b><br>"+esc(r.explain||"");
       const box=fx.parentElement;box.className="fb "+(r.correct?"ok":"bad");
     }
     if(r.correct&&$("exb"))$("exb").onclick=()=>{const d=$("exd");d.classList.toggle("hide");$("exb").textContent=d.classList.contains("hide")?"看講解 ▾":"收起講解 ▴";};
@@ -310,7 +311,8 @@ function next(){if(QZ.i>=QZ.qs.length-1)return endQuiz();QZ.i++;showQ();}
 async function endQuiz(msg){
   if(!QZ)return;clearInterval(QZ.timer);await waitPending();const z=QZ;QZ=null;
   $("quiz").classList.add("hide");document.body.style.overflow="";
-  if(z.gain>0||z.res.length)toast((msg?msg+" ":"")+"這次發了 "+z.gain+" 塊能量！");
+  if(z.practice&&!z.gain)toast((msg?msg+" ":"")+"這次練功答對 "+z.res.filter(x=>x===1).length+" 題！");
+  else if(z.gain>0||z.res.length)toast((msg?msg+" ":"")+"這次發了 "+z.gain+" 塊能量！");
   draw();load();
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
