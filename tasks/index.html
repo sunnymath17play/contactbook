@@ -47,6 +47,13 @@ header .home { border: 2px solid var(--main); background: #fff; color: var(--mai
 .chip.on { border-color: var(--main); background: #fff; box-shadow: 0 0 0 2px var(--main) inset; }
 .chip.done small { color: #22A06B; opacity: 1; font-weight: 700; }
 .chip.add { border-style: dashed; color: var(--main); background: #fff6; }
+.chip.tool { border-style: dashed; background: #fff6; opacity: .8; }
+.chip.fold { background: transparent; border-color: transparent; opacity: .7; padding-left: 4px; }
+.chip.old { opacity: .6; background: #F3F4F6; }
+.chip.old.on { opacity: 1; }
+.mrow { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #EEF2F6; font-size: 16px; }
+.mrow span { flex: 1; font-weight: 600; }
+.mrow.old span { opacity: .45; }
 
 .bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 10px; }
 .bar h2 { font-size: 20px; margin: 0; }
@@ -142,7 +149,10 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const saveAll = () => LS.set('all', S.all), saveQ = () => LS.set('q', S.q);
 const D = () => S.all && S.all[S.cls];
-const catOf = () => LS.get('cat_' + S.cls, 'jy');
+// 六年級用不到講義（2026-11-24 SUNNY）→ 不顯示講義分頁
+const NO_JY = { g6: 1 };
+const catsOf = c => CATS.filter(x => !(NO_JY[c] && x[0] === 'jy'));
+const catOf = () => { const c = LS.get('cat_' + S.cls, NO_JY[S.cls] ? 'fx' : 'jy'); return NO_JY[S.cls] && c === 'jy' ? 'fx' : c; };
 const pad = n => String(n).padStart(2, '0');
 const hash = s => { let h = 2166136261; for (const ch of s) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
 const kOf = (id, full) => id + '|' + ITEM + '|' + full;
@@ -176,12 +186,25 @@ const CLS_NAME = Object.fromEntries(CLASSES);
 function sheets(c, cat) {
   const d = S.all && S.all[c]; if (!d) return [];
   const mine = d.units.filter(u => u.cat === cat);
+  let out;
   if (cat === 'jy') {
-    const pre = (UNITS[c] || []).map(n => mine.find(u => u.name === n) || { id: 'J' + hash(c + '|' + n), cls: c, name: n, cat: 'jy', items: [ITEM], at: 0, virtual: true });
-    return pre.concat(mine.filter(u => pre.indexOf(u) < 0));
-  }
-  if (cat === 'kg') return mine.slice().sort((a, b) => a.at - b.at);
-  return mine.slice().sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant', { numeric: true }));
+    // 預設單元：認 原單元／名稱／固定編號（改過名也還認得）
+    const pre = (UNITS[c] || []).map(n => { const id = 'J' + hash(c + '|' + n);
+      return mine.find(u => u.orig === n || u.id === id) || mine.find(u => !u.orig && u.name === n) || { id, cls: c, name: n, orig: n, cat: 'jy', items: [ITEM], at: 0, virtual: true }; });
+    pre.forEach((u, i) => { if (!u.orig) u.orig = UNITS[c][i]; });
+    out = pre.concat(mine.filter(u => pre.indexOf(u) < 0));
+  } else if (cat === 'kg') out = mine.slice().sort((a, b) => a.at - b.at);
+  else out = mine.slice().sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant', { numeric: true }));
+  return out.filter(u => u.state !== '刪除');
+}
+// 改一張的欄位（收起／改名／期限）：還沒上傳的新增就直接改那筆；預設單元第一次動就建一列；離線也行
+function upsert(u, f) {
+  Object.assign(u, f);
+  const pend = S.q.find(o => o.t === 'add' && o.id === u.id && !o.started);
+  if (pend) Object.assign(pend, f);
+  else if (u.virtual) { delete u.virtual; D().units.push(u); S.q.push(Object.assign({ t: 'add', cls: S.cls, id: u.id, cat: u.cat, name: u.name, orig: u.orig || '', at: Date.now(), due: u.due || 0 }, f)); }
+  else S.q.push({ t: 'edit', cls: S.cls, id: u.id, f: Object.assign({}, f, u.orig ? { orig: u.orig } : {}) });
+  saveAll(); saveQ(); flush();
 }
 const doneN = (d, u) => d.roster.filter(r => d.done[kOf(u.id, r.full)]).length;
 const pendingFor = id => S.q.filter(o => o.id === id);
@@ -211,8 +234,8 @@ async function flush() {
   while (S.q.length && !stop) {
     const o = S.q[0];
     try {
-      if (o.t === 'add') await api({ mode: 'addUnit', cls: o.cls, id: o.id, cat: o.cat, name: o.name, at: o.at, due: o.due || 0 });
-      if (o.t === 'edit') await api({ mode: 'editUnit', id: o.id, due: o.due || 0 });
+      if (o.t === 'add') await api({ mode: 'addUnit', cls: o.cls, id: o.id, cat: o.cat, name: o.name, at: o.at, due: o.due || 0, state: o.state || '', orig: o.orig || '' });
+      if (o.t === 'edit') await api(Object.assign({ mode: 'editUnit', id: o.id }, o.f || { due: o.due || 0 }));
       if (o.t === 'mark') await sendMark(o);
       S.q.shift(); n++;
     } catch (e) {
@@ -260,8 +283,8 @@ async function loadAll(quiet) {
     const j = await api({ mode: 'loadAll' });
     S.q.forEach(o => {
       const d = j.classes[o.cls]; if (!d) return;
-      if (o.t === 'add' && !d.units.some(u => u.id === o.id)) d.units.push({ id: o.id, cls: o.cls, name: o.name, cat: o.cat, items: [ITEM], at: o.at, due: o.due || 0 });
-      if (o.t === 'edit') d.units.filter(u => u.id === o.id).forEach(u => u.due = o.due || 0);
+      if (o.t === 'add' && !d.units.some(u => u.id === o.id)) d.units.push({ id: o.id, cls: o.cls, name: o.name, cat: o.cat, items: [ITEM], at: o.at, due: o.due || 0, state: o.state || '', orig: o.orig || '' });
+      if (o.t === 'edit') d.units.filter(u => u.id === o.id).forEach(u => Object.assign(u, o.f || { due: o.due || 0 }));
       if (o.t === 'mark') {
         if (o.on && !d.units.some(u => u.id === o.id)) d.units.push({ id: o.id, cls: o.cls, name: o.name, cat: o.cat, items: [ITEM], at: o.at });
         const k = kOf(o.id, o.full);
@@ -311,34 +334,48 @@ function duePicker(m) {
 function keepName() { const i = $('#uname'); if (i && S.modal) S.modal.name = i.value; }
 function openDue() { const u = S.view.cur; if (u) { S.modal = { dueFor: u.id, due: u.due || dueIn(7) }; render(); } }
 function saveDue() {
-  const u = S.view.cur, due = S.modal.due || 0; if (!u) return;
-  u.due = due;
-  const pend = S.q.find(o => o.t === 'add' && o.id === u.id && !o.started);
-  if (pend) pend.due = due;
-  else if (u.virtual) { delete u.virtual; D().units.push(u); S.q.push({ t: 'add', cls: S.cls, id: u.id, cat: u.cat, name: u.name, at: Date.now(), due }); }
-  else S.q.push({ t: 'edit', cls: S.cls, id: u.id, due });
-  S.modal = null; saveAll(); saveQ(); render(); flush();
+  const u = S.view.cur; if (!u) return;
+  upsert(u, { due: S.modal.due || 0 });
+  S.modal = null; render();
 }
-function openEdit() {
-  const u = S.view.cur; if (!u || u.virtual) return;
-  if (pendingFor(u.id).length) return toast('這張還有勾勾沒上傳，連上網路傳完再改');
-  S.modal = { edit: u.id, name: u.name, cat: u.cat }; render();
+// ---------- ⚙️ 整理（2026-11-24 SUNNY：考完的單元收起來；自己加／改名／刪） ----------
+const sheetById = id => sheets(S.cls, catOf()).find(u => u.id === id);
+function openManage() { S.modal = { manage: true }; render(); }
+function setHidden(id, on) { const u = sheetById(id); if (u) { upsert(u, { state: on ? '收起' : '' }); render(); } }
+function openEdit(id) {
+  const u = id ? sheetById(id) : S.view.cur; if (!u) return;
+  S.modal = { edit: u.id, name: u.name, back: !!id }; render();
 }
-async function saveEdit() {
-  const m = S.modal, name = $('#uname').value.trim().slice(0, 30); if (!name) return toast('請輸入名稱');
-  try { await api({ mode: 'editUnit', id: m.edit, name }); D().units.find(u => u.id === m.edit).name = name; saveAll(); S.modal = null; render(); }
-  catch (e) { toast(e.net ? '要有網路才能改名，回家再改' : '沒存到，請再試一次'); }
+function saveEdit() {
+  const m = S.modal, u = sheetById(m.edit), name = $('#uname').value.trim().slice(0, 30); if (!name) return toast('請輸入名稱');
+  if (u && name !== u.name) upsert(u, { name });
+  S.modal = m.back ? { manage: true } : null; render();
 }
+function addJy() {
+  const i = $('#newjy'), name = (i && i.value || '').trim().slice(0, 30); if (!name) return toast('請輸入單元名稱');
+  if (sheets(S.cls, 'jy').some(u => u.name === name)) return toast('「' + name + '」已經有了');
+  const u = { id: 'K' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), cls: S.cls, name, cat: 'jy', items: [ITEM], at: Date.now(), due: 0 };
+  D().units.push(u); S.q.push({ t: 'add', cls: S.cls, id: u.id, cat: 'jy', name, at: u.at, due: 0 });
+  saveAll(); saveQ(); render(); flush();
+}
+// 刪除：那張的勾勾一起刪；寵物點數不扣（SUNNY：點數本來就要給，只是任務結束）
 async function delSheet() {
-  const d = D(), u = d.units.find(x => x.id === S.modal.edit);
-  if (!confirm('確定刪掉「' + u.name + '」和它的打勾紀錄？' + (PETS[S.cls] ? '\n（加過的寵物點數會扣回）' : ''))) return;
+  const d = D(), u = sheetById(S.modal.edit), back = S.modal.back; if (!u) return;
+  const ticks = doneN(d, u);
+  if (!confirm('確定刪掉「' + u.name + '」？' + (ticks ? '\n打過的 ' + ticks + ' 個勾會一起刪掉，不能恢復（寵物點數不會扣）。\n只是考完了的話，用「收起來」就好。' : ''))) return;
+  const onlyLocal = S.q.some(o => o.t === 'add' && o.id === u.id && !o.started);   // 還沒上傳過的：平板上直接拿掉
+  if (u.virtual || onlyLocal) {
+    if (u.virtual) upsert(u, { state: '刪除' });   // 預設單元、沒勾過：離線也能刪
+    else { S.q = S.q.filter(o => o.id !== u.id); d.units = d.units.filter(x => x !== u); Object.keys(d.done).forEach(k => { if (k.startsWith(u.id + '|')) delete d.done[k]; }); saveAll(); saveQ(); }
+    S.modal = back ? { manage: true } : null; render(); return;
+  }
+  if (pendingFor(u.id).length) return toast('這張還有東西沒上傳，連上網路傳完再刪');
   try {
-    const r = await api({ mode: 'delUnit', id: u.id });
-    for (const x of r.refund || []) { try { await post(PETS[S.cls], { mode: 'add', names: [x.full], reason: '訂正取消', pts: -x.pts, src: '訂正紀錄' }); } catch (e) {} }
-    d.units = d.units.filter(x => x.id !== u.id);
+    await api({ mode: 'delUnit', id: u.id, keep: !!u.orig });
+    if (u.orig) u.state = '刪除'; else d.units = d.units.filter(x => x.id !== u.id);
     Object.keys(d.done).forEach(k => { if (k.startsWith(u.id + '|')) delete d.done[k]; });
-    S.modal = null; saveAll(); render();
-  } catch (e) { toast(e.net ? '要有網路才能刪，回家再刪' : '刪除失敗，請再試一次'); }
+    S.modal = back ? { manage: true } : null; saveAll(); render();
+  } catch (e) { toast(e.net ? '要有網路才能刪，回家再刪（只是考完的話用「收起來」，離線也可以）' : '刪除失敗，請再試一次'); }
 }
 
 // ---------- 最後 3 位（平板上自己算，離線也有） ----------
@@ -347,7 +384,7 @@ function watchList() {
   if (!S.all) return out;
   CLASSES.forEach(([c]) => {
     const d = S.all[c]; if (!d || d.roster.length <= 3) return;
-    d.units.forEach(u => {
+    d.units.filter(u => !u.state).forEach(u => {   // 收起／刪除的不再提醒
       const miss = d.roster.filter(r => !d.done[kOf(u.id, r.full)]);
       if (miss.length >= 1 && miss.length <= 3) out.push({ cls: c, cat: u.cat, id: u.id, name: u.name, kids: miss });
     });
@@ -385,15 +422,19 @@ function render() {
   const d = D();
   if (!d) { app.innerHTML = h + `<div class="empty">${S.loading ? '讀取中…' : '還沒有資料：請連上網路重新打開一次'}</div></div>` + modal(); return; }
   const cat = catOf();
-  h += `<div class="cats">${CATS.map(([c, n]) => `<button class="cat ${c === cat ? 'on' : ''}" onclick="pickCat('${c}')">${n}</button>`).join('')}</div>`;
+  h += `<div class="cats" style="grid-template-columns:repeat(${catsOf(S.cls).length},1fr)">${catsOf(S.cls).map(([c, n]) => `<button class="cat ${c === cat ? 'on' : ''}" onclick="pickCat('${c}')">${n}</button>`).join('')}</div>`;
   const list = sheets(S.cls, cat), selId = LS.get('sel_' + S.cls + '_' + cat, '');
-  const u = list.find(x => x.id === selId) || (cat === 'jy' ? null : list[list.length - 1]) || null;
+  const active = list.filter(x => !x.state), hid = list.filter(x => x.state === '收起');
+  const u = list.find(x => x.id === selId) || (cat === 'jy' ? null : active[active.length - 1]) || null;
   S.view = list; S.view.cur = u;
-  const now = Date.now();
-  h += `<div class="chips">${list.map((x, i) => {
-    const n = doneN(d, x), tot = d.roster.length, over = x.due && now > x.due && n < tot;
-    return `<button class="chip ${x === u ? 'on' : ''} ${n === tot && tot ? 'done' : ''}" onclick="pickSheet(${i})">${over ? '⏰ ' : ''}${esc(x.name)}<small>${n === tot && tot ? '✅ 全部完成' : n ? `完成 ${n}/${tot}` : '還沒開始'}</small></button>`;
-  }).join('')}${cat === 'fx' || cat === 'ev' ? `<button class="chip add" onclick="addNext('${cat}')">＋ 下一張</button>` : ''}${cat === 'kg' ? '<button class="chip add" onclick="openAddKg()">＋ 學校</button>' : ''}</div>`;
+  const now = Date.now(), showHid = S.showHid === S.cls + cat || (u && u.state === '收起');
+  const chip = x => {
+    const i = list.indexOf(x), n = doneN(d, x), tot = d.roster.length, over = !x.state && x.due && now > x.due && n < tot;
+    return `<button class="chip ${x === u ? 'on' : ''} ${n === tot && tot ? 'done' : ''} ${x.state ? 'old' : ''}" onclick="pickSheet(${i})">${over ? '⏰ ' : ''}${esc(x.name)}<small>${n === tot && tot ? '✅ 全部完成' : n ? `完成 ${n}/${tot}` : '還沒開始'}</small></button>`;
+  };
+  h += `<div class="chips">${active.map(chip).join('')}${cat === 'fx' || cat === 'ev' ? `<button class="chip add" onclick="addNext('${cat}')">＋ 下一張</button>` : ''}${cat === 'kg' ? '<button class="chip add" onclick="openAddKg()">＋ 學校</button>' : ''}
+    <button class="chip tool" onclick="openManage()">⚙️ 整理</button></div>`;
+  if (hid.length) h += `<div class="chips"><button class="chip fold" onclick="S.showHid=${showHid ? "''" : `'${S.cls + cat}'`};render()">已結束 ${showHid ? '▾' : '▸'}（${hid.length} 個）</button>${showHid ? hid.map(chip).join('') : ''}</div>`;
   if (!u) {
     const tip = { jy: '👆 點上面的單元，就可以開始打勾', fx: '📋 還沒有單元複習<br>按「＋ 下一張」就會出現單元複習01', ev: '📋 還沒有評量<br>按「＋ 下一張」就會出現評量01', kg: '🏫 還沒有考古卷<br>按「＋ 學校」輸入學校名稱' }[cat];
     app.innerHTML = h + `<div class="empty">${tip}</div></div>` + modal(); return;
@@ -401,7 +442,7 @@ function render() {
   const n = doneN(d, u);
   const left = u.due ? Math.ceil((u.due - now) / DAY) : 0;
   const dueTxt = !u.due ? '📅 設期限' : now > u.due ? `⏰ 期限 ${md(u.due)}・已過 ${lateDays(now, u.due)} 天` : `📅 期限 ${md(u.due)}・${left <= 1 ? '今天' : '還有 ' + (left - 1) + ' 天'}`;
-  h += `<div class="bar"><h2>${esc(u.name)}</h2><span class="cnt">${n}/${d.roster.length}</span><button class="btn ${u.due && now > u.due && n < d.roster.length ? 'danger' : ''}" onclick="openDue()">${dueTxt}</button>${u.virtual || cat === 'jy' && UNITS[S.cls] && UNITS[S.cls].indexOf(u.name) >= 0 ? '' : '<button class="btn" onclick="openEdit()">✏️ 改</button>'}
+  h += `<div class="bar"><h2>${esc(u.name)}</h2><span class="cnt">${n}/${d.roster.length}</span>${u.state ? `<button class="btn" onclick="setHidden('${u.id}',false)">↩ 拿回來</button>` : `<button class="btn ${u.due && now > u.due && n < d.roster.length ? 'danger' : ''}" onclick="openDue()">${dueTxt}</button>`}<button class="btn" onclick="openEdit()">✏️ 改</button>
     ${PETS[S.cls] ? `<label class="pet"><input type="checkbox" ${petOn(S.cls) ? 'checked' : ''} onchange="setPet(this.checked)">🐾 打勾＝寵物蛋加點</label>` : ''}</div>`;
   const miss = d.roster.filter(r => !d.done[kOf(u.id, r.full)]), isLast = miss.length <= 3 && d.roster.length > 3;
   const pend = new Set(pendingFor(u.id).map(o => o.full));
@@ -436,6 +477,18 @@ function modal() {
     <h3>新增 ${esc(m.name)}</h3>${duePicker(m)}
     <div class="row"><span class="grow"></span><button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="addSheet(S.modal.add,S.modal.name)">建立</button></div>
   </div></div>`;
+  if (m.manage) {
+    const cat = catOf(), cn = (CATS.find(x => x[0] === cat) || [, ''])[1], list = sheets(S.cls, cat);
+    return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
+    <h3>⚙️ 整理${cn}（${CLS_NAME[S.cls]}）</h3>
+    <p style="font-size:13px;opacity:.7;margin:0 0 6px">考完的按「收起來」：打過的勾都留著，在「已結束」裡還能補勾、隨時拿回來。</p>
+    ${list.map(u => `<div class="mrow ${u.state ? 'old' : ''}"><span>${esc(u.name)}</span>
+      <button class="btn ${u.state ? '' : 'main'}" onclick="setHidden('${u.id}',${!u.state})">${u.state ? '↩ 拿回來' : '收起來'}</button>
+      <button class="btn" onclick="openEdit('${u.id}')">✏️</button></div>`).join('') || '<p style="opacity:.6">還沒有</p>'}
+    ${cat === 'jy' ? `<label>＋ 加單元（自己打）</label><form onsubmit="event.preventDefault();addJy()" style="display:flex;gap:8px"><input id="newjy" type="text" maxlength="30" placeholder="例如：複習講義" style="flex:1"><button class="btn main">加入</button></form>` : ''}
+    <div class="row"><button class="btn main" onclick="S.modal=null;render()">好了</button></div>
+  </div></div>`;
+  }
   if (m.dueFor) return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
     <h3>${esc((S.view.cur || {}).name || '')} 期限</h3>${duePicker(m)}
     <div class="row"><span class="grow"></span><button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="saveDue()">儲存</button></div>
@@ -443,7 +496,7 @@ function modal() {
   return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
     <h3>修改</h3><label>名稱</label><input id="uname" type="text" value="${esc(m.name)}" maxlength="30">
     <div class="row"><button class="btn danger" onclick="delSheet()">刪除</button><span class="grow"></span>
-      <button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="saveEdit()">儲存</button></div>
+      <button class="btn" onclick="S.modal=S.modal.back?{manage:true}:null;render()">取消</button><button class="btn main" onclick="saveEdit()">儲存</button></div>
   </div></div>`;
 }
 // 📲 加到主畫面：Android/電腦 Chrome 直接跳安裝；iPad/iPhone 不能自動加，跳出三步驟說明
@@ -482,7 +535,7 @@ if (S.key) { render(); flush(); if (!S.q.length) loadAll(true); } else render();
 // 離線也打得開：service worker 把網頁存在平板（要先連網打開過一次）
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611242205';
+const VER = '202611242248';
 async function checkNew() {
   if (VER.startsWith('__') || !navigator.onLine) return;
   try {
