@@ -214,6 +214,8 @@ const LAYOUT = {
   grand_角度: { img: "cert_grand_角度.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.29, 0.375, 0.405, 0.45, 0.49, 0.53], logo: [0.19, 0.19, 0.2], date: ["c", 0.57, null], sign: "SUNNY" },
   grand_除法: { img: "cert_grand_除法.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.19, 0.19, 0.2], date: ["c", 0.595, 0.625], sign: "SUNNY" },
   grand_角: { img: "cert_grand_角.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.29, 0.375, 0.405, 0.45, 0.49, 0.53], logo: [0.19, 0.19, 0.2], date: ["c", 0.57, null], sign: "SUNNY" },
+  // 炸彈超人全破（終點寶箱，阿居 2026-11-24：金紅框、皇冠、11 顆星、浩克2.0＋全員圍寶箱；左上角有 LOGO 空框）
+  grand_炸彈超人: { img: "cert_grand_炸彈超人.jpg", title: "大 獎 狀", tc: "#C62828", y: [0.245, 0.325, 0.355, 0.40, 0.44, 0.48], logo: [0.045, 0.045, 0.15], date: ["c", 0.525, 0.56], sign: "SUNNY" },
   grand_加與減: { img: "cert_grand_加與減.jpg", title: "大 獎 狀", tc: "#B8460B", y: [0.30, 0.385, 0.415, 0.465, 0.505, 0.55], logo: [0.235, 0.2, 0.19], date: ["c", 0.595, 0.625], sign: "SUNNY" },
 };
 async function drawCert({ grand, unit, name, line1, line2, date }){   // date＝當初過關那天（獎狀牆重畫用）
@@ -274,6 +276,21 @@ async function showGrand(name, unit){
     <button type="button" class="chlink" id="chDone">回影片清單</button>`, true);
   $("chDone").onclick = done;
 }
+// 💣 炸彈超人闖關：全部過關 → 點終點寶箱領「炸彈超人全破」大獎狀（2026-11-24 SUNNY 選，獎狀阿居畫）
+const GRAND_TXT = { 炸彈超人: { title: "炸彈超人全破大獎狀", line1: "炸彈超人十一型", line2: "全部過關" } };
+async function bombGrand(){
+  const name = (lsGet("wh_name") || "").trim() || "小朋友", p = passed(), T = GRAND_TXT.炸彈超人;
+  p.__grand_炸彈超人 = p.__grand_炸彈超人 || new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p)); sync();
+  panel(`<div class="chtop"><img class="chic" src="th/medal.png" alt="">💣 炸彈超人全破！</div><div class="chcert"><div class="chload">大獎狀製作中…</div></div>`, true);
+  const url = await drawCert({ grand: true, unit: "炸彈超人", name, line1: T.line1, line2: T.line2, date: p.__grand_炸彈超人 });
+  panel(`<div class="chtop"><img class="chic" src="th/medal.png" alt="">💣 炸彈超人全破！</div>
+    <div class="chcert"><img src="${url}" alt="炸彈超人全破大獎狀"></div>
+    <div class="chtip">長按大獎狀可以存到手機，拿給 SUNNY 看！</div>
+    <button type="button" class="chbtn" id="chWall"><img class="chic" src="th/trophy.png" alt="">掛到我的獎狀牆</button>
+    <button type="button" class="chlink" id="chDone">回闖關地圖</button>`, true);
+  $("chWall").onclick = () => { done(); wall(); };
+  $("chDone").onclick = done;
+}
 function done(){ hide(); if (typeof drawRoom === "function") drawRoom(); }
 
 // 清單上的小標籤：有小挑戰／已過關
@@ -298,7 +315,7 @@ const wallSeen = () => { try { return JSON.parse(lsGet("wh_wall_seen") || "[]");
 function wallItems(){
   const items = [];
   Object.entries(passed()).forEach(([k, date]) => {
-    if (k.startsWith("__grand_")) { const unit = k.slice(8); items.push({ key: k, grand: true, unit, date, title: `「${unit}」大獎狀`, line1: `「${unit}」單元`, line2: "小挑戰全部過關" }); return; }
+    if (k.startsWith("__grand_")) { const unit = k.slice(8), t = GRAND_TXT[unit]; items.push({ key: k, grand: true, unit, date, title: t ? t.title : `「${unit}」大獎狀`, line1: t ? t.line1 : `「${unit}」單元`, line2: t ? t.line2 : "小挑戰全部過關" }); return; }
     const c = ALL[k]; if (!c) return;
     items.push({ key: k, unit: c.unit || "其他", date, title: c.title, line1: `看完「${c.title}」`, line2: "小挑戰全部答對" });
   });
@@ -368,5 +385,5 @@ const TRIAL = false;
 const stat = id => !D[id] ? "" : passed()[id] ? "pass" : "todo";
 const unitStat = vs => { const has = vs.filter(v => D[v.id]); return { has: has.length, ok: has.filter(v => passed()[v.id]).length }; };
 const certs = () => Object.keys(passed()).length;
-if (!TRIAL || TESTER) window.CHAL = { has: id => !!D[id], mount, badge, tileNote, close, stat, unitStat, certs, wall };
+if (!TRIAL || TESTER) window.CHAL = { has: id => !!D[id], mount, bombGrand, badge, tileNote, close, stat, unitStat, certs, wall };
 })();

@@ -590,6 +590,20 @@
   .bmn.playing{outline:4px solid #2F7DD1;}
   @keyframes bmpulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.13);}}
   .bmbox{position:absolute;right:3%;top:3%;background:rgba(255,255,255,.92);border-radius:12px;padding:3px 9px;font-size:12px;font-weight:900;color:#B8460B;}
+  /* 終點寶箱（2026-11-24）：全破才會發光，點了開寶箱動畫 → 炸彈超人全破大獎狀 */
+  .bmbox.go{background:#E53935;color:#fff;animation:bmpulse2 1s ease-in-out infinite;}
+  @keyframes bmpulse2{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+  .bmchest{position:absolute;left:79%;top:4%;width:19%;height:28%;border:0;border-radius:50%;background:radial-gradient(circle,rgba(255,235,59,.55),rgba(255,235,59,0) 70%);cursor:pointer;animation:bmglow 1.2s ease-in-out infinite;}
+  @keyframes bmglow{0%,100%{opacity:.55;transform:scale(.95);}50%{opacity:1;transform:scale(1.12);}}
+  .bmopen{position:fixed;inset:0;z-index:60;background:rgba(40,20,0,.78);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+  .bmopen .ch{width:min(70vw,300px);aspect-ratio:290/220;background:url(th/bomb_map.jpg) no-repeat;background-size:576.6% auto;background-position:96.2% 8.3%;border-radius:20px;animation:bmshake .12s linear 6;}
+  .bmopen.pop .ch{animation:bmpop .6s ease-out forwards;}
+  .bmopen b{color:#FFE082;font-size:24px;font-weight:900;font-family:var(--font);text-shadow:0 2px 6px rgba(0,0,0,.5);}
+  .bmopen .fx{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(255,241,118,.95),rgba(255,241,118,0) 60%);opacity:0;}
+  .bmopen.pop .fx{animation:bmflash .7s ease-out forwards;}
+  @keyframes bmshake{0%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}100%{transform:rotate(-6deg);}}
+  @keyframes bmpop{0%{transform:scale(1);}40%{transform:scale(1.25);}100%{transform:scale(.2);opacity:0;}}
+  @keyframes bmflash{0%{opacity:0;}30%{opacity:1;}100%{opacity:0;}}
   .bmtip{font-size:13px;font-weight:700;color:#6B5A45;text-align:center;margin:0 0 10px;}
   .vunit .vdot,.vwide .vdot{position:absolute;right:6px;top:-7px;margin:0;font-size:12px;padding:0 8px;}
   .vwide{position:relative;width:100%;display:flex;align-items:center;gap:10px;margin-bottom:10px;border:0;border-radius:20px;padding:10px 14px 10px 8px;cursor:pointer;
@@ -682,7 +696,7 @@
   .vsok{background:#F3E2C4;color:#6B3A12;}
 </style>
 <link rel="stylesheet" href="calc/calc.css?v=1795248181586">
-<link rel="stylesheet" href="challenge/challenge.css?v=1795488047609">
+<link rel="stylesheet" href="challenge/challenge.css?v=1795505251606">
 </head>
 <body>
 <div class="wrap">
@@ -789,8 +803,8 @@
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
 <script src="v/list.js?v=1795488005159"></script>
-<script src="challenge/data.js?v=1795488047609"></script>
-<script src="challenge/challenge.js?v=1795488047609"></script>
+<script src="challenge/data.js?v=1795505251606"></script>
+<script src="challenge/challenge.js?v=1795505251606"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -1364,8 +1378,8 @@ function bombHTML(){
       :`<span class="${cls}" style="left:${st.left};top:${st.top}">${n.label}<small>即將登場</small></span>`;}).join("");
   const list=ns.filter(n=>n.vs.length).map(n=>`<div class="vh2">${n.name?`💣 ${n.name}`:"🎬 先看介紹"}${n.done?"　✔":""}</div>`+n.vs.map(line).join("")).join("");
   return `<div class="bmhead"><b>💣 炸彈超人闖關地圖</b><small>從介紹開始，一關一關挑戰！過關 ${ok}／${has.length}　<span class="bmend">${L.md} 下片・${L.txt}</span></small></div>
-    <div class="bmmap">${nodes}<span class="bmbox">${all?"🎉 全部破關！":"終點寶箱 🏆"}</span></div>
-    <div class="bmtip">會跳動的就是下一關；灰色的還沒上架，敬請期待！</div>${list}`;
+    <div class="bmmap">${nodes}${all?`<button type="button" class="bmchest" data-chest="1" aria-label="打開寶箱"></button><span class="bmbox go" data-chest="1" style="cursor:pointer">🎁 點寶箱領大獎狀！</span>`:`<span class="bmbox">終點寶箱 🏆</span>`}</div>
+    <div class="bmtip">${all?"全部過關！點右上角的寶箱，打開領「炸彈超人全破大獎狀」🏆":"會跳動的就是下一關；灰色的還沒上架，敬請期待！全部過關可以打開終點寶箱喔！"}</div>${list}`;
 }
 function drawRoom(){
   const w=$("vwrap"), seen=seenSet();
@@ -1525,6 +1539,13 @@ window.addEventListener("popstate",e=>{
   if(e.state&&e.state.v==="home"){ VIEW="home"; drawRoom(); } else closeRoom();
 });
 $("vback").onclick=()=>history.back();
+// 💣 終點寶箱：開寶箱動畫（搖一搖→閃光）→ 炸彈超人全破大獎狀（challenge.js 的 CHAL.bombGrand）
+document.addEventListener("click",e=>{
+  const c=e.target.closest&&e.target.closest("[data-chest]"); if(!c||!window.CHAL||!CHAL.bombGrand) return;
+  const o=document.createElement("div"); o.className="bmopen"; o.innerHTML='<div class="fx"></div><div class="ch"></div><b>寶箱打開中…</b>'; document.body.appendChild(o);
+  setTimeout(()=>{o.classList.add("pop"); o.querySelector("b").textContent="🎉 炸彈超人全破！";},800);
+  setTimeout(()=>{o.remove(); CHAL.bombGrand();},1700);
+});
 document.addEventListener("click",e=>{
   const t=e.target.closest&&e.target.closest("[data-vopen],[data-unit],[data-play],[data-src],[data-key],[data-ask],[data-share],[data-resume]"); if(!t) return;
   if(t.dataset.share){ openShare(); return; }
