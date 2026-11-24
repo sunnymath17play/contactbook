@@ -11,12 +11,13 @@
 <meta name="apple-mobile-web-app-title" content="訂正紀錄">
 <link rel="manifest" href="manifest.json">
 <style>
-/* 2026-11-02 SUNNY：講義 B 本各單元「單元複習 01、02…」完成訂正紀錄；全部班級；三年級、五年級B 打勾順便寵物蛋加點 */
+/* 2026-11-02 SUNNY：各班完成訂正紀錄；三年級、四年級、五年級B 打勾順便寵物蛋加點
+   2026-11-24 改版：班級 → 講義／單元複習／期末評量／考古卷 → 一張一張；平板上課離線也能勾，回家連網自動上傳 */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; font-family: 'PingFang TC', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
   background: var(--bg); color: var(--text); min-height: 100vh; }
 button { font: inherit; cursor: pointer; }
-.wrap { max-width: 960px; margin: 0 auto; padding: 12px 12px 90px; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 12px 14px 90px; }
 header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 header img { width: 34px; height: 34px; object-fit: contain; opacity: .9; }
 header h1 { font-size: 20px; margin: 0; color: var(--main); letter-spacing: 1px; }
@@ -26,19 +27,30 @@ header .home { border: 2px solid var(--main); background: #fff; color: var(--mai
 .howto b.n { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--main); color: #fff; display: flex; align-items: center; justify-content: center; }
 .howto svg { vertical-align: middle; }
 
-.tabs, .units { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; }
-.tabs::-webkit-scrollbar, .units::-webkit-scrollbar { display: none; }
+.net { display: flex; align-items: center; gap: 10px; border-radius: 14px; padding: 8px 12px; margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.net.off { background: #EEF1F5; color: #4A5568; border: 2px solid #CBD5E0; }
+.net.wait { background: #FFF8E1; color: #7A5A00; border: 2px solid #FFD666; }
+.net .btn { margin-left: auto; }
+
+.tabs, .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar, .chips::-webkit-scrollbar { display: none; }
 .tab { flex: none; border: 2px solid var(--line); background: #fff; color: var(--text); border-radius: 22px;
   padding: 8px 16px; font-size: 16px; font-weight: 700; }
 .tab.on { background: var(--main); border-color: var(--main); color: #fff; }
-.unit { flex: none; border: 2px solid var(--line); background: #fffc; color: var(--text); border-radius: 14px;
-  padding: 6px 12px; font-size: 14px; font-weight: 600; text-align: left; line-height: 1.3; }
-.unit small { display: block; font-size: 11px; font-weight: 500; opacity: .65; }
-.unit.on { border-color: var(--main); background: #fff; box-shadow: 0 0 0 2px var(--main) inset; }
-.unit.add { border-style: dashed; color: var(--main); }
+.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #fff9; border-radius: 16px; padding: 5px; margin: 4px 0 10px; }
+.cat { border: 0; background: transparent; color: var(--text); border-radius: 12px; padding: 10px 4px; font-size: 17px; font-weight: 700; }
+.cat.on { background: #fff; color: var(--main); box-shadow: 0 2px 8px #0002, 0 0 0 2px var(--main) inset; }
+.chips { flex-wrap: wrap; overflow: visible; }
+.chip { flex: none; border: 2px solid var(--line); background: #fffc; color: var(--text); border-radius: 14px;
+  padding: 7px 14px; font-size: 15px; font-weight: 600; text-align: left; line-height: 1.3; }
+.chip small { display: block; font-size: 11px; font-weight: 500; opacity: .65; }
+.chip.on { border-color: var(--main); background: #fff; box-shadow: 0 0 0 2px var(--main) inset; }
+.chip.done small { color: #22A06B; opacity: 1; font-weight: 700; }
+.chip.add { border-style: dashed; color: var(--main); background: #fff6; }
 
-.bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
-.bar h2 { font-size: 18px; margin: 0; }
+.bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 10px; }
+.bar h2 { font-size: 20px; margin: 0; }
+.bar .cnt { font-size: 15px; font-weight: 700; color: var(--main); }
 .btn { border: 2px solid var(--line); background: #fff; color: var(--text); border-radius: 10px; padding: 6px 12px; font-size: 14px; font-weight: 600; }
 .btn.main { background: var(--main); border-color: var(--main); color: #fff; }
 .btn.danger { color: #E5484D; border-color: #F5C2C4; }
@@ -46,32 +58,26 @@ header .home { border: 2px solid var(--main); background: #fff; color: var(--mai
   background: #fff; border: 2px solid var(--line); border-radius: 20px; padding: 4px 12px; }
 .pet input { width: 20px; height: 20px; accent-color: var(--main); }
 
-.card { background: #fff; border-radius: 16px; box-shadow: 0 2px 10px #0001; overflow: auto; }
-table { border-collapse: collapse; width: 100%; }
-th, td { border-bottom: 1px solid #EEF2F6; text-align: center; }
-th { position: sticky; top: 0; background: #fff; font-size: 14px; padding: 10px 6px; z-index: 1; }
-th .n { display: block; font-size: 12px; font-weight: 500; color: var(--main); }
-th.name, td.name { text-align: left; padding-left: 14px; white-space: nowrap; position: sticky; left: 0; background: #fff; }
-td.name { font-size: 17px; font-weight: 600; }
-td.name .no { font-size: 11px; opacity: .4; margin-right: 6px; display: inline-block; width: 16px; text-align: right; }
-td.c { height: 50px; min-width: 84px; font-size: 26px; user-select: none; }
-td.c.ok { background: #EAFBF1; }
-td.c.busy { opacity: .4; }
-tr:nth-child(even) td.name { background: #FAFCFE; }
+.kids { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.kid { position: relative; display: flex; align-items: center; gap: 10px; border: 2px solid #E2E8F0; background: #fff; color: var(--text);
+  border-radius: 16px; padding: 14px 12px; min-height: 64px; font-size: 19px; font-weight: 700; text-align: left; user-select: none; }
+.kid .no { font-size: 12px; opacity: .4; width: 18px; text-align: right; flex: none; }
+.kid .box { margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 10px; border: 2px solid #CBD5E0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.kid.ok { background: #EAFBF1; border-color: #9BE3BC; }
+.kid.ok .box { border: 0; }
+.kid.last { border-color: #FFB547; background: #FFF4E5; }
+.kid .tag { position: absolute; top: -9px; left: 10px; font-size: 11px; background: #FFB547; color: #fff; border-radius: 8px; padding: 1px 7px; }
+.kid .up { position: absolute; top: 4px; right: 6px; font-size: 11px; opacity: .55; }
 
-.left { margin-top: 12px; display: grid; gap: 8px; }
-.left div { background: #fffc; border-radius: 12px; padding: 8px 12px; font-size: 15px; }
-.left b { color: var(--main); }
+.left { margin-top: 14px; background: #fffc; border-radius: 12px; padding: 10px 14px; font-size: 15px; }
 .left .all { color: #22A06B; font-weight: 700; }
+.left .lastline { color: #C2410C; font-weight: 700; }
 
 .watch { background: #FFF4E5; border: 2px solid #FFB547; border-radius: 14px; padding: 10px 12px; margin: 0 0 12px; }
 .watch h3 { margin: 0 0 6px; font-size: 15px; color: #C2410C; }
 .watch button { display: block; width: 100%; text-align: left; border: 0; background: #fff; border-radius: 10px; padding: 8px 10px; margin-top: 6px; font-size: 15px; color: #5A3B00; }
 .watch button small { opacity: .6; font-size: 12px; }
 .watch .hint { font-size: 12px; opacity: .7; margin-top: 6px; }
-td.c.last { background: #FFF4E5; box-shadow: inset 0 0 0 2px #FFB547; }
-td.name .tag { font-size: 11px; background: #FFB547; color: #fff; border-radius: 8px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
-.left .lastline { color: #C2410C; font-weight: 700; }
 .empty { text-align: center; padding: 50px 10px; opacity: .7; font-size: 16px; line-height: 1.8; }
 
 .mask { position: fixed; inset: 0; background: #0006; display: flex; align-items: flex-end; justify-content: center; z-index: 9; }
@@ -80,19 +86,10 @@ td.name .tag { font-size: 11px; background: #FFB547; color: #fff; border-radius:
 @media (min-width: 700px) { .mask { align-items: center; } .sheet { border-radius: 20px; } }
 .sheet h3 { margin: 0 0 12px; color: var(--main); }
 .sheet label { display: block; font-size: 13px; font-weight: 700; margin: 12px 0 6px; opacity: .75; }
-.sheet input[type=text], .sheet input[type=password] { width: 100%; font-size: 17px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 10px; outline: none; }
+.sheet input[type=text] { width: 100%; font-size: 17px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 10px; outline: none; }
 .sheet input:focus { border-color: var(--main); }
-.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .presets button { border: 2px solid var(--line); background: #fff; border-radius: 10px; padding: 6px 10px; font-size: 14px; color: var(--text); }
-.presets button.on { background: var(--main); border-color: var(--main); color: #fff; }
-.step { display: flex; align-items: center; gap: 12px; font-size: 16px; }
-.step button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: #fff; font-size: 20px; color: var(--main); }
-.kind { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
-.kind .kn { width: 72px; font-weight: 700; font-size: 16px; }
-.kind input { flex: 1; font-size: 15px; padding: 8px 10px; border: 2px solid var(--line); border-radius: 10px; outline: none; }
-.tg { border: 2px solid var(--line); background: #fff; border-radius: 12px; padding: 8px 14px; font-size: 16px; font-weight: 700; color: var(--text); }
-.tg.on { border-color: var(--main); }
-.preview { margin-top: 10px; font-size: 13px; background: #F5F8FB; border-radius: 10px; padding: 8px 10px; }
 .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 .row .grow { flex: 1; }
 
@@ -114,12 +111,14 @@ const PETS = {
   g5b: 'https://script.google.com/macros/s/AKfycbxTqrjL43ZD31zvDHQxLAnpxq9FyXF87ns56Q_mVPbel4RiRj4I1A2GUCkWbN8i8dm12Q/exec',
 };
 const CLASSES = [['g3', '三年級'], ['g4', '四年級'], ['g5a', '五年級A'], ['g5b', '五年級B'], ['g6', '六年級']];
+const CATS = [['jy', '講義'], ['fx', '單元複習'], ['ev', '期末評量'], ['kg', '考古卷']];
+const ITEM = '完成';
 const T_BLUE  = { '--main': '#3D9BE9', '--line': '#BFE0FA', '--text': '#2D4A66', '--bg': 'linear-gradient(160deg,#F2F9FF 0%,#E3F2FF 100%)' };
 const T_LEMON = { '--main': '#F5A524', '--line': '#FFE29A', '--text': '#5A4520', '--bg': 'linear-gradient(160deg,#FFFDF0 0%,#FFF4CF 100%)' };
 const T_MINT  = { '--main': '#22B892', '--line': '#B6EBDC', '--text': '#25504A', '--bg': 'linear-gradient(160deg,#F1FCF8 0%,#DDF6EE 100%)' };
 const T_PEACH = { '--main': '#F5874A', '--line': '#FFD3B5', '--text': '#5C3A24', '--bg': 'linear-gradient(160deg,#FFF8F1 0%,#FFE9D6 100%)' };
 const THEMES = { g3: T_BLUE, g4: T_LEMON, g5a: T_MINT, g5b: T_MINT, g6: T_PEACH };
-// 講義上學期單元（新增單元時點一下帶入；也可以自己打）
+// 講義上學期單元（「講義」分頁直接列出來，不用先新增）
 const g5 = ['01 複雜的統計圖', '02 因數和倍數', '03 多邊形', '04 擴分、約分和通分', '05 線對稱圖形', '06 異分母分數的加減',
   '07 整數四則運算', '08 平行四邊形、三角形、梯形面積', '09 時間的乘法與除法', '10 正方體與長方體'];
 const UNITS = {
@@ -131,13 +130,25 @@ const UNITS = {
 
 const LS = { get: (k, d) => { try { const v = localStorage.getItem('dz_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set: (k, v) => { try { localStorage.setItem('dz_' + k, JSON.stringify(v)); } catch (e) {} } };
-const S = { key: LS.get('key', ''), cls: LS.get('cls', 'g3'), unit: null, data: null, loading: false, modal: null, busy: {}, watch: [] };
+// all＝全部班級（存在平板，離線照樣看）；q＝還沒上傳的動作（離線打的勾、新增的張）
+const S = { key: LS.get('key', ''), cls: LS.get('cls', 'g3'), all: LS.get('all', null), q: LS.get('q', []),
+  loading: false, syncing: false, modal: null, view: [] };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const saveAll = () => LS.set('all', S.all), saveQ = () => LS.set('q', S.q);
+const D = () => S.all && S.all[S.cls];
+const catOf = () => LS.get('cat_' + S.cls, 'jy');
+const pad = n => String(n).padStart(2, '0');
+const hash = s => { let h = 2166136261; for (const ch of s) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
+const kOf = (id, full) => id + '|' + ITEM + '|' + full;
 
 async function post(url, body) {
-  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: S.key }, body)) });
-  const j = await r.json();
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+  let r;
+  try { r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: S.key }, body)), signal: ctl.signal }); }
+  catch (e) { const x = new Error('net'); x.net = true; throw x; }
+  finally { clearTimeout(t); }
+  let j; try { j = await r.json(); } catch (e) { const x = new Error('net'); x.net = true; throw x; }
   if (!j.ok) throw new Error(j.err || 'fail');
   return j;
 }
@@ -146,116 +157,173 @@ let toastT;
 function toast(msg) {
   let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
   t.textContent = msg; t.style.display = 'block';
-  clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', 2600);
+  clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', 2800);
 }
 function theme() {
   const T = THEMES[S.cls] || T_BLUE;
   Object.entries(T).forEach(([k, v]) => document.body.style.setProperty(k, v));
   document.querySelector('meta[name=theme-color]').content = T['--main'];
 }
-const petOn = () => !!PETS[S.cls] && LS.get('pet_' + S.cls, true);
-
-async function loadWatch() {
-  try { S.watch = (await api({ mode: 'watch' })).list; render(); } catch (e) {}
-}
+const petOn = c => !!PETS[c] && LS.get('pet_' + c, true);
 const CLS_NAME = Object.fromEntries(CLASSES);
-const daysAgo = t => { const d = Math.floor((Date.now() - t) / 864e5); return d <= 0 ? '今天' : d + ' 天了'; };
-function goWatch(c, u) { S.cls = c; LS.set('cls', c); LS.set('unit_' + c, u); load(); }
 
-async function load() {
-  S.loading = true; S.data = null; render();
+// ---------- 每班每分類的「張」 ----------
+function sheets(c, cat) {
+  const d = S.all && S.all[c]; if (!d) return [];
+  const mine = d.units.filter(u => u.cat === cat);
+  if (cat === 'jy') {
+    const pre = (UNITS[c] || []).map(n => mine.find(u => u.name === n) || { id: 'J' + hash(c + '|' + n), cls: c, name: n, cat: 'jy', items: [ITEM], at: 0, virtual: true });
+    return pre.concat(mine.filter(u => pre.indexOf(u) < 0));
+  }
+  if (cat === 'kg') return mine.slice().sort((a, b) => a.at - b.at);
+  return mine.slice().sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant', { numeric: true }));
+}
+const doneN = (d, u) => d.roster.filter(r => d.done[kOf(u.id, r.full)]).length;
+const pendingFor = id => S.q.filter(o => o.id === id);
+
+// ---------- 打勾（先記在平板，再排隊上傳） ----------
+function tap(i) {
+  const d = D(), u = S.view.cur, r = d.roster[i]; if (!u || !r) return;
+  const k = kOf(u.id, r.full), was = d.done[k];
+  const pi = S.q.findIndex(o => o.t === 'mark' && o.id === u.id && o.full === r.full && !o.started);
+  if (pi >= 0) {   // 還沒上傳就又按一次＝抵銷，回到原本的樣子
+    const o = S.q.splice(pi, 1)[0];
+    if (o.on) delete d.done[k]; else d.done[k] = o.prev;
+  } else {
+    if (u.virtual) { delete u.virtual; d.units.push(u); }
+    S.q.push({ t: 'mark', cls: S.cls, id: u.id, cat: u.cat, name: u.name, full: r.full, on: !was, prev: was || null, pet: petOn(S.cls), at: Date.now() });
+    if (was) delete d.done[k]; else d.done[k] = { at: Date.now(), pts: 0, local: 1 };
+  }
+  saveAll(); saveQ(); render(); flush();
+}
+
+// ---------- 上傳（回家連上網自動送；送過的不會重複） ----------
+let flushT;
+async function flush() {
+  if (S.syncing || !S.q.length || !S.key) return;
+  S.syncing = true; render();
+  let n = 0, stop = false;
+  while (S.q.length && !stop) {
+    const o = S.q[0];
+    try {
+      if (o.t === 'add') await api({ mode: 'addUnit', cls: o.cls, id: o.id, cat: o.cat, name: o.name, at: o.at });
+      if (o.t === 'mark') await sendMark(o);
+      S.q.shift(); n++;
+    } catch (e) {
+      if (e.net) stop = true;
+      else if (e.message === 'bad_key') { stop = true; S.key = ''; LS.set('key', ''); }
+      else { S.q.shift(); toast('⚠ 有一筆沒存到（' + (o.name || '') + '），請再按一次'); }
+    }
+    saveQ(); saveAll();
+  }
+  S.syncing = false;
+  if (n && !S.q.length && S.wasOffline) { toast('✓ 離線時的 ' + n + ' 筆都上傳好了'); S.wasOffline = false; }
+  if (stop) S.wasOffline = true;
+  render();
+  clearTimeout(flushT);
+  if (S.q.length) flushT = setTimeout(flush, 20000);
+  else if (n) loadAll(true);
+}
+async function sendMark(o) {
+  const d = S.all[o.cls], k = kOf(o.id, o.full), nick = ((d.roster.find(r => r.full === o.full) || {}).nick) || o.full;
+  o.started = 1;
+  if (o.on) {
+    if (o.pet && PETS[o.cls] && o.pts == null) {
+      try { o.pts = (await post(PETS[o.cls], { mode: 'add', names: [o.full], reason: '作業', src: '訂正紀錄' })).pts || 0; }
+      catch (e) { if (e.net) throw e; o.pts = 0; toast('⚠ 寵物蛋加點沒成功（' + nick + '），訂正有記到'); }
+      saveQ();
+      if (o.pts) toast('🐾 ' + nick + ' 寵物蛋 +' + o.pts);
+    }
+    const r = await api({ mode: 'mark', cls: o.cls, unit: o.id, item: ITEM, full: o.full, on: true, pts: o.pts || 0, cat: o.cat, name: o.name, at: o.at });
+    if (r.already && o.pts) { o.on = false; o.refund = o.pts; }   // 其實早就勾過了：剛加的點扣回
+    else if (d.done[k]) d.done[k] = { at: o.at, pts: o.pts || 0 };
+  } else if (o.refund == null) {
+    const r = await api({ mode: 'mark', cls: o.cls, unit: o.id, item: ITEM, full: o.full, on: false });
+    o.refund = r.pts || 0; saveQ();
+  }
+  if (o.refund && PETS[o.cls]) {
+    try { await post(PETS[o.cls], { mode: 'add', names: [o.full], reason: '訂正取消', pts: -o.refund, src: '訂正紀錄' }); toast(nick + ' 寵物蛋 -' + o.refund); }
+    catch (e) { if (e.net) throw e; toast('⚠ 寵物蛋沒扣回（' + nick + ' -' + o.refund + '），跟浩克說'); }
+  }
+}
+
+// 從後台拿全部班級；還沒上傳的動作疊回去（才不會一重新整理勾勾就不見）
+async function loadAll(quiet) {
+  if (!S.all) { S.loading = true; render(); }
   try {
-    const d = await api({ mode: 'load', cls: S.cls });
-    d.units.sort((a, b) => b.at - a.at);
-    S.data = d;
-    const last = LS.get('unit_' + S.cls, '');
-    S.unit = (d.units.find(u => u.id === last) || d.units[0] || {}).id || null;
+    const j = await api({ mode: 'loadAll' });
+    S.q.forEach(o => {
+      const d = j.classes[o.cls]; if (!d) return;
+      if (o.t === 'add' && !d.units.some(u => u.id === o.id)) d.units.push({ id: o.id, cls: o.cls, name: o.name, cat: o.cat, items: [ITEM], at: o.at });
+      if (o.t === 'mark') {
+        if (o.on && !d.units.some(u => u.id === o.id)) d.units.push({ id: o.id, cls: o.cls, name: o.name, cat: o.cat, items: [ITEM], at: o.at });
+        const k = kOf(o.id, o.full);
+        if (o.on) d.done[k] = d.done[k] || { at: o.at, pts: 0, local: 1 }; else delete d.done[k];
+      }
+    });
+    S.all = j.classes; saveAll(); S.lastLoad = Date.now();
   } catch (e) {
     if (e.message === 'bad_key') { S.key = ''; LS.set('key', ''); }
-    else toast('讀取失敗，請檢查網路再試一次');
+    else if (!quiet && !S.all) toast('沒有網路，而且這台還沒存過資料：請先連上網路打開一次');
+    if (e.net) S.wasOffline = true;
   }
   S.loading = false; render();
 }
 
-async function toggle(full, item) {
-  const u = S.data.units.find(x => x.id === S.unit); if (!u) return;
-  const k = u.id + '|' + item + '|' + full;
-  if (S.busy[k]) return;
-  const was = S.data.done[k];
-  const nick = (S.data.roster.find(r => r.full === full) || {}).nick || full;
-  S.busy[k] = 1;
-  if (was) delete S.data.done[k]; else S.data.done[k] = { at: Date.now(), pts: 0 };
-  render();
-  try {
-    if (!was) {
-      let pts = 0;
-      if (petOn()) {
-        try { pts = (await post(PETS[S.cls], { mode: 'add', names: [full], reason: '作業', src: '訂正紀錄' })).pts || 0; }
-        catch (e) { toast('⚠ 寵物蛋加點沒成功（' + nick + '），訂正有記到'); }
-      }
-      await api({ mode: 'mark', cls: S.cls, unit: u.id, item, full, on: true, pts });
-      S.data.done[k] = { at: Date.now(), pts };
-      if (pts) toast('🐾 ' + nick + ' 寵物蛋 +' + pts);
-    } else {
-      const r = await api({ mode: 'mark', cls: S.cls, unit: u.id, item, full, on: false });
-      if (r.pts && PETS[S.cls]) {
-        try { await post(PETS[S.cls], { mode: 'add', names: [full], reason: '訂正取消', pts: -r.pts, src: '訂正紀錄' }); toast('已取消，' + nick + ' 寵物蛋 -' + r.pts); }
-        catch (e) { toast('⚠ 已取消打勾，但寵物蛋沒扣回（' + nick + ' -' + r.pts + '），跟浩克說'); }
-      }
-    }
-  } catch (e) {
-    if (was) S.data.done[k] = was; else delete S.data.done[k];
-    toast('沒存到，請再按一次');
-  }
-  delete S.busy[k]; render(); loadWatch();
+// ---------- 新增／修改 ----------
+function addNext(cat) {
+  const pre = cat === 'fx' ? '單元複習' : '評量';
+  const used = sheets(S.cls, cat).map(u => +((u.name.match(/(\d+)\s*$/) || [])[1] || 0));
+  const name = pre + pad((used.length ? Math.max.apply(null, used) : 0) + 1);
+  addSheet(cat, name);
 }
-
-// 2026-11-02 SUNNY：要記的有「講義、單元複習、考卷，以及其他」→ 每個單元自己勾要哪幾種
-const nums = (pre, n) => Array.from({ length: n }, (_, i) => pre + String(i + 1).padStart(2, '0'));
-function kinds(list) {
-  const k = { jy: false, fx: 0, kj: 0, other: [] };
-  list.forEach(it => {
-    if (it === '講義') k.jy = true;
-    else if (/^單元複習\d+$/.test(it)) k.fx = Math.max(k.fx, +it.slice(4));
-    else if (/^考卷\d+$/.test(it)) k.kj = Math.max(k.kj, +it.slice(2));
-    else k.other.push(it);
-  });
-  return k;
+function addSheet(cat, name) {
+  name = String(name || '').trim().slice(0, 30); if (!name) return toast('請輸入名稱');
+  const d = D();
+  if (d.units.some(u => u.cat === cat && u.name === name)) return toast('「' + name + '」已經有了');
+  const u = { id: 'K' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), cls: S.cls, name, cat, items: [ITEM], at: Date.now() };
+  d.units.push(u);
+  S.q.push({ t: 'add', cls: S.cls, id: u.id, cat, name, at: u.at });
+  LS.set('sel_' + S.cls + '_' + cat, u.id);
+  S.modal = null; saveAll(); saveQ(); render(); flush();
 }
-const itemList = m => [].concat(m.jy ? ['講義'] : [], nums('單元複習', m.fx), nums('考卷', m.kj),
-  String(m.other || '').split(/[、,，\s]+/).filter(Boolean));
-function openUnit(edit) {
-  const u = edit && S.data.units.find(x => x.id === S.unit);
-  if (u) { const k = kinds(u.items); S.modal = { edit: u.id, name: u.name, jy: k.jy, fx: k.fx, kj: k.kj, other: k.other.join('、') }; }
-  else S.modal = { name: '', jy: false, fx: 2, kj: 0, other: '' };
-  render(); setTimeout(() => { const i = $('#uname'); if (i && !u) i.focus(); }, 50);
+function openEdit() {
+  const u = S.view.cur; if (!u || u.virtual) return;
+  if (pendingFor(u.id).length) return toast('這張還有勾勾沒上傳，連上網路傳完再改');
+  S.modal = { edit: u.id, name: u.name, cat: u.cat }; render();
 }
-async function saveUnit() {
-  const m = S.modal, name = $('#uname').value.trim();
-  if (!name) return toast('請選或輸入單元');
-  m.other = $('#uother').value;
-  const list = itemList(m);
-  if (!list.length) return toast('至少要選一種（講義／單元複習／考卷／其他）');
-  if (list.length > 12) return toast('一個單元最多 12 項');
-  if (m.edit) {
-    const old = S.data.units.find(x => x.id === m.edit).items, gone = old.filter(it => list.indexOf(it) < 0);
-    if (gone.some(it => S.data.roster.some(r => S.data.done[m.edit + '|' + it + '|' + r.full])) &&
-      !confirm('拿掉的「' + gone.join('、') + '」已經有打勾，拿掉後就看不到那些勾了。確定？')) return;
-  }
-  try {
-    if (m.edit) { await api({ mode: 'editUnit', id: m.edit, name, items: list }); }
-    else { const r = await api({ mode: 'addUnit', cls: S.cls, name, items: list }); LS.set('unit_' + S.cls, r.id); }
-    S.modal = null; await load();
-  } catch (e) { toast('沒存到，請再試一次'); }
+async function saveEdit() {
+  const m = S.modal, name = $('#uname').value.trim().slice(0, 30); if (!name) return toast('請輸入名稱');
+  try { await api({ mode: 'editUnit', id: m.edit, name }); D().units.find(u => u.id === m.edit).name = name; saveAll(); S.modal = null; render(); }
+  catch (e) { toast(e.net ? '要有網路才能改名，回家再改' : '沒存到，請再試一次'); }
 }
-async function delUnit() {
-  const u = S.data.units.find(x => x.id === S.modal.edit);
+async function delSheet() {
+  const d = D(), u = d.units.find(x => x.id === S.modal.edit);
   if (!confirm('確定刪掉「' + u.name + '」和它的打勾紀錄？' + (PETS[S.cls] ? '\n（加過的寵物點數會扣回）' : ''))) return;
   try {
     const r = await api({ mode: 'delUnit', id: u.id });
     for (const x of r.refund || []) { try { await post(PETS[S.cls], { mode: 'add', names: [x.full], reason: '訂正取消', pts: -x.pts, src: '訂正紀錄' }); } catch (e) {} }
-    S.modal = null; await load();
-  } catch (e) { toast('刪除失敗，請再試一次'); }
+    d.units = d.units.filter(x => x.id !== u.id);
+    Object.keys(d.done).forEach(k => { if (k.startsWith(u.id + '|')) delete d.done[k]; });
+    S.modal = null; saveAll(); render();
+  } catch (e) { toast(e.net ? '要有網路才能刪，回家再刪' : '刪除失敗，請再試一次'); }
+}
+
+// ---------- 最後 3 位（平板上自己算，離線也有） ----------
+function watchList() {
+  const out = [];
+  if (!S.all) return out;
+  CLASSES.forEach(([c]) => {
+    const d = S.all[c]; if (!d || d.roster.length <= 3) return;
+    d.units.forEach(u => {
+      const miss = d.roster.filter(r => !d.done[kOf(u.id, r.full)]);
+      if (miss.length >= 1 && miss.length <= 3) out.push({ cls: c, cat: u.cat, id: u.id, name: u.name, kids: miss });
+    });
+  });
+  return out;
+}
+function goWatch(i) {
+  const w = S.watchView[i]; S.cls = w.cls; LS.set('cls', w.cls); LS.set('cat_' + w.cls, w.cat || 'jy'); LS.set('sel_' + w.cls + '_' + (w.cat || 'jy'), w.id); render();
 }
 
 function render() {
@@ -269,41 +337,48 @@ function render() {
       <p style="font-size:13px;opacity:.6">跟樹洞回信、寵物蛋同一組密碼，這台記住後就不用再打</p><p id="msg" style="color:#E5484D;font-weight:700;min-height:1em"></p>${standalone() ? '' : '<button type="button" class="btn" style="width:100%" onclick="addHome()">📲 加到主畫面</button>'}</form>` + modal();
     return;
   }
-  const d = S.data, u = d && d.units.find(x => x.id === S.unit);
-  let h = `<div class="wrap"><header><img src="logo.png" alt=""><h1>訂正紀錄</h1><span class="sub">SUNNY魔法數學</span>${standalone() ? '' : '<button class="home" onclick="addHome()">📲 加到主畫面</button>'}</header>
-    <div class="tabs">${CLASSES.map(([c, n]) => `<button class="tab ${c === S.cls ? 'on' : ''}" onclick="pick('${c}')">${n}</button>`).join('')}</div>`;
-  if (S.watch.length) {
-    h += '<div class="watch"><h3>⚠ 最後 3 位還沒訂正（要注意）</h3>' + S.watch.map(w =>
-      `<button onclick="goWatch('${w.cls}','${w.unit}')"><b>${esc(w.kids.map(k => k.nick).join('、'))}</b><br><small>${CLS_NAME[w.cls]}・${esc(w.name)}・${esc(w.item)}・剩 ${w.kids.length} 人${w.since ? '（' + daysAgo(w.since) + '）' : ''}</small></button>`).join('') +
+  let h = `<div class="wrap"><header><img src="logo.png" alt=""><h1>訂正紀錄</h1><span class="sub">SUNNY魔法數學</span>${standalone() ? '' : '<button class="home" onclick="addHome()">📲 加到主畫面</button>'}</header>`;
+  const off = !navigator.onLine;
+  if (S.q.length) {
+    const marks = S.q.filter(o => o.t === 'mark').length;
+    h += `<div class="net wait">${S.syncing ? '⏳ 上傳中…' : (off ? '📴 離線中・' : '') + '還有 ' + (marks || S.q.length) + ' 筆沒上傳（連上網路會自動上傳）'}${S.syncing ? '' : '<button class="btn" onclick="flush()">立即上傳</button>'}</div>`;
+  } else if (off) h += '<div class="net off">📴 離線中・照常打勾，連上網路會自動上傳</div>';
+  h += `<div class="tabs">${CLASSES.map(([c, n]) => `<button class="tab ${c === S.cls ? 'on' : ''}" onclick="pick('${c}')">${n}</button>`).join('')}</div>`;
+  const W = S.watchView = watchList();
+  if (W.length) {
+    h += '<div class="watch"><h3>⚠ 最後 3 位還沒訂正（要注意）</h3>' + W.map((w, i) =>
+      `<button onclick="goWatch(${i})"><b>${esc(w.kids.map(k => k.nick).join('、'))}</b><br><small>${CLS_NAME[w.cls]}・${esc((CATS.find(x => x[0] === w.cat) || [, ''])[1])} ${esc(w.name)}・剩 ${w.kids.length} 人</small></button>`).join('') +
       '<div class="hint">想關心家長：跟浩克說「擬訂正訊息」</div></div>';
   }
-  if (S.loading || !d) { app.innerHTML = h + '<div class="empty">讀取中…</div></div>' + modal(); return; }
-  h += `<div class="units"><button class="unit add" onclick="openUnit()">＋ 單元</button>${d.units.map(x => {
-    const tot = x.items.length * d.roster.length, ok = x.items.reduce((s, it) => s + d.roster.filter(r => d.done[x.id + '|' + it + '|' + r.full]).length, 0);
-    return `<button class="unit ${x.id === S.unit ? 'on' : ''}" onclick="pickUnit('${x.id}')">${esc(x.name)}<small>${ok === tot && tot ? '✅ 全部完成' : `完成 ${ok}/${tot}`}</small></button>`;
+  const d = D();
+  if (!d) { app.innerHTML = h + `<div class="empty">${S.loading ? '讀取中…' : '還沒有資料：請連上網路重新打開一次'}</div></div>` + modal(); return; }
+  const cat = catOf();
+  h += `<div class="cats">${CATS.map(([c, n]) => `<button class="cat ${c === cat ? 'on' : ''}" onclick="pickCat('${c}')">${n}</button>`).join('')}</div>`;
+  const list = sheets(S.cls, cat), selId = LS.get('sel_' + S.cls + '_' + cat, '');
+  const u = list.find(x => x.id === selId) || (cat === 'jy' ? null : list[list.length - 1]) || null;
+  S.view = list; S.view.cur = u;
+  h += `<div class="chips">${list.map((x, i) => {
+    const n = doneN(d, x), tot = d.roster.length;
+    return `<button class="chip ${x === u ? 'on' : ''} ${n === tot && tot ? 'done' : ''}" onclick="pickSheet(${i})">${esc(x.name)}<small>${n === tot && tot ? '✅ 全部完成' : n ? `完成 ${n}/${tot}` : '還沒開始'}</small></button>`;
+  }).join('')}${cat === 'fx' || cat === 'ev' ? `<button class="chip add" onclick="addNext('${cat}')">＋ 下一張</button>` : ''}${cat === 'kg' ? '<button class="chip add" onclick="openAddKg()">＋ 學校</button>' : ''}</div>`;
+  if (!u) {
+    const tip = { jy: '👆 點上面的單元，就可以開始打勾', fx: '📋 還沒有單元複習<br>按「＋ 下一張」就會出現單元複習01', ev: '📋 還沒有評量<br>按「＋ 下一張」就會出現評量01', kg: '🏫 還沒有考古卷<br>按「＋ 學校」輸入學校名稱' }[cat];
+    app.innerHTML = h + `<div class="empty">${tip}</div></div>` + modal(); return;
+  }
+  const n = doneN(d, u);
+  h += `<div class="bar"><h2>${esc(u.name)}</h2><span class="cnt">${n}/${d.roster.length}</span>${u.virtual || cat === 'jy' && UNITS[S.cls] && UNITS[S.cls].indexOf(u.name) >= 0 ? '' : '<button class="btn" onclick="openEdit()">✏️ 改</button>'}
+    ${PETS[S.cls] ? `<label class="pet"><input type="checkbox" ${petOn(S.cls) ? 'checked' : ''} onchange="setPet(this.checked)">🐾 打勾＝寵物蛋加點</label>` : ''}</div>`;
+  const miss = d.roster.filter(r => !d.done[kOf(u.id, r.full)]), isLast = miss.length <= 3 && d.roster.length > 3;
+  const pend = new Set(pendingFor(u.id).map(o => o.full));
+  h += `<div class="kids">${d.roster.map((r, i) => {
+    const ok = d.done[kOf(u.id, r.full)], last = !ok && isLast;
+    return `<button class="kid ${ok ? 'ok' : ''} ${last ? 'last' : ''}" onclick="tap(${i})">${last ? '<span class="tag">最後</span>' : ''}${pend.has(r.full) ? '<span class="up">待上傳</span>' : ''}<span class="no">${i + 1}</span>${esc(r.nick)}<span class="box">${ok ? '✅' : ''}</span></button>`;
   }).join('')}</div>`;
-  if (!u) { app.innerHTML = h + `<div class="empty">📋 還沒有單元<br>按「＋ 單元」選講義單元，就可以開始打勾</div></div>` + modal(); return; }
-  h += `<div class="bar"><h2>${esc(u.name)}</h2><button class="btn" onclick="openUnit(true)">✏️ 改</button>
-    ${PETS[S.cls] ? `<label class="pet"><input type="checkbox" ${petOn() ? 'checked' : ''} onchange="setPet(this.checked)">🐾 打勾＝寵物蛋加點</label>` : ''}</div>`;
-  const key = (it, r) => u.id + '|' + it + '|' + r.full;
-  h += `<div class="card"><table><thead><tr><th class="name">${d.roster.length} 人</th>${u.items.map(it =>
-    `<th>${esc(it)}<span class="n">${d.roster.filter(r => d.done[key(it, r)]).length}/${d.roster.length}</span></th>`).join('')}</tr></thead><tbody>`;
-  const lastOf = {};
-  u.items.forEach(it => { const m = d.roster.filter(r => !d.done[key(it, r)]); if (m.length && m.length <= 3 && d.roster.length > 3) m.forEach(r => lastOf[key(it, r)] = 1); });
-  d.roster.forEach((r, i) => {
-    const isLast = u.items.some(it => lastOf[key(it, r)]);
-    h += `<tr><td class="name"><span class="no">${i + 1}</span>${esc(r.nick)}${isLast ? '<span class="tag">最後</span>' : ''}</td>${u.items.map(it => {
-      const k = key(it, r), ok = d.done[k];
-      return `<td class="c ${ok ? 'ok' : ''} ${lastOf[k] ? 'last' : ''} ${S.busy[k] ? 'busy' : ''}" onclick="toggle(${esc(JSON.stringify(r.full))}, ${esc(JSON.stringify(it))})">${ok ? '✅' : ''}</td>`;
-    }).join('')}</tr>`;
-  });
-  h += '</tbody></table></div><div class="left">';
-  u.items.forEach(it => {
-    const miss = d.roster.filter(r => !d.done[key(it, r)]).map(r => esc(r.nick));
-    h += `<div><b>${esc(it)}</b>　${!miss.length ? '<span class="all">全班完成 🎉</span>' : miss.length <= 3 && d.roster.length > 3 ? `<span class="lastline">⚠ 最後 ${miss.length} 位：${miss.join('、')}</span>` : `還沒訂正 ${miss.length} 人：${miss.join('、')}`}</div>`;
-  });
-  app.innerHTML = h + '</div></div>' + modal();
+  h += `<div class="left">${!miss.length ? '<span class="all">全班完成 🎉</span>' : isLast ? `<span class="lastline">⚠ 最後 ${miss.length} 位：${miss.map(r => esc(r.nick)).join('、')}</span>` : `還沒訂正 ${miss.length} 人：${miss.map(r => esc(r.nick)).join('、')}`}</div>`;
+  app.innerHTML = h + '</div>' + modal();
 }
+function openAddKg() { S.modal = { kg: true }; render(); setTimeout(() => { const i = $('#uname'); if (i) i.focus(); }, 50); }
+function addKgSuffix(s) { const i = $('#uname'); i.value = i.value.replace(/\s*(期中考|期末考)$/, '') + ' ' + s; i.focus(); }
 function modal() {
   const m = S.modal; if (!m) return '';
   if (m.home) return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet" style="text-align:left">
@@ -313,21 +388,16 @@ function modal() {
     <div class="howto"><b class="n">3</b><span>右上角按「<b>加入</b>」，主畫面就有浩克圖示了</span></div>
     <p style="font-size:13px;opacity:.6">以前加過的話，先把主畫面舊的圖示刪掉再加，才會換成新圖示。</p>
     <div class="row"><button class="btn main" onclick="S.modal=null;render()">知道了</button></div></div></div>`;
-  const pre = UNITS[S.cls] || [];
+  if (m.kg) return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
+    <h3>新增考古卷</h3><label>哪一家學校</label>
+    <form onsubmit="event.preventDefault();addSheet('kg',$('#uname').value)"><input id="uname" type="text" placeholder="例如：楠陽國小 期末考" maxlength="30"></form>
+    <div class="presets"><button onclick="addKgSuffix('期中考')">＋ 期中考</button><button onclick="addKgSuffix('期末考')">＋ 期末考</button></div>
+    <div class="row"><span class="grow"></span><button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="addSheet('kg',$('#uname').value)">建立</button></div>
+  </div></div>`;
   return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet">
-    <h3>${m.edit ? '修改單元' : '新增單元'}</h3>
-    <label>講義單元（點一下帶入，也可以自己打）</label>
-    <div class="presets">${pre.map(p => `<button class="${p === m.name ? 'on' : ''}" onclick="S.modal.name=${esc(JSON.stringify(p))};S.modal.other=$('#uother').value;render()">${esc(p)}</button>`).join('')}</div>
-    <label>單元名稱（各校考卷也可以自己打，例如「XX國小 期中考」）</label><input id="uname" type="text" value="${esc(m.name)}" oninput="S.modal.name=this.value">
-    <label>要記哪些</label>
-    <div class="kind"><button class="tg ${m.jy ? 'on' : ''}" onclick="S.modal.jy=!S.modal.jy;S.modal.other=$('#uother').value;render()">${m.jy ? '✅' : '⬜'} 講義</button></div>
-    ${[['fx', '單元複習'], ['kj', '考卷']].map(([k, n]) => `<div class="kind"><span class="kn">${n}</span>
-      <div class="step"><button onclick="S.modal.${k}=Math.max(0,S.modal.${k}-1);S.modal.other=$('#uother').value;render()">－</button>
-      <b>${m[k] ? m[k] + ' 張' : '不用'}</b><button onclick="S.modal.${k}=Math.min(8,S.modal.${k}+1);S.modal.other=$('#uother').value;render()">＋</button></div></div>`).join('')}
-    <div class="kind"><span class="kn">其他</span><input id="uother" type="text" value="${esc(m.other)}" placeholder="例如：學習單、作業簿（用「、」隔開）"></div>
-    <div class="preview">會出現：${esc(itemList(m).join('、')) || '（還沒選）'}</div>
-    <div class="row">${m.edit ? '<button class="btn danger" onclick="delUnit()">刪除</button>' : ''}<span class="grow"></span>
-      <button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="saveUnit()">${m.edit ? '儲存' : '建立'}</button></div>
+    <h3>修改</h3><label>名稱</label><input id="uname" type="text" value="${esc(m.name)}" maxlength="30">
+    <div class="row"><button class="btn danger" onclick="delSheet()">刪除</button><span class="grow"></span>
+      <button class="btn" onclick="S.modal=null;render()">取消</button><button class="btn main" onclick="saveEdit()">儲存</button></div>
   </div></div>`;
 }
 // 📲 加到主畫面：Android/電腦 Chrome 直接跳安裝；iPad/iPhone 不能自動加，跳出三步驟說明
@@ -340,8 +410,9 @@ async function addHome() {
 }
 const SHARE_ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3D9BE9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
 
-function pick(c) { S.cls = c; LS.set('cls', c); load(); }
-function pickUnit(id) { S.unit = id; LS.set('unit_' + S.cls, id); render(); }
+function pick(c) { S.cls = c; LS.set('cls', c); render(); }
+function pickCat(c) { LS.set('cat_' + S.cls, c); render(); }
+function pickSheet(i) { const u = S.view[i]; if (u) { LS.set('sel_' + S.cls + '_' + u.cat, u.id); render(); } }
 function setPet(on) { LS.set('pet_' + S.cls, on); toast(on ? '🐾 打勾會順便幫寵物蛋加點' : '打勾不加寵物點數'); }
 async function login(given) {
   const pw = String(given != null ? given : ($('#pw') || {}).value || '').replace(/\s+/g, '');
@@ -349,15 +420,25 @@ async function login(given) {
   if (!pw) return msg('請先輸入密碼');
   msg('確認中…');
   S.key = pw;
-  try { await api({ mode: 'ping' }); LS.set('key', pw); load(); loadWatch(); }
-  catch (e) { S.key = ''; msg(e.message === 'bad_key' ? '密碼不對，請再試一次' : '連不上後台（' + e.message + '），請檢查網路再試'); }
+  try { await api({ mode: 'ping' }); LS.set('key', pw); loadAll(); flush(); }
+  catch (e) { S.key = ''; msg(e.message === 'bad_key' ? '密碼不對，請再試一次' : '連不上後台（要有網路才能第一次登入），請檢查網路再試'); }
 }
 function loginPrompt() { const k = prompt('管理密碼'); if (k) login(k); }
-if (S.key) { load(); loadWatch(); } else render();
+
+window.addEventListener('online', () => { render(); flush(); if (!S.q.length) loadAll(true); });
+window.addEventListener('offline', () => { S.wasOffline = true; render(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !S.key) return;
+  flush(); if (!S.q.length && Date.now() - (S.lastLoad || 0) > 30000) loadAll(true);
+  checkNew();
+});
+if (S.key) { render(); flush(); if (!S.q.length) loadAll(true); } else render();
+// 離線也打得開：service worker 把網頁存在平板（要先連網打開過一次）
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611121720';
+const VER = '202611242132';
 async function checkNew() {
-  if (VER.startsWith('__')) return;
+  if (VER.startsWith('__') || !navigator.onLine) return;
   try {
     const t = await (await fetch('./?nocache=' + Date.now(), { cache: 'no-store' })).text();
     const m = t.match(/const VER = '([^']+)'/);
@@ -365,7 +446,6 @@ async function checkNew() {
   } catch (e) {}
 }
 checkNew();
-document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNew(); });
 </script>
 </body>
 </html>
