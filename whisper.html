@@ -564,7 +564,7 @@
   .vunit .go{font-size:22px;font-weight:900;flex:none;}
   .vprog{display:block;height:7px;border-radius:9px;background:rgba(255,255,255,.85);overflow:hidden;}
   .vprog i{display:block;height:100%;border-radius:9px;min-width:4px;}
-  /* 💣 炸彈超人闖關（2026-11-06）：按鈕＋阿居闖關地圖，照順序 介紹→第一型…第十型 */
+  /* 💣 炸彈超人闖關（2026-11-06）：按鈕＋阿居闖關地圖，照順序 介紹→第一型…第十一型（特殊戰場） */
   .vbomb{display:flex;align-items:center;gap:10px;width:100%;border:3px solid #E53935;border-radius:20px;padding:8px 10px 8px 8px;margin:0 0 12px;
     background:linear-gradient(135deg,#FFF3C4,#FFD8B0);cursor:pointer;font-family:var(--font);text-align:left;box-shadow:0 4px 12px rgba(229,57,53,.22);}
   .vbomb:active{transform:scale(.98);}
@@ -581,6 +581,7 @@
   .bmn{position:absolute;transform:translate(-50%,-50%);width:12%;overflow:visible;aspect-ratio:1;border-radius:50%;border:3px solid #fff;background:#E53935;color:#fff;
     font-family:var(--font);font-weight:900;font-size:clamp(13px,4vw,22px);display:flex;align-items:center;justify-content:center;flex-direction:column;line-height:1.05;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.3);padding:0;}
   .bmn.intro{background:#F28C28;font-size:clamp(11px,3.2vw,17px);}
+  .bmn.special{background:#8B5A2B;border-color:#FFD54F;box-shadow:0 0 0 4px rgba(255,213,79,.6),0 3px 8px rgba(0,0,0,.3);}   /* 第十一型：特殊戰場（茶葉炸彈色） */
   .bmn.done{background:#3BA55C;}
   .bmn.done::after{content:"★";position:absolute;right:-14%;top:-18%;color:#FFC107;font-size:1.15em;text-shadow:0 1px 2px rgba(0,0,0,.35);}
   .bmn.next{animation:bmpulse 1s ease-in-out infinite;box-shadow:0 0 0 5px #FFEB3B,0 3px 8px rgba(0,0,0,.3);}
@@ -1333,7 +1334,7 @@ function gateHTML(nm){
 }
 // ---------- 💣 炸彈超人闖關（2026-11-06 SUNNY）：介紹→第一型…第十型照順序；不鎖關，只提示「下一關」；還沒上架＝灰色「即將登場」；11/30 下片倒數 ----------
 const BOMB_END="2026-11-30";   // 最後一天（影片的「下架」也設這天）；後台有 until 就用後台的
-const BOMB_POS=[[190,560],[300,745],[590,745],[880,745],[1180,745],[1165,515],[820,515],[485,515],[440,320],[765,320],[1095,320]];   // 阿居闖關地圖 1672×941 上的位置：紅旗旁＝介紹，10 個平台＝第一～十型
+const BOMB_POS=[[215,792],[424,738],[672,738],[924,738],[1182,736],[1214,512],[948,513],[681,512],[418,514],[442,320],[772,319],[1078,322]];   // 阿居闖關地圖 1672×941（2026-11-24 十一型版，舊圖 th/bomb_map_10.jpg）：紅旗旁空地＝介紹，下排1～4、中排5～8（右往左）、上排9、10、特殊戰場＝第十一型
 const bombNodes=()=>{
   const C=["一","二","三","四","五","六","七","八","九","十","十一"], nodes=[{label:"介紹",vs:VIDS.filter(v=>/炸彈超人介紹/.test(v.title||""))}];
   for(let i=0;i<C.length;i++) nodes.push({label:String(i+1),name:`第${C[i]}型`,vs:VIDS.filter(v=>new RegExp(`炸彈超人第${C[i]}型`).test(v.title||"")).sort((a,b)=>(chOrd(a)||0)-(chOrd(b)||0))});
@@ -1358,7 +1359,7 @@ function bombHTML(){
   const ns=bombNodes(), L=bombLeft(), has=ns.filter(n=>n.vs.length), ok=has.filter(n=>n.done).length, all=ns.slice(1).every(n=>n.done);
   const nodes=ns.map((n,i)=>{if(!BOMB_POS[i]) return "";   // 地圖上還沒有這一關的位置（第十一型等阿居新地圖）
     const [x,y]=BOMB_POS[i], st={left:(x/1672*100).toFixed(2)+"%",top:(y/941*100).toFixed(2)+"%"};
-    const cls="bmn"+(i===0?" intro":"")+(n.vs.length?(n.done?" done":"")+(n.next?" next":""):" soon");
+    const cls="bmn"+(i===0?" intro":"")+(i===11?" special":"")+(n.vs.length?(n.done?" done":"")+(n.next?" next":""):" soon");
     return n.vs.length?`<button type="button" class="${cls}" data-play="${escH(n.play)}" style="left:${st.left};top:${st.top}" aria-label="${n.name||"介紹"}">${n.label}</button>`
       :`<span class="${cls}" style="left:${st.left};top:${st.top}">${n.label}<small>即將登場</small></span>`;}).join("");
   const list=ns.filter(n=>n.vs.length).map(n=>`<div class="vh2">${n.name?`💣 ${n.name}`:"🎬 先看介紹"}${n.done?"　✔":""}</div>`+n.vs.map(line).join("")).join("");
