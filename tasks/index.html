@@ -37,6 +37,8 @@ header .home { border: 2px solid var(--main); background: #fff; color: var(--mai
 .tab { flex: none; border: 2px solid var(--line); background: #fff; color: var(--text); border-radius: 22px;
   padding: 8px 16px; font-size: 16px; font-weight: 700; }
 .tab.on { background: var(--main); border-color: var(--main); color: #fff; }
+.tab.peek { margin-left: auto; border-color: #E2E8F0; color: #A0AEC0; font-size: 13px; padding: 8px 12px; background: #fff8; }
+.tab.peek.on { background: #FFF4E5; border-color: #FFB547; color: #C2410C; }
 .cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #fff9; border-radius: 16px; padding: 5px; margin: 4px 0 10px; }
 .cat { border: 0; background: transparent; color: var(--text); border-radius: 12px; padding: 10px 4px; font-size: 17px; font-weight: 700; }
 .cat.on { background: #fff; color: var(--main); box-shadow: 0 2px 8px #0002, 0 0 0 2px var(--main) inset; }
@@ -412,12 +414,12 @@ function render() {
     const marks = S.q.filter(o => o.t === 'mark').length;
     h += `<div class="net wait">${S.syncing ? '⏳ 上傳中…' : (off ? '📴 離線中・' : '') + '還有 ' + (marks || S.q.length) + ' 筆沒上傳（連上網路會自動上傳）'}${S.syncing ? '' : '<button class="btn" onclick="flush()">立即上傳</button>'}</div>`;
   } else if (off) h += '<div class="net off">📴 離線中・照常打勾，連上網路會自動上傳</div>';
-  h += `<div class="tabs">${CLASSES.map(([c, n]) => `<button class="tab ${c === S.cls ? 'on' : ''}" onclick="pick('${c}')">${n}</button>`).join('')}</div>`;
+  // 2026-11-24 SUNNY：上課時孩子看得到平板 → 「最後 3 位」縮成班級列右邊的小「⚠ N」，SUNNY 點了才展開（不記住，每次都收著）
   const W = S.watchView = watchList();
-  if (W.length) {
-    h += '<div class="watch"><h3>⚠ 最後 3 位還沒訂正（要注意）</h3>' + W.map((w, i) =>
-      `<button onclick="goWatch(${i})"><b>${esc(w.kids.map(k => k.nick).join('、'))}</b><br><small>${CLS_NAME[w.cls]}・${esc((CATS.find(x => x[0] === w.cat) || [, ''])[1])} ${esc(w.name)}・剩 ${w.kids.length} 人</small></button>`).join('') +
-      '<div class="hint">想關心家長：跟浩克說「擬訂正訊息」</div></div>';
+  h += `<div class="tabs">${CLASSES.map(([c, n]) => `<button class="tab ${c === S.cls ? 'on' : ''}" onclick="pick('${c}')">${n}</button>`).join('')}${W.length ? `<button class="tab peek ${S.peek ? 'on' : ''}" onclick="S.peek=!S.peek;render()">⚠ ${W.length}</button>` : ''}</div>`;
+  if (W.length && S.peek) {
+    h += '<div class="watch">' + W.map((w, i) =>
+      `<button onclick="S.peek=false;goWatch(${i})"><b>${esc(w.kids.map(k => k.nick).join('、'))}</b><br><small>${CLS_NAME[w.cls]}・${esc((CATS.find(x => x[0] === w.cat) || [, ''])[1])} ${esc(w.name)}・剩 ${w.kids.length} 人</small></button>`).join('') + '</div>';
   }
   const d = D();
   if (!d) { app.innerHTML = h + `<div class="empty">${S.loading ? '讀取中…' : '還沒有資料：請連上網路重新打開一次'}</div></div>` + modal(); return; }
@@ -509,7 +511,7 @@ async function addHome() {
 }
 const SHARE_ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3D9BE9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
 
-function pick(c) { S.cls = c; LS.set('cls', c); render(); }
+function pick(c) { S.cls = c; S.peek = false; LS.set('cls', c); render(); }
 function pickCat(c) { LS.set('cat_' + S.cls, c); render(); }
 function pickSheet(i) { const u = S.view[i]; if (u) { LS.set('sel_' + S.cls + '_' + u.cat, u.id); render(); } }
 function setPet(on) { LS.set('pet_' + S.cls, on); toast(on ? '🐾 打勾會順便幫寵物蛋加點' : '打勾不加寵物點數'); }
@@ -535,7 +537,7 @@ if (S.key) { render(); flush(); if (!S.q.length) loadAll(true); } else render();
 // 離線也打得開：service worker 把網頁存在平板（要先連網打開過一次）
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611242248';
+const VER = '202611242301';
 async function checkNew() {
   if (VER.startsWith('__') || !navigator.onLine) return;
   try {
