@@ -18,6 +18,7 @@ table{width:100%;border-collapse:collapse;font-size:15px}th,td{padding:7px 4px;t
 th{color:#8a6d4b;font-size:13px}td:first-child,th:first-child{text-align:left}
 tr.z td{color:#bbb}.hot td:nth-child(2){color:#c26a1e;font-weight:900}
 input,button{font:inherit;padding:10px;border-radius:12px;border:2px solid #f0dcc0}button{background:#ff8a1f;color:#fff;border:0;font-weight:900}
+td.low{color:#e06a00;font-weight:900}
 .muted{color:#8a6d4b;font-size:14px}
 </style></head><body><main>
 <h1>☀️ 太陽能量站後台</h1>
@@ -39,9 +40,9 @@ async function load(){
   let h='<div class="card"><b>全班階段 '+j.done+' / 6</b>'+(ev.name?'<div class="muted">本週事件：'+esc(ev.name)+(ev.target?'　'+ev.got+' / '+ev.target:'')+'</div>':'')+'</div><div class="card">';
   j.units.forEach(u=>{const t=u.lit?u.gold:u.light,p=Math.min(100,Math.round(u.energy*100/t));
     h+='<div class="u"><span>'+esc(u.name)+(u.open?'':' <small>（未開放）</small>')+'</span><span>'+u.energy+' / '+t+'</span></div><div class="bar"><i style="width:'+p+'%"></i></div>';});
-  h+='</div><div class="card"><table><tr><th>姓名</th><th>能量</th><th>答對</th><th>答錯</th><th>天數</th><th>魔王</th><th>練功</th><th>最近</th></tr>';
-  j.kids.forEach(k=>{const z=!k.right&&!k.wrong;
-    h+='<tr class="'+(z?'z':'')+(k.prize||(j.prizeNeed&&k.blocks>=j.prizeNeed)?' hot':'')+'"><td>'+esc(k.name)+'</td><td>'+k.blocks+'</td><td>'+k.right+'</td><td>'+k.wrong+'</td><td>'+k.days+'</td><td>'+k.boss+'</td><td>'+(k.practice||0)+'</td><td>'+(k.last?k.last.slice(5):"-")+'</td></tr>';});
+  h+='</div><div class="card"><table><tr><th>姓名</th><th>能量</th><th>答對</th><th>答錯</th><th>準確率</th><th>天數</th><th>魔王</th><th>練功</th><th>最近</th></tr>';
+  j.kids.forEach(k=>{const z=!k.right&&!k.wrong,n=(k.right||0)+(k.wrong||0),acc=n?Math.round(k.right*100/n):-1;
+    h+='<tr class="'+(z?'z':'')+(k.prize||(j.prizeNeed&&k.blocks>=j.prizeNeed)?' hot':'')+'"><td>'+esc(k.name)+'</td><td>'+k.blocks+'</td><td>'+k.right+'</td><td>'+k.wrong+'</td><td'+(acc>=0&&acc<60?' class="low"':'')+'>'+(acc<0?'-':acc+'%')+'</td><td>'+k.days+'</td><td>'+k.boss+'</td><td>'+(k.practice||0)+'</td><td>'+(k.last?k.last.slice(5):"-")+'</td></tr>';});
   h+='</table></div>'+(j.prizeNeed?'<p class="muted">個人獎：'+esc(j.prize||"")+'（累積 '+j.prizeNeed+' 塊）</p>':'');
   h+='<div class="card"><b>🙋 孩子說「還是不會」的題目</b>'+(j.flags&&j.flags.length?j.flags.map(f=>'<div style="border-top:1px solid #f0dcc0;margin-top:8px;padding-top:6px"><div class="muted">'+esc(f.u)+'　'+f.names.length+' 人：'+esc(f.names.join("、"))+'　'+esc(f.last.slice(5))+'</div><div>'+esc(f.q)+'</div><div class="muted">'+esc(f.id)+'</div></div>').join(""):'<div class="muted">目前沒有</div>')+'</div>';
   $("app").innerHTML=h;$("t").textContent="更新："+new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"});
