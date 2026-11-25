@@ -275,31 +275,36 @@ const routeTitle = (r, stage) => r ? r[1+stage] : "";
 const STAGE_NM = ["蛋","寶寶","少年","勇者","傳說","守護神獸"];
 const DECO = ["","","✨","🌟","👑",""];
 const NEXT_TXT = {hatch:"就孵出來！", teen:"變成「少年」！", hero:"變成「勇者」！", legend:"變成「傳說」！", full:"就收進收藏簿、拿到新的蛋！", mhatch:"神秘蛋就要孵化了！"};
-const DEF_CFG = {per:2,cls:1,e100:20,e95:10,hatch:10,teen:20,hero:32,legend:42,full:50,lvl:5,count:4,mHatch:20,gift:"立可帶"};
+const DEF_CFG = {per:2,cls:1,e100:20,e95:10,hatch:10,teen:20,hero:32,legend:42,full:50,lvl:5,m2:1.5,m3:2,count:4,mHatch:20,gift:"立可帶"};
 
 // ★ 進度計算：跟 Apps Script 的 stateOf_ 一模一樣（改一邊要一起改）
-function stateOf(total, eggs, pets, C, routes){
+function petTh(C, i) {
+  const m = i <= 0 ? 1 : i === 1 ? C.m2 : C.m3, r = v => Math.max(1, Math.round(v * m));
+  return { hatch: r(C.hatch), teen: r(C.teen), hero: r(C.hero), legend: r(C.legend), full: r(C.full), lvl: r(C.lvl) };
+}
+function stateOf(total, eggs, pets, C, routes) {
   total = Math.max(0, total); routes = routes || [];
-  const done = Math.min(Math.floor(total / C.full), C.count);
+  let rest = total, done = 0;                                          // 一隻一隻扣滿點，扣不夠的就是現在這隻
+  while (done < C.count && rest >= petTh(C, done).full) { rest -= petTh(C, done).full; done++; }
   const collection = [];
   for (let i = 0; i < done; i++) collection.push({ egg: eggs[i] === undefined ? '' : eggs[i], pet: pets[i] || '', route: routes[i] === undefined ? '' : routes[i] });
-  if (done >= C.count) {
-    const pts = total - C.count * C.full, hatched = pts >= C.mHatch;
+  if (done >= C.count) {                                                 // 神秘蛋
+    const pts = rest, hatched = pts >= C.mHatch;
     return { done, collection, mystery: true, pts, hatched, stage: hatched ? 5 : 0, level: 0, needPick: false,
       next: hatched ? null : { at: C.mHatch, what: 'mhatch' } };
   }
-  const pts = total - done * C.full;
-  const needPick = eggs.length <= done;
-  const stage = pts < C.hatch ? 0 : pts < C.teen ? 1 : pts < C.hero ? 2 : pts < C.legend ? 3 : 4;
-  const level = stage ? Math.floor((pts - C.hatch) / C.lvl) + 1 : 0;
-  const steps = [[C.hatch, 'hatch'], [C.teen, 'teen'], [C.hero, 'hero'], [C.legend, 'legend'], [C.full, 'full']];
+  const T = petTh(C, done), pts = rest;
+  const needPick = eggs.length <= done;                                  // 這一格還沒挑蛋
+  const stage = pts < T.hatch ? 0 : pts < T.teen ? 1 : pts < T.hero ? 2 : pts < T.legend ? 3 : 4;
+  const level = stage ? Math.floor((pts - T.hatch) / T.lvl) + 1 : 0;
+  const steps = [[T.hatch, 'hatch'], [T.teen, 'teen'], [T.hero, 'hero'], [T.legend, 'legend'], [T.full, 'full']];
   const nx = steps.find(s => pts < s[0]);
-  return { done, collection, mystery: false, pts, stage, level, needPick,
+  return { done, collection, mystery: false, pts, stage, level, needPick, th: T,
     egg: needPick ? '' : eggs[done], pet: needPick ? '' : pets[done], route: needPick || routes[done] === undefined ? '' : routes[done],
     next: nx ? { at: nx[0], what: nx[1] } : null };
 }
 function publicState(st, C, withGift){
-  const o = { done: st.done, collection: st.collection, mystery: st.mystery, pts: st.pts, stage: st.stage, level: st.level,
+  const o = { done: st.done, collection: st.collection, mystery: st.mystery, pts: st.pts, stage: st.stage, level: st.level, th: st.th,
     needPick: st.needPick, next: st.next, egg: st.egg, pet: st.stage ? st.pet : '', route: st.stage ? st.route : '' };
   if (st.mystery && st.hatched && withGift) o.gift = C.gift;
   return o;
@@ -513,9 +518,9 @@ function howTo(C){
   return dialog(`<div class="howto"><h2>🐣 寵物蛋怎麼玩？</h2>
     <ol>
       <li><b>寫作業就加點</b>：作業完成 +${C.per}，在課堂上寫完又寫得好再 +${C.cls}，期中／期末考考很好還有大加分！</li>
-      <li><b>${C.hatch} 點蛋就孵化</b>：裡面是誰？孵出來才知道！</li>
+      <li><b>第一顆蛋 ${C.hatch} 點就孵化</b>：裡面是誰？孵出來才知道！</li>
       <li><b>點數越多長越大</b>：寶寶 → 少年 → 勇者 → 傳說，每隻都有自己的夢想職業喔</li>
-      <li><b>養到 ${C.full} 點</b>就收進「收藏簿」，再挑下一顆蛋</li>
+      <li><b>第一隻養到 ${C.full} 點</b>就收進「收藏簿」，再挑下一顆蛋。<b>後面的寵物越來越珍貴</b>：第二隻要 ${Math.round(C.full*C.m2)} 點、第三隻起要 ${Math.round(C.full*C.m3)} 點</li>
       <li><b>收集滿 ${C.count} 隻</b>會出現神秘蛋，裡面有 SUNNY 送你的禮物 🎁</li>
       <li>點「🏡 寵物園」可以看全班的寵物（看不到是誰的喔）</li>
     </ol>
@@ -541,7 +546,7 @@ async function showCard(){
     const R=!d.mystery&&d.stage?routeOf(d.pet,"",d.done,d.route):null;
     if(d.needPick) return box(`<div class="em">🥚</div><div class="pc-t"><b>${esc(d.pn)} 收進收藏簿了！</b><div class="muted">點我挑下一顆蛋 👉</div></div>`);
     let pct=100, line="";
-    if(d.next){ const prev=d.mystery?0:[0,C.hatch,C.teen,C.hero,C.legend][d.stage]; pct=Math.max(0,Math.min(100,(d.pts-prev)/(d.next.at-prev)*100)); line=`再 ${d.next.at-d.pts} 點${NEXT_TXT[d.next.what]}`; }
+    if(d.next){ const T=d.th||C, prev=d.mystery?0:[0,T.hatch,T.teen,T.hero,T.legend][d.stage]; pct=Math.max(0,Math.min(100,(d.pts-prev)/(d.next.at-prev)*100)); line=`再 ${d.next.at-d.pts} 點${NEXT_TXT[d.next.what]}`; }
     const nm = d.mystery ? (d.stage?"守護神獸":"神秘蛋") : d.stage ? (routeTitle(R,d.stage)||P.nm) : E.nm;
     box(`<div style="width:76px;flex:none">${creature({stage:d.stage,pet:d.pet,egg:d.egg,mystery:d.mystery,gift:null,n:d.done,route:d.route,hot:!!(d.next&&d.next.at-d.pts<=4&&!d.stage)},76)}</div>
       <div class="pc-t"><b>${esc(d.pn)}</b>　<span class="muted">${esc(nm)}</span>${d.next?`<div class="bar"><div style="width:${pct}%"></div></div><div class="muted">${line}</div>`:""}</div>`);
@@ -647,7 +652,7 @@ function albumHTML(d, C){
   const m = d.mystery ? (d.stage ? guardianHTML(64, null) : mysteryEggHTML(64)) : `<div class="slot">🎁</div>`;
   cells.push(`<div class="${d.mystery?"got":"empty"} gift"><div>${m}</div><div>神秘蛋</div></div>`);
   return `<div class="card"><h2>📖 收藏簿 ${d.done} / ${C.count}</h2>
-    <div class="muted" style="margin-bottom:8px">每隻養到 ${C.full} 點就收進來，再挑下一顆蛋；收集滿 ${C.count} 隻會出現一顆<b>神秘蛋</b>，裡面是最大隻的守護神獸，還帶著 SUNNY 送你的禮物！</div>
+    <div class="muted" style="margin-bottom:8px">第一隻養到 ${C.full} 點就收進來（第二隻 ${Math.round(C.full*C.m2)} 點、第三隻起 ${Math.round(C.full*C.m3)} 點，越後面越珍貴），再挑下一顆蛋；收集滿 ${C.count} 隻會出現一顆<b>神秘蛋</b>，裡面是最大隻的守護神獸，還帶著 SUNNY 送你的禮物！</div>
     <div class="album">${cells.join("")}</div></div>`;
 }
 async function showMe(pre){
@@ -672,7 +677,7 @@ async function showMe(pre){
     badge = stage ? `<span class="lv">Lv ${level}・${STAGE_NM[stage]}</span>` : `<span class="lv">裡面住著誰呢？</span>`;
   }
   if(d.next){
-    const prev = d.mystery ? 0 : [0,C.hatch,C.teen,C.hero,C.legend][stage];
+    const T = d.th||C, prev = d.mystery ? 0 : [0,T.hatch,T.teen,T.hero,T.legend][stage];
     pct = Math.max(0,Math.min(100,(d.pts-prev)/(d.next.at-prev)*100));
     line = `再 <b>${d.next.at-d.pts}</b> 點${NEXT_TXT[d.next.what]}`;
   }
