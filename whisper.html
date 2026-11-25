@@ -1281,7 +1281,8 @@ function renderVideos(list){
 // 「一箱共有幾顆蘋果？（應用題第3題）」→ 題目「一箱共有幾顆蘋果？」＋小字「期中評量（四）應用題第3題」
 function vTitle(v){
   const m=/^(.*?)（([^（）]*)）\s*$/.exec(v.title||""), main=m?m[1]:(v.title||""), part=m?m[2]:"", s=srcOf(v);
-  const sub=s.src==="評量"||s.src==="單元複習" ? s.key+(part?" "+part:"")
+  const sub=/^五年級/.test(v.unit||"") ? "⭐ 五年級挑戰"+(part?"・"+part:"")   // 五年級的四則影片也放在四年級一起練功（2026-11-25）
+    : s.src==="評量"||s.src==="單元複習" ? s.key+(part?" "+part:"")
     : s.src==="校卷複習" ? "校卷必考"+(part?"・"+part:"")
     : s.src==="太陽能量站" ? "☀️ 太陽能量站"+(part?"・"+part:"")
     : s.src.startsWith("講義") ? s.label : (part||v.unit||"");
