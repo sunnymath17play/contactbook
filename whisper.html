@@ -766,7 +766,7 @@
         <button class="chip reexplain" id="reexplainChip"></button>
       </div>
       <div class="sub-q"><span class="n">2</span>打字給 SUNNY</div>
-      <textarea id="text" maxlength="200" placeholder="想跟 SUNNY 說什麼都可以寫在這裡～不寫也沒關係喔"></textarea>
+      <textarea id="text" placeholder="想跟 SUNNY 說什麼都可以寫在這裡～不寫也沒關係喔"></textarea>
     </div>
   </div>
 
@@ -1789,7 +1789,7 @@ $("send").onclick=async()=>{
       items:list, where:[...new Set(list.map(it=>it.type))], reexplain:state.help.reexplain,
       detail:items.map(itemText).join("、")
     } : null,
-    text:(marks+text).slice(0,200), time:new Date().toISOString()
+    text:(marks+text).slice(0,5000), time:new Date().toISOString()
   };
   const btn=$("send");btn.disabled=true;
   const btnHTML=btn.innerHTML; btn.innerHTML="<img src=\"th/plane.png\" alt=\"\">正在飛往樹洞…";
