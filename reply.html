@@ -262,7 +262,7 @@ function render(){
     if(!isDone && draft) c.insertAdjacentHTML("beforeend",`<div class="draftlbl"><img src="th/hulkwave.png" alt="">浩克先擬好了，點一下換版本；想自己寫就選「空白」（浩克會學你寫的）</div>
       <div class="vers">${vers.map((v,i)=>`<button type="button" class="ver${i?"":" on"}${v[0]==="空白"?" blank":""}" data-i="${i}">${v[0]==="空白"?"空白（自己寫）":v[0]==="溫暖版"?"溫暖鼓勵版":v[0]}</button>`).join("")}</div>`);
     const ta=document.createElement("textarea");
-    ta.maxLength=300; ta.placeholder=isDone?"想改回信就在這裡重打":"回一句話給孩子…";
+    ta.placeholder=isDone?"想改回信就在這裡重打":"回一句話給孩子…";
     const key=g.rs.map(r=>r.row).join(",");
     ta.value=DRAFTING[key]!=null?DRAFTING[key]:(!isDone?draft:"");
     if(!isDone&&draft&&ta.value===draft) ta.classList.add("drafted");
