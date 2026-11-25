@@ -1467,7 +1467,7 @@ function drawRoom(){
       <div class="vh"><span class="vpill blue"><i class="pl"></i>最新影片</span>${VIDS.length>1?'<small>左右滑</small>':""}</div>
       <div class="vrow">${VIDS.filter(v=>!isHulk(v)).slice(0,6).map(card).join("")}</div>
       <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>`}
-      <div class="vunits">${units().filter(([u])=>!/浩克/.test(u)).map(([u,vs],i)=>{ const c=UNIT_COLORS[i%UNIT_COLORS.length], p=unitProg(vs,seen);
+      <div class="vunits">${units().filter(([u])=>!/浩克/.test(u)&&!/四則/.test(u)).map(([u,vs],i)=>{ const c=UNIT_COLORS[i%UNIT_COLORS.length], p=unitProg(vs,seen);
         return `<button class="vunit" type="button" data-unit="${escH(u)}" style="background:${c[0]}">${fresh(vs)?'<span class="vdot">新</span>':""}
           <img src="${iconOf(u)}" alt=""><span class="ut"><b>${escH(u)}</b>${bar(p,c[1])}<small>${p.t} ${p.n}/${p.d}</small></span><span class="go" style="color:${c[1]}">›</span></button>`; }).join("")}</div>
       ${solar.length?`<button class="vwide solar" type="button" data-unit="__solar">${fresh(solar)?'<span class="vdot">新</span>':""}<img src="th/solar_icon.png" alt="">
