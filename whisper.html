@@ -574,6 +574,23 @@
   .vbomb small{font-size:12.5px;font-weight:700;color:#6B4A2A;}
   .vbomb .go{font-size:26px;font-weight:900;color:#E53935;}
   .vbomb .end,.bmend{display:inline-block;background:#E53935;color:#fff;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:900;}
+  /* 🏠 整數四則・高手秘密基地（2026-11-25，顏色取自阿居主視覺：金黃＋石頭紫） */
+  .vbase{position:relative;display:flex;align-items:center;gap:10px;width:100%;border:3px solid #E0A100;border-radius:20px;padding:8px 10px 8px 8px;margin:0 0 12px;
+    background:linear-gradient(135deg,#FFF7DA,#FFE38C);cursor:pointer;font-family:var(--font);text-align:left;box-shadow:0 4px 12px rgba(110,90,140,.22);}
+  .vbase:active{transform:scale(.98);}
+  .vbase img{width:112px;height:63px;object-fit:cover;border-radius:12px;flex:none;}
+  .vbase .bt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .vbase b{font-size:17px;font-weight:900;color:#5B3F8C;line-height:1.25;}
+  .vbase small{font-size:12.5px;font-weight:700;color:#6B4A2A;}
+  .vbase .go{font-size:26px;font-weight:900;color:#E0A100;}
+  .bshero{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:18px;display:block;margin:2px 0 10px;box-shadow:0 4px 14px rgba(110,90,140,.22);}
+  .bsu b{color:#5B3F8C;}
+  .bsh{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#F1EAFB,#FFF4CF);border-left:6px solid #E0A100;border-radius:14px;padding:6px 12px 6px 6px;margin:16px 0 8px;}
+  .bsh img{width:44px;height:44px;flex:none;object-fit:contain;}
+  .bsh .bst{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .bsh b{font-size:16.5px;font-weight:900;color:#3B2A1A;line-height:1.25;}
+  .bsh small{font-size:12px;font-weight:700;color:#6E5A8C;}
+  .bsh em{font-style:normal;font-size:13px;font-weight:900;color:#5B3F8C;background:#fff;border-radius:999px;padding:2px 9px;flex:none;}
   .bmhead{text-align:center;margin:2px 0 10px;}
   .bmhead b{display:block;font-size:22px;font-weight:900;color:#C62828;}
   .bmhead small{font-size:13.5px;font-weight:700;color:#6B4A2A;}
@@ -802,7 +819,7 @@
 
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
-<script src="v/list.js?v=1795569171061"></script>
+<script src="v/list.js?v=1795581130969"></script>
 <script src="challenge/data.js?v=1795505251606"></script>
 <script src="challenge/challenge.js?v=1795505251606"></script>
 <script>
@@ -1369,6 +1386,35 @@ function bombBtn(){
   return `<button type="button" class="vbomb" data-unit="__bomb"><img src="th/bomb_hero.jpg" alt=""><span class="bt"><b>💣 炸彈超人闖關</b>
     <small>過關 ${ok}／${has.length}　<span class="end">${L.md} 下片・${L.txt}</span></small></span><span class="go">›</span></button>`;
 }
+// 🏠 整數四則・高手秘密基地（2026-11-25）：單元名有「四則」就收（原單元照留），照「題型」分段，段名＝SUNNY 上課的分法
+// 題型由標題判斷（test 依序比對，先對到先算）；判斷不準的影片寫進 BASE_FIX（YouTube 代號 → 題型 key）
+const BASE_TYPES=[
+  {k:"order", t:"算式順序・括號先算",   s:"先乘除後加減，有括號的先算；還有找錯誤", ic:"th/base/order.png", test:v=>/算錯|找錯|[＝=]\s*[？?]|由左往右|先乘除/.test(v.title||"")},
+  {k:"plan",  t:"方案比較・哪個划算",   s:"月租費、優惠方案，算完再比較",        ic:"th/base/plan.png",  test:v=>/方案|月租|划算|優惠/.test(v.title||"")},
+  {k:"save",  t:"存錢・每個月",         s:"每個月存多少，幾個月才夠",              ic:"th/base/save.png",  test:v=>/存錢|存了|每個月|幾個月|每月/.test(v.title||"")},
+  {k:"shop",  t:"買東西・付錢找錢",     s:"買幾樣東西、付多少、找回多少",          ic:"th/base/shop.png",  test:v=>/買|付|找回|找錢/.test(v.title||"")},
+  {k:"pack",  t:"分裝・平分",           s:"裝成幾包、每人分幾個",                  ic:"th/base/pack.png",  test:v=>/裝|包|平分|分給|每人|每盒/.test(v.title||"")},
+  {k:"line",  t:"畫線段圖・長度高度",   s:"畫圖找出長度的關係",                    ic:"th/base/line.png",  test:v=>/河|深|長度|高度|公尺|公分/.test(v.title||"")},
+  {k:"other", t:"其他應用題",           s:"圈重點、畫數線、合成算式",              ic:"th/base/other.png", test:()=>true}];
+const BASE_SHOW=["order","shop","pack","save","plan","line","other"];   // 頁面上的排列順序（算式順序是基本功，放第一）
+const BASE_FIX={};
+const baseVids=()=>VIDS.filter(v=>/四則/.test(v.unit||""));
+const baseType=v=>BASE_FIX[v.id]||(BASE_TYPES.find(t=>t.test(v))||{}).k;
+function baseBtn(){
+  const vs=baseVids(); if(!vs.length) return "";
+  const seen=seenSet(), n=vs.filter(v=>seen.has(v.id)).length, nw=vs.some(v=>isNew(v)&&!seen.has(v.id));
+  return `<button type="button" class="vbase" data-unit="__base">${nw?'<span class="vdot">新</span>':""}<img src="th/base_thumb.jpg" alt=""><span class="bt"><b>整數四則・高手秘密基地</b>
+    <small>${vs.length} 部影片・看過 ${n} 部</small></span><span class="go">›</span></button>`;
+}
+function baseHTML(){
+  const vs=baseVids().slice().sort(bySrc), seen=seenSet(), p=unitProg(vs,seen);
+  let body="";
+  BASE_SHOW.forEach(k=>{ const T=BASE_TYPES.find(t=>t.k===k), g=vs.filter(v=>baseType(v)===k); if(!g.length) return;
+    const d=g.filter(v=>seen.has(v.id)).length;
+    body+=`<div class="bsh"><img src="${T.ic}" alt=""><span class="bst"><b>${T.t}</b><small>${T.s}</small></span><em>${d}/${g.length}</em></div>`+g.map(line).join(""); });
+  return `<img class="bshero" src="th/base_hero.jpg" alt="括號最先算、乘除再來、加減最後"><div class="vuhead bsu"><img src="th/base_icon.png" alt="">
+    <b>整數四則・高手秘密基地</b><span class="up"><small>${p.t} <em>${p.n}</em>/${p.d}</small>${bar(p,"#E0A100")}</span></div>`+body;
+}
 function bombHTML(){
   const ns=bombNodes(), L=bombLeft(), has=ns.filter(n=>n.vs.length), ok=has.filter(n=>n.done).length, all=ns.slice(1).every(n=>n.done);
   const nodes=ns.map((n,i)=>{if(!BOMB_POS[i]) return "";   // 地圖上還沒有這一關的位置（第十一型等阿居新地圖）
@@ -1406,7 +1452,7 @@ function drawRoom(){
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
     w.innerHTML=shareBtn()+meBox()+`
-      ${premCard()}${bombBtn()}<button type="button" class="vmine" id="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀牆 ›</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></button>${resumeCard()}
+      ${premCard()}${bombBtn()}${baseBtn()}<button type="button" class="vmine" id="vmine"><img class="hk" src="th/hulkwave.png" alt=""><span class="tx"><b>我的獎狀牆 ›</b><span>看過 <em>${watched}</em> 支・獎狀 <em>${certs}</em> 張</span></span><img class="md" src="th/medal.png" alt=""></button>${resumeCard()}
       ${onlyHulk?`<div class="vh"><span class="vpill blue"><i class="pl"></i>認識浩克</span>${hulk.length>1?'<small>左右滑</small>':""}</div>
       <div class="vrow">${hulk.map(card).join("")}</div>
       <div class="vnone" style="margin-top:4px">${escH(CLASS_NAME)}的新影片陸續上架中 🎬<br>卡住的題目，你要不要當第一個問 SUNNY 的人？ 🙋
@@ -1433,6 +1479,8 @@ function drawRoom(){
     premTick(); seasonNotice();
   }else if(VIEW==="__bomb"){
     w.innerHTML=bombHTML();
+  }else if(VIEW==="__base"){
+    w.innerHTML=baseHTML();
   }else{
     const isAsk=VIEW==="__ask", isSolar=VIEW==="__solar", isSchool=VIEW==="__school"||isSolar;
     const vs=isAsk?VIDS.filter(v=>v.type==="ask")
@@ -1452,7 +1500,7 @@ function drawRoom(){
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
   $("petcard3").style.display=VIEW==="home"?"":"none";
   $("vhome").style.display=VIEW==="home"&&homeTipOn()?"block":"none";
-  $("vroomTitle").innerHTML=VIEW==="__bomb"?"💣 炸彈超人闖關":VIEW==="home"||VIEW.startsWith("__")?escH((CLASS_NAME||"")+"影片教室"):`<img src="${iconOf(VIEW)}" alt="">${escH(VIEW)}`;
+  $("vroomTitle").innerHTML=VIEW==="__bomb"?"💣 炸彈超人闖關":VIEW==="__base"?"整數四則・高手秘密基地":VIEW==="home"||VIEW.startsWith("__")?escH((CLASS_NAME||"")+"影片教室"):`<img src="${iconOf(VIEW)}" alt="">${escH(VIEW)}`;
   $("vbody").scrollTop=0;
 }
 // 找不到影片＝還沒有人問過這題 → 邀請孩子自己問（今天送過的，請他明天再來）
