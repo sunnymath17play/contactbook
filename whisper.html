@@ -578,13 +578,18 @@
   .vbase{position:relative;display:flex;align-items:center;gap:10px;width:100%;border:3px solid #E0A100;border-radius:20px;padding:8px 10px 8px 8px;margin:0 0 12px;
     background:linear-gradient(135deg,#FFF7DA,#FFE38C);cursor:pointer;font-family:var(--font);text-align:left;box-shadow:0 4px 12px rgba(110,90,140,.22);}
   .vbase:active{transform:scale(.98);}
+  .vbase .vdot{position:absolute;top:-9px;left:-6px;margin:0;z-index:1;}
   .vbase img{width:112px;height:63px;object-fit:cover;border-radius:12px;flex:none;}
   .vbase .bt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
   .vbase b{font-size:17px;font-weight:900;color:#5B3F8C;line-height:1.25;}
   .vbase small{font-size:12.5px;font-weight:700;color:#6B4A2A;}
   .vbase .go{font-size:26px;font-weight:900;color:#E0A100;}
   .bshero{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:18px;display:block;margin:2px 0 10px;box-shadow:0 4px 14px rgba(110,90,140,.22);}
-  .bsu b{color:#5B3F8C;}
+  .bsprog{display:flex;align-items:center;gap:10px;background:#fff;border-radius:18px;padding:6px 14px 6px 6px;margin:0 0 6px;box-shadow:0 4px 12px rgba(110,90,140,.16);}
+  .bsprog img{width:48px;height:48px;flex:none;}
+  .bsprog .bpt{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
+  .bsprog b{font-size:15px;font-weight:900;color:#5B3F8C;}
+  .bsprog b em{font-style:normal;color:#E0A100;font-size:18px;}
   .bsh{display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#F1EAFB,#FFF4CF);border-left:6px solid #E0A100;border-radius:14px;padding:6px 12px 6px 6px;margin:16px 0 8px;}
   .bsh img{width:44px;height:44px;flex:none;object-fit:contain;}
   .bsh .bst{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
@@ -1403,17 +1408,19 @@ const baseType=v=>BASE_FIX[v.id]||(BASE_TYPES.find(t=>t.test(v))||{}).k;
 function baseBtn(){
   const vs=baseVids(); if(!vs.length) return "";
   const seen=seenSet(), n=vs.filter(v=>seen.has(v.id)).length, nw=vs.some(v=>isNew(v)&&!seen.has(v.id));
-  return `<button type="button" class="vbase" data-unit="__base">${nw?'<span class="vdot">新</span>':""}<img src="th/base_thumb.jpg" alt=""><span class="bt"><b>整數四則・高手秘密基地</b>
+  return `<button type="button" class="vbase" data-unit="__base">${nw?'<span class="vdot">新</span>':""}<img src="th/base_thumb.jpg" alt=""><span class="bt"><b>整數四則<br>高手秘密基地</b>
     <small>${vs.length} 部影片・看過 ${n} 部</small></span><span class="go">›</span></button>`;
 }
 function baseHTML(){
-  const vs=baseVids().slice().sort(bySrc), seen=seenSet(), p=unitProg(vs,seen);
+  // 同一段裡：先看基本題，「找錯誤」放後面（會算了才抓得到別人的錯）
+  const vs=baseVids().slice().sort((a,b)=>(/算錯|找錯/.test(a.title||"")?1:0)-(/算錯|找錯/.test(b.title||"")?1:0)||bySrc(a,b)), seen=seenSet();
+  const n=vs.filter(v=>seen.has(v.id)).length;
   let body="";
   BASE_SHOW.forEach(k=>{ const T=BASE_TYPES.find(t=>t.k===k), g=vs.filter(v=>baseType(v)===k); if(!g.length) return;
     const d=g.filter(v=>seen.has(v.id)).length;
     body+=`<div class="bsh"><img src="${T.ic}" alt=""><span class="bst"><b>${T.t}</b><small>${T.s}</small></span><em>${d}/${g.length}</em></div>`+g.map(line).join(""); });
-  return `<img class="bshero" src="th/base_hero.jpg" alt="括號最先算、乘除再來、加減最後"><div class="vuhead bsu"><img src="th/base_icon.png" alt="">
-    <b>整數四則・高手秘密基地</b><span class="up"><small>${p.t} <em>${p.n}</em>/${p.d}</small>${bar(p,"#E0A100")}</span></div>`+body;
+  return `<img class="bshero" src="th/base_hero.jpg" alt="括號最先算、乘除再來、加減最後"><div class="bsprog"><img src="th/base_icon.png" alt="">
+    <span class="bpt"><b>看過 <em>${n}</em> / ${vs.length} 部</b>${bar({n,d:vs.length},"#E0A100")}</span></div>`+body;
 }
 function bombHTML(){
   const ns=bombNodes(), L=bombLeft(), has=ns.filter(n=>n.vs.length), ok=has.filter(n=>n.done).length, all=ns.slice(1).every(n=>n.done);
@@ -1500,7 +1507,7 @@ function drawRoom(){
   $("vback").textContent=VIEW==="home"?"← 回樹洞":"← 全部單元";
   $("petcard3").style.display=VIEW==="home"?"":"none";
   $("vhome").style.display=VIEW==="home"&&homeTipOn()?"block":"none";
-  $("vroomTitle").innerHTML=VIEW==="__bomb"?"💣 炸彈超人闖關":VIEW==="__base"?"整數四則・高手秘密基地":VIEW==="home"||VIEW.startsWith("__")?escH((CLASS_NAME||"")+"影片教室"):`<img src="${iconOf(VIEW)}" alt="">${escH(VIEW)}`;
+  $("vroomTitle").innerHTML=VIEW==="__bomb"?"💣 炸彈超人闖關":VIEW==="__base"?"高手秘密基地":VIEW==="home"||VIEW.startsWith("__")?escH((CLASS_NAME||"")+"影片教室"):`<img src="${iconOf(VIEW)}" alt="">${escH(VIEW)}`;
   $("vbody").scrollTop=0;
 }
 // 找不到影片＝還沒有人問過這題 → 邀請孩子自己問（今天送過的，請他明天再來）
