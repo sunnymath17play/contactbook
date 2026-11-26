@@ -174,9 +174,40 @@ header .home { border: 2px solid var(--main); background: #fff; color: var(--mai
   header .home { margin-left: auto; white-space: nowrap; font-size: 13px; padding: 5px 10px; }
   .mode { padding: 9px 4px; font-size: 16px; }
   .seg button { padding: 7px 4px; font-size: 15px; }
-  .stb { gap: 6px; padding: 8px; font-size: 16px; white-space: nowrap; }
-  .stb i { font-size: 20px; }
-  .stb .ck { width: 20px; height: 20px; font-size: 12px; }
+}
+/* 大字版（2026-11-26 SUNNY 老花：課堂狀況不要圖示、字放大） */
+.stb { justify-content: space-between; gap: 6px; min-height: 68px; padding: 10px 12px; font-size: 24px; white-space: nowrap; }
+.stb .ck { margin-left: 0; width: 28px; height: 28px; font-size: 16px; }
+.sthead b { font-size: 32px; }
+.sthead span { font-size: 18px; }
+.sheet .memo { font-size: 20px; padding: 13px; }
+.strecent { font-size: 16px; line-height: 1.5; }
+.btn.big { font-size: 22px; padding: 14px; }
+.sheet .btn.danger { font-size: 18px; padding: 12px 16px; border-radius: 14px; }
+.stk { font-size: 22px; min-height: 74px; }
+.stk .no { font-size: 12px; }
+.stk .up { font-size: 11px; }
+.dot { width: 13px; height: 13px; }
+.dots small { font-size: 13px; }
+.stbar .day { font-size: 22px; }
+.stbar .day small { font-size: 15px; }
+.stbar .day button { font-size: 15px; padding: 3px 10px; }
+.stbar .nav { width: 50px; height: 50px; font-size: 26px; }
+.seg button { font-size: 19px; padding: 10px 4px; }
+.sthint { font-size: 16px; }
+.lcard { font-size: 20px; }
+.lcard .top { font-size: 22px; }
+.lcard .top .n { font-size: 17px; }
+.lcard .tg span { font-size: 17px; padding: 3px 10px; }
+.tl div { font-size: 18px; }
+.tl b { width: 96px; font-size: 17px; }
+.tl em { font-size: 16px; }
+.tl button { font-size: 16px; }
+.presets.big button { font-size: 17px; padding: 8px 12px; }
+@media (max-width: 480px) {
+  .stb { font-size: 22px; padding: 10px 8px; }
+  .stb .ck { width: 24px; height: 24px; font-size: 14px; }
+  .seg button { font-size: 18px; }
 }
 .tl u { text-decoration: none; flex: none; font-size: 13px; color: var(--main); font-weight: 700; padding: 2px 4px; }
 </style>
@@ -520,7 +551,7 @@ function dotsOf(n) {
 }
 function renderSt(d) {
   const view = LS.get('stv', 'rec');
-  let h = `<div class="seg"><button class="${view === 'rec' ? 'on' : ''}" onclick="LS.set('stv','rec');render()">✍️ 記錄</button><button class="${view === 'log' ? 'on' : ''}" onclick="LS.set('stv','log');render()">📖 看紀錄</button></div>`;
+  let h = `<div class="seg"><button class="${view === 'rec' ? 'on' : ''}" onclick="LS.set('stv','rec');render()">記錄</button><button class="${view === 'log' ? 'on' : ''}" onclick="LS.set('stv','log');render()">看紀錄</button></div>`;
   if (view === 'log') return h + renderLog(d);
   const date = stDate(), isToday = date === todayStr();
   const nN = d.roster.filter(r => noteOf(d, date, r.full)).length;
@@ -536,24 +567,24 @@ function renderSt(d) {
 }
 function renderLog(d) {
   const days = LS.get('stdays', NOTE_DAYS);
-  let h = `<div class="presets" style="margin:0 0 10px">${[[14, '最近 2 週'], [30, '最近 1 個月'], [0, '全部']].map(([n, t]) =>
+  let h = `<div class="presets big" style="margin:0 0 10px">${[[14, '最近 2 週'], [30, '最近 1 個月'], [0, '全部']].map(([n, t]) =>
     `<button class="${days === n ? 'on' : ''}" onclick="LS.set('stdays',${n});render()">${t}</button>`).join('')}</div>`;
   const rows = d.roster.map((r, i) => {
     const ns = recentOf(d, r.full, days).sort((a, b) => a.date < b.date ? 1 : -1);
     const warn = recentOf(d, r.full, NOTE_DAYS).reduce((s, n) => s + nCount(n), 0) >= NOTE_WARN;
     return { r, i, ns, n: ns.reduce((s, x) => s + nCount(x), 0), warn };
   }).filter(x => x.ns.length).sort((a, b) => b.warn - a.warn || b.n - a.n);
-  if (!rows.length) return h + `<div class="empty">👍 ${days ? '這段時間' : ''}全班都沒有狀況</div>`;
+  if (!rows.length) return h + `<div class="empty" style="font-size:19px">${days ? '這段時間' : ''}全班都沒有狀況</div>`;
   h += rows.map(x => {
     const cnt = {}; x.ns.forEach(n => (n.tags.length ? n.tags : ['其他']).forEach(t => cnt[t] = (cnt[t] || 0) + 1));
     const open = S.stOpenKid === x.r.full;
     return `<div class="lcard ${x.warn ? 'warn' : ''}"><button onclick="S.stOpenKid=${open ? 'null' : `'${esc(x.r.full)}'`};render()">
       <div class="top">${x.warn ? '⚠ ' : ''}${esc(x.r.nick)}<span class="n">${x.n} 次 ${open ? '▾' : '▸'}</span></div>
-      <div class="tg">${TAGS.filter(t => cnt[t[0]]).map(t => `<span>${t[1]} ${t[0]} ×${cnt[t[0]]}</span>`).join('')}</div></button>
-      ${open ? `<div class="tl">${x.ns.map(n => `<div><b>${mdOf(n.date)}（${wkOf(n.date)}）</b><span>${n.tags.map(t => TAG[t][1] + t).join('、') || '💬'}${n.memo ? `<em>${esc(n.memo)}</em>` : ''}</span><button onclick="stOpen(${x.i},'${n.date}')">✏️ 改</button></div>`).join('')}</div>` : ''}</div>`;
+      <div class="tg">${TAGS.filter(t => cnt[t[0]]).map(t => `<span>${t[0]} ×${cnt[t[0]]}</span>`).join('')}</div></button>
+      ${open ? `<div class="tl">${x.ns.map(n => `<div><b>${mdOf(n.date)}（${wkOf(n.date)}）</b><span>${n.tags.join('、') || '其他'}${n.memo ? `<em>${esc(n.memo)}</em>` : ''}</span><button onclick="stOpen(${x.i},'${n.date}')">改</button></div>`).join('')}</div>` : ''}</div>`;
   }).join('');
   const none = d.roster.length - rows.length;
-  return h + (none ? `<p class="lmore">其他 ${none} 人${days ? '這段時間' : ''}都沒有狀況 👍</p>` : '');
+  return h + (none ? `<p class="lmore" style="font-size:17px">其他 ${none} 人${days ? '這段時間' : ''}都沒有狀況</p>` : '');
 }
 function stSheet() {
   const m = S.modal, d = D(), r = d.roster.find(x => x.full === m.st) || { nick: m.st }, date = stDate();
@@ -561,9 +592,9 @@ function stSheet() {
   rec.forEach(n => (n.tags.length ? n.tags : ['其他']).forEach(t => cnt[t] = (cnt[t] || 0) + 1));
   return `<div class="mask" onclick="if(event.target===this)stSave()"><div class="sheet">
     <div class="sthead"><b>${esc(r.nick)}</b><span>${mdOf(date)}（${wkOf(date)}）${date === todayStr() ? '今天' : ''}</span></div>
-    <div class="stgrid">${TAGS.map(([t, ic, c]) => `<button class="stb ${m.tags.includes(t) ? 'on' : ''}" style="--c:${c}" onclick="stToggle(this,'${t}')"><i>${ic}</i>${t}<span class="ck">✓</span></button>`).join('')}</div>
+    <div class="stgrid">${TAGS.map(([t, ic, c]) => `<button class="stb ${m.tags.includes(t) ? 'on' : ''}" style="--c:${c}" onclick="stToggle(this,'${t}')">${t}<span class="ck">✓</span></button>`).join('')}</div>
     <input id="stmemo" class="memo" type="text" maxlength="60" value="${esc(m.memo)}" placeholder="備註（可不填）例如：放在安親班">
-    <div class="strecent">${rec.length ? '最近 2 週其他天：' + TAGS.filter(t => cnt[t[0]]).map(t => t[1] + '×' + cnt[t[0]]).join('　') : '最近 2 週其他天沒有狀況'}</div>
+    <div class="strecent">${rec.length ? '最近 2 週其他天：' + TAGS.filter(t => cnt[t[0]]).map(t => t[0] + ' ' + cnt[t[0]] + ' 次').join('、') : '最近 2 週其他天沒有狀況'}</div>
     <div class="row">${noteOf(d, date, m.st) ? '<button class="btn danger" onclick="stSave(true)">清掉</button>' : ''}<button class="btn main big" onclick="stSave()">好了</button></div>
   </div></div>`;
 }
@@ -713,7 +744,7 @@ if (S.key) { render(); flush(); if (!S.q.length) loadAll(true); } else render();
 // 離線也打得開：service worker 把網頁存在平板（要先連網打開過一次）
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611261032';
+const VER = '202611261048';
 async function checkNew() {
   if (VER.startsWith('__') || !navigator.onLine) return;
   try {
