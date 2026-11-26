@@ -62,6 +62,7 @@ button{font:inherit;border:none;border-radius:16px;cursor:pointer}
 .askbtn img{width:64px;height:64px;flex:none}
 .askbtn b{display:block;font-size:22px;font-weight:900;color:#c26a1e}
 .askbtn small{display:block;font-size:17px;font-weight:700;color:var(--sub);margin-top:2px}
+.undobtn{display:block;margin:6px auto 0;padding:6px 14px;background:none;border:none;color:var(--sub);font-size:16px;font-weight:700;text-decoration:underline}
 .askbtn.done{border-color:#7fcf94;background:#e8f8ec;box-shadow:none}.askbtn.done b{color:#2e9e4f}.qfig svg{max-width:100%;height:auto}
 .vidbtn{border-color:#5aa9f0;background:#eef6ff;box-shadow:0 3px 0 #cfe2f5}.vidbtn b{color:#2f7dd1}
 .choices{display:grid;gap:10px;margin-top:12px}
@@ -272,11 +273,15 @@ async function submit(ans){
   const evs=[];let nxReady=L.ok;   // 答對可以馬上下一題；答錯要等講解出來
   const go=async()=>{if(!nxReady)return;if(last){await waitPending();}for(const e of evs.splice(0))await celebrate(e);next();};
   $("nx").onclick=go;
-  {const hb=document.createElement("button");hb.className="askbtn";
-   hb.innerHTML='<img src="img/help_hand.png" alt=""><span><b>這題我還是不會</b><small>按一下，告訴 SUNNY</small></span>';
-   hb.onclick=()=>{hb.disabled=true;hb.classList.add("done");hb.innerHTML='<img src="img/help_done.png" alt=""><span><b>已經告訴 SUNNY 了</b><small>謝謝你，老師會幫你！</small></span>';
-     post({mode:"flag",name:NAME,id:q.id}).catch(()=>{hb.disabled=false;hb.classList.remove("done");hb.innerHTML='<img src="img/help_hand.png" alt=""><span><b>連線失敗，再按一次</b></span>';});};
-   $("nx").after(hb);
+  {// 「還是不會」只在答錯時出現；按錯可以收回（2026-11-26 孩子反映按錯）
+   const ASK='<img src="img/help_hand.png" alt=""><span><b>這題我還是不會</b><small>按一下，告訴 SUNNY</small></span>';
+   if(!L.ok){const hb=document.createElement("button");hb.className="askbtn";hb.innerHTML=ASK;
+   const ub=document.createElement("button");ub.className="undobtn";ub.textContent="按錯了，收回";ub.style.display="none";
+   const reset=t=>{hb.disabled=false;hb.classList.remove("done");hb.innerHTML=t||ASK;ub.style.display="none";};
+   hb.onclick=()=>{hb.disabled=true;hb.classList.add("done");hb.innerHTML='<img src="img/help_done.png" alt=""><span><b>已經告訴 SUNNY 了</b><small>謝謝你，老師會幫你！</small></span>';ub.style.display="";
+     post({mode:"flag",name:NAME,id:q.id}).catch(()=>reset('<img src="img/help_hand.png" alt=""><span><b>連線失敗，再按一次</b></span>'));};
+   ub.onclick=()=>{ub.disabled=true;post({mode:"unflag",name:NAME,id:q.id}).then(()=>{ub.disabled=false;reset();toast("收回了！");}).catch(()=>{ub.disabled=false;toast("連線失敗，再按一次");});};
+   $("nx").after(hb);hb.after(ub);}
    // 這題有浩克講解影片（videos.json：題目編號→影片代號，2026-11-22）
    const vid=SOLAR_VIDS[q.id];
    if(vid){const vb=document.createElement("button");vb.className="askbtn vidbtn";
