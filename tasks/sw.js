@@ -1,7 +1,7 @@
 // 訂正紀錄・離線用（2026-11-24 SUNNY：平板上課常沒網路）
 // 網頁先抓最新的，抓不到（離線）就用平板存的那份；後台資料不經過這裡（打勾在網頁裡排隊，連網再上傳）
-const CACHE = 'tasks-v1';
-const FILES = ['./', 'logo.png', 'icon-180.png', 'icon-512.png', 'manifest.json'];
+const CACHE = 'tasks-v2';
+const FILES = ['./', 'logo.png', 'good.png', 'icon-180.png', 'icon-512.png', 'manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

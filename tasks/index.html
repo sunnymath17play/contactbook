@@ -204,6 +204,17 @@ header .home { border: 2px solid var(--main); background: #fff; color: var(--mai
 .tl em { font-size: 16px; }
 .tl button { font-size: 16px; }
 .presets.big button { font-size: 17px; padding: 8px 12px; }
+/* 可累加的按鈕：點一下＋1，「−1」扣回 */
+.stb.multi { cursor: pointer; flex-wrap: wrap; row-gap: 4px; user-select: none; }
+.stb.multi .lb { flex: 1 0 auto; }
+.stb .ck.plus { color: #94A3B8; font-size: 18px; font-weight: 800; }
+.stb.multi .x { font-size: 26px; font-weight: 900; }
+.stb.multi .minus { border: 0; background: #fff; color: var(--c); border-radius: 10px; font-size: 18px; font-weight: 800; padding: 6px 10px; margin-left: 6px; }
+.stb.good { grid-column: 1 / -1; min-height: 80px; gap: 10px; }
+.stb.good img { width: 60px; height: 60px; object-fit: contain; flex: none; background: #fff; border-radius: 14px; }
+.stb.good:not(.on) { border-color: #F5D27A; background: #FFFBEB; }
+.lcard .tg span.gd { display: inline-flex; align-items: center; gap: 6px; background: #FFF4D1; color: #8A5A00; }
+.lcard .tg span.gd img { width: 26px; height: 26px; object-fit: contain; }
 @media (max-width: 480px) {
   .stb { font-size: 22px; padding: 10px 8px; }
   .stb .ck { width: 24px; height: 24px; font-size: 14px; }
@@ -500,8 +511,13 @@ function goWatch(i) {
 // ---------- 📋 課堂狀況（2026-11-26 SUNNY：沒帶講義、沒帶作業、沒寫完、不認真、分心…；不跟寵物蛋連動） ----------
 // 一個孩子一天一筆；編號＝班級|日期|姓名（離線重送、浩克補記都對到同一筆）
 const TAGS = [['沒帶講義', '📕', '#E5484D'], ['沒帶作業', '📒', '#F08C00'], ['作業沒寫完', '✏️', '#8E4EC6'],
-  ['作業不認真', '🌀', '#0B84C6'], ['上課分心', '👀', '#1F9D63'], ['其他', '💬', '#64748B']];
+  ['作業不認真', '🌀', '#0B84C6'], ['上課分心', '👀', '#1F9D63'], ['其他', '💬', '#64748B'], ['表現很棒', '🌟', '#E09B00']];
 const TAG = Object.fromEntries(TAGS.map(t => [t[0], t]));
+// 2026-11-26 SUNNY：上課分心／其他／表現很棒 點一下＋1（tags 裡重複＝幾次）；表現很棒是好事，不算進「常出狀況」
+const MULTI = { 上課分心: 1, 其他: 1, 表現很棒: 1 }, GOOD = '表現很棒';
+const cntOf = (tags, t) => tags.filter(x => x === t).length;
+const uniq = tags => TAGS.map(t => t[0]).filter(t => tags.includes(t));
+const tagTxt = tags => uniq(tags).map(t => { const n = cntOf(tags, t); return t + (n > 1 ? ' ×' + n : ''); }).join('、');
 const NOTE_WARN = 3, NOTE_DAYS = 14;   // 14 天內 3 次以上＝常出狀況
 const WK = '日一二三四五六';
 const todayStr = () => ymd(Date.now());
@@ -511,7 +527,7 @@ const noteId = (c, date, full) => 'N' + hash(c + '|' + date + '|' + full);
 const notesOf = d => d.notes || (d.notes = []);
 const stDate = () => S.stDate || todayStr();
 const noteOf = (d, date, full) => notesOf(d).find(n => n.date === date && n.full === full);
-const nCount = n => n.tags.length || (n.memo ? 1 : 0);
+const nCount = n => n.tags.filter(t => t !== GOOD).length || (!n.tags.length && n.memo ? 1 : 0);   // 負面次數
 const recentOf = (d, full, days) => notesOf(d).filter(n => n.full === full && (!days || new Date(n.date + 'T23:59:59').getTime() > Date.now() - days * DAY));
 function stShift(n) {
   const t = new Date(stDate() + 'T12:00:00'); t.setDate(t.getDate() + n);
@@ -528,10 +544,16 @@ function stToggle(el, t) {
   if (i >= 0) m.tags.splice(i, 1); else m.tags.push(t);
   el.classList.toggle('on', i < 0);
 }
+function stMulti(t, dlt) {
+  const m = S.modal, mi = $('#stmemo'); if (mi) m.memo = mi.value;
+  if (dlt > 0) { if (cntOf(m.tags, t) < 99) m.tags.push(t); }
+  else { const i = m.tags.lastIndexOf(t); if (i >= 0) m.tags.splice(i, 1); }
+  render();
+}
 function stSave(clear) {
   const m = S.modal; if (!m || !m.st) return;
   const d = D(), date = stDate(), full = m.st, old = noteOf(d, date, full);
-  const tags = clear ? [] : TAGS.map(t => t[0]).filter(t => m.tags.includes(t));
+  const tags = clear ? [] : TAGS.map(t => t[0]).flatMap(t => MULTI[t] ? m.tags.filter(x => x === t) : m.tags.includes(t) ? [t] : []);
   const mi = $('#stmemo'), memo = clear ? '' : (mi ? mi.value : m.memo).trim().slice(0, 60);
   S.modal = null;
   if (!old && !tags.length && !memo || old && old.tags.join() === tags.join() && old.memo === memo) return render();
@@ -546,8 +568,8 @@ function stSave(clear) {
 }
 function dotsOf(n) {
   if (!n) return '';
-  const ts = n.tags.length ? n.tags : ['其他'];
-  return ts.slice(0, 3).map(t => `<i class="dot" style="background:${TAG[t][2]}"></i>`).join('') + (ts.length > 3 ? `<small>+${ts.length - 3}</small>` : '');
+  const all = n.tags.length ? n.tags : ['其他'], ts = uniq(all);
+  return ts.slice(0, 3).map(t => { const c = cntOf(all, t); return `<i class="dot" style="background:${TAG[t][2]}"></i>${c > 1 ? `<small>${c}</small>` : ''}`; }).join('') + (ts.length > 3 ? `<small>+${ts.length - 3}</small>` : '');
 }
 function renderSt(d) {
   const view = LS.get('stv', 'rec');
@@ -572,16 +594,17 @@ function renderLog(d) {
   const rows = d.roster.map((r, i) => {
     const ns = recentOf(d, r.full, days).sort((a, b) => a.date < b.date ? 1 : -1);
     const warn = recentOf(d, r.full, NOTE_DAYS).reduce((s, n) => s + nCount(n), 0) >= NOTE_WARN;
-    return { r, i, ns, n: ns.reduce((s, x) => s + nCount(x), 0), warn };
-  }).filter(x => x.ns.length).sort((a, b) => b.warn - a.warn || b.n - a.n);
+    return { r, i, ns, n: ns.reduce((s, x) => s + nCount(x), 0), good: ns.reduce((s, x) => s + cntOf(x.tags, GOOD), 0), warn };
+  }).filter(x => x.ns.length).sort((a, b) => b.warn - a.warn || b.n - a.n || b.good - a.good);
   if (!rows.length) return h + `<div class="empty" style="font-size:19px">${days ? '這段時間' : ''}全班都沒有狀況</div>`;
   h += rows.map(x => {
     const cnt = {}; x.ns.forEach(n => (n.tags.length ? n.tags : ['其他']).forEach(t => cnt[t] = (cnt[t] || 0) + 1));
     const open = S.stOpenKid === x.r.full;
     return `<div class="lcard ${x.warn ? 'warn' : ''}"><button onclick="S.stOpenKid=${open ? 'null' : `'${esc(x.r.full)}'`};render()">
-      <div class="top">${x.warn ? '⚠ ' : ''}${esc(x.r.nick)}<span class="n">${x.n} 次 ${open ? '▾' : '▸'}</span></div>
-      <div class="tg">${TAGS.filter(t => cnt[t[0]]).map(t => `<span>${t[0]} ×${cnt[t[0]]}</span>`).join('')}</div></button>
-      ${open ? `<div class="tl">${x.ns.map(n => `<div><b>${mdOf(n.date)}（${wkOf(n.date)}）</b><span>${n.tags.join('、') || '其他'}${n.memo ? `<em>${esc(n.memo)}</em>` : ''}</span><button onclick="stOpen(${x.i},'${n.date}')">改</button></div>`).join('')}</div>` : ''}</div>`;
+      <div class="top">${x.warn ? '⚠ ' : ''}${esc(x.r.nick)}<span class="n">${x.n ? x.n + ' 次' : ''} ${open ? '▾' : '▸'}</span></div>
+      ${x.n ? `<div class="tg">${TAGS.filter(t => t[0] !== GOOD && cnt[t[0]]).map(t => `<span>${t[0]} ×${cnt[t[0]]}</span>`).join('')}</div>` : ''}
+      ${x.good ? `<div class="tg"><span class="gd"><img src="good.png" alt="">表現很棒 ×${x.good}</span></div>` : ''}</button>
+      ${open ? `<div class="tl">${x.ns.map(n => `<div><b>${mdOf(n.date)}（${wkOf(n.date)}）</b><span>${tagTxt(n.tags) || '其他'}${n.memo ? `<em>${esc(n.memo)}</em>` : ''}</span><button onclick="stOpen(${x.i},'${n.date}')">改</button></div>`).join('')}</div>` : ''}</div>`;
   }).join('');
   const none = d.roster.length - rows.length;
   return h + (none ? `<p class="lmore" style="font-size:17px">其他 ${none} 人${days ? '這段時間' : ''}都沒有狀況</p>` : '');
@@ -592,7 +615,11 @@ function stSheet() {
   rec.forEach(n => (n.tags.length ? n.tags : ['其他']).forEach(t => cnt[t] = (cnt[t] || 0) + 1));
   return `<div class="mask" onclick="if(event.target===this)stSave()"><div class="sheet">
     <div class="sthead"><b>${esc(r.nick)}</b><span>${mdOf(date)}（${wkOf(date)}）${date === todayStr() ? '今天' : ''}</span></div>
-    <div class="stgrid">${TAGS.map(([t, ic, c]) => `<button class="stb ${m.tags.includes(t) ? 'on' : ''}" style="--c:${c}" onclick="stToggle(this,'${t}')">${t}<span class="ck">✓</span></button>`).join('')}</div>
+    <div class="stgrid">${TAGS.map(([t, ic, c]) => {
+      if (!MULTI[t]) return `<button class="stb ${m.tags.includes(t) ? 'on' : ''}" style="--c:${c}" onclick="stToggle(this,'${t}')">${t}<span class="ck">✓</span></button>`;
+      const k = cntOf(m.tags, t);
+      return `<div class="stb multi ${t === GOOD ? 'good' : ''} ${k ? 'on' : ''}" style="--c:${c}" role="button" onclick="stMulti('${t}',1)">${t === GOOD ? '<img src="good.png" alt="">' : ''}<span class="lb">${t}</span>${k ? `<b class="x">×${k}</b><button class="minus" onclick="event.stopPropagation();stMulti('${t}',-1)">−1</button>` : '<span class="ck plus">＋</span>'}</div>`;
+    }).join('')}</div>
     <input id="stmemo" class="memo" type="text" maxlength="60" value="${esc(m.memo)}" placeholder="備註（可不填）例如：放在安親班">
     <div class="strecent">${rec.length ? '最近 2 週其他天：' + TAGS.filter(t => cnt[t[0]]).map(t => t[0] + ' ' + cnt[t[0]] + ' 次').join('、') : '最近 2 週其他天沒有狀況'}</div>
     <div class="row">${noteOf(d, date, m.st) ? '<button class="btn danger" onclick="stSave(true)">清掉</button>' : ''}<button class="btn main big" onclick="stSave()">好了</button></div>
@@ -744,7 +771,7 @@ if (S.key) { render(); flush(); if (!S.q.length) loadAll(true); } else render();
 // 離線也打得開：service worker 把網頁存在平板（要先連網打開過一次）
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611261048';
+const VER = '202611261100';
 async function checkNew() {
   if (VER.startsWith('__') || !navigator.onLine) return;
   try {
