@@ -112,6 +112,73 @@ header .home { border: 2px solid var(--main); background: #fff; color: var(--mai
 .login { max-width: 360px; margin: 80px auto; background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 4px 20px #0001; text-align: center; }
 .login img { width: 80px; }
 .login input { width: 100%; font-size: 20px; padding: 12px; border: 2px solid var(--line); border-radius: 12px; text-align: center; margin: 14px 0; }
+
+/* 2026-11-26 課堂狀況：手機（375px）優先，平板再放大 */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 10px; }
+.mode { border: 2px solid var(--line); background: #fff8; color: var(--text); border-radius: 14px; padding: 11px 6px; font-size: 17px; font-weight: 700; opacity: .8; }
+.mode.on { background: #fff; color: var(--main); border-color: var(--main); opacity: 1; box-shadow: 0 2px 10px #0001; }
+.stbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 6px; margin: 0 -14px 10px; padding: 8px 14px;
+  background: #ffffffe8; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-bottom: 1px solid #0000000d; }
+.stbar .nav { width: 44px; height: 44px; flex: none; border: 2px solid var(--line); background: #fff; border-radius: 12px; font-size: 22px; color: var(--main); font-weight: 700; padding: 0; }
+.stbar .nav:disabled { opacity: .3; }
+.stbar .day { flex: 1; text-align: center; font-size: 18px; font-weight: 800; line-height: 1.15; }
+.stbar .day small { display: block; font-size: 12px; font-weight: 600; opacity: .6; }
+.stbar .day button { border: 0; background: var(--main); color: #fff; border-radius: 10px; font-size: 12px; padding: 2px 8px; margin-top: 2px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: #0000000a; border-radius: 12px; padding: 3px; margin: 0 0 10px; }
+.seg button { border: 0; background: transparent; border-radius: 10px; padding: 9px 4px; font-size: 16px; font-weight: 700; color: var(--text); opacity: .7; }
+.seg button.on { background: #fff; color: var(--main); opacity: 1; box-shadow: 0 1px 4px #0002; }
+.kids.st { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (min-width: 600px) { .kids.st { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; } }
+.stk { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 6px; border: 2px solid #E2E8F0; background: #fff;
+  color: var(--text); border-radius: 16px; padding: 10px 10px 9px; min-height: 66px; font-size: 18px; font-weight: 700; text-align: left; user-select: none; word-break: break-all; }
+.stk .no { position: absolute; top: 5px; right: 8px; font-size: 11px; opacity: .35; }
+.stk.has { border-color: #CBD5E0; background: #F8FAFC; }
+.stk .up { position: absolute; bottom: 4px; right: 6px; font-size: 10px; opacity: .55; }
+.dots { display: flex; gap: 4px; align-items: center; min-height: 10px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.dots small { font-size: 11px; opacity: .6; font-weight: 700; }
+.sthint { font-size: 13px; opacity: .6; text-align: center; margin: 12px 0 0; }
+.sthead { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px; }
+.sthead b { font-size: 28px; color: var(--main); }
+.sthead span { font-size: 15px; opacity: .65; font-weight: 600; }
+.stgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stb { display: flex; align-items: center; gap: 8px; border: 2px solid #E2E8F0; background: #fff; color: var(--text); border-radius: 14px;
+  min-height: 58px; padding: 8px 10px; font-size: 17px; font-weight: 700; text-align: left; }
+.stb i { font-style: normal; font-size: 22px; flex: none; }
+.stb .ck { margin-left: auto; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #CBD5E0; flex: none; display: flex; align-items: center; justify-content: center; font-size: 14px; color: transparent; }
+.stb.on { background: var(--c); border-color: var(--c); color: #fff; }
+.stb.on .ck { border-color: #fff; background: #fff; color: var(--c); }
+.sheet .memo { width: 100%; font-size: 17px; padding: 12px; border: 2px solid var(--line); border-radius: 12px; outline: none; margin-top: 12px; }
+.sheet .memo:focus { border-color: var(--main); }
+.strecent { font-size: 13px; opacity: .7; margin-top: 10px; }
+.btn.big { flex: 1; padding: 13px; font-size: 18px; border-radius: 14px; }
+.lcard > button { display: block; width: 100%; border: 0; background: transparent; padding: 0; color: inherit; text-align: left; font: inherit; }
+.tl button { flex: none; border: 0; background: transparent; font-size: 13px; color: var(--main); font-weight: 700; padding: 2px 4px; }
+.lmore { text-align: center; font-size: 14px; opacity: .65; margin: 12px 0; }
+.lcard { display: block; width: 100%; text-align: left; border: 2px solid #E2E8F0; background: #fff; color: var(--text); border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; font-size: 17px; }
+.lcard.warn { border-color: #FFB547; background: #FFF8EE; }
+.lcard .top { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+.lcard .top .n { margin-left: auto; font-size: 14px; font-weight: 700; opacity: .7; }
+.lcard .tg { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.lcard .tg span { font-size: 13px; font-weight: 700; background: #F1F5F9; border-radius: 8px; padding: 2px 8px; }
+.tl { margin-top: 10px; border-top: 1px dashed #E2E8F0; padding-top: 4px; }
+.tl div { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; font-size: 15px; border-bottom: 1px solid #F1F5F9; }
+.tl div:last-child { border-bottom: 0; }
+.tl b { flex: none; width: 74px; font-size: 14px; opacity: .75; }
+.tl span { flex: 1; line-height: 1.45; }
+.tl em { font-style: normal; display: block; font-size: 13px; opacity: .7; }
+@media (max-width: 480px) {
+  header { margin-bottom: 8px; }
+  header h1 { white-space: nowrap; font-size: 19px; }
+  header .sub { display: none; }
+  header .home { margin-left: auto; white-space: nowrap; font-size: 13px; padding: 5px 10px; }
+  .mode { padding: 9px 4px; font-size: 16px; }
+  .seg button { padding: 7px 4px; font-size: 15px; }
+  .stb { gap: 6px; padding: 8px; font-size: 16px; white-space: nowrap; }
+  .stb i { font-size: 20px; }
+  .stb .ck { width: 20px; height: 20px; font-size: 12px; }
+}
+.tl u { text-decoration: none; flex: none; font-size: 13px; color: var(--main); font-weight: 700; padding: 2px 4px; }
 </style>
 </head>
 <body>
@@ -239,11 +306,12 @@ async function flush() {
       if (o.t === 'add') await api({ mode: 'addUnit', cls: o.cls, id: o.id, cat: o.cat, name: o.name, at: o.at, due: o.due || 0, state: o.state || '', orig: o.orig || '' });
       if (o.t === 'edit') await api(Object.assign({ mode: 'editUnit', id: o.id }, o.f || { due: o.due || 0 }));
       if (o.t === 'mark') await sendMark(o);
+      if (o.t === 'note') await api({ mode: 'setNote', cls: o.cls, id: o.id, date: o.date, full: o.full, tags: o.tags, memo: o.memo, src: o.src || '平板', at: o.at });
       S.q.shift(); n++;
     } catch (e) {
       if (e.net) stop = true;
       else if (e.message === 'bad_key') { stop = true; S.key = ''; LS.set('key', ''); }
-      else { S.q.shift(); toast('⚠ 有一筆沒存到（' + (o.name || '') + '），請再按一次'); }
+      else { S.q.shift(); toast('⚠ 有一筆沒存到（' + (o.name || o.full || '') + '），請再按一次'); }
     }
     saveQ(); saveAll();
   }
@@ -285,6 +353,7 @@ async function loadAll(quiet) {
     const j = await api({ mode: 'loadAll' });
     S.q.forEach(o => {
       const d = j.classes[o.cls]; if (!d) return;
+      if (o.t === 'note') { d.notes = (d.notes || []).filter(n => n.id !== o.id); if (o.tags.length || o.memo) d.notes.push({ id: o.id, cls: o.cls, date: o.date, full: o.full, tags: o.tags, memo: o.memo, src: o.src, at: o.at, local: 1 }); return; }
       if (o.t === 'add' && !d.units.some(u => u.id === o.id)) d.units.push({ id: o.id, cls: o.cls, name: o.name, cat: o.cat, items: [ITEM], at: o.at, due: o.due || 0, state: o.state || '', orig: o.orig || '' });
       if (o.t === 'edit') d.units.filter(u => u.id === o.id).forEach(u => Object.assign(u, o.f || { due: o.due || 0 }));
       if (o.t === 'mark') {
@@ -397,6 +466,109 @@ function goWatch(i) {
   const w = S.watchView[i]; S.cls = w.cls; LS.set('cls', w.cls); LS.set('cat_' + w.cls, w.cat || 'jy'); LS.set('sel_' + w.cls + '_' + (w.cat || 'jy'), w.id); render();
 }
 
+// ---------- 📋 課堂狀況（2026-11-26 SUNNY：沒帶講義、沒帶作業、沒寫完、不認真、分心…；不跟寵物蛋連動） ----------
+// 一個孩子一天一筆；編號＝班級|日期|姓名（離線重送、浩克補記都對到同一筆）
+const TAGS = [['沒帶講義', '📕', '#E5484D'], ['沒帶作業', '📒', '#F08C00'], ['作業沒寫完', '✏️', '#8E4EC6'],
+  ['作業不認真', '🌀', '#0B84C6'], ['上課分心', '👀', '#1F9D63'], ['其他', '💬', '#64748B']];
+const TAG = Object.fromEntries(TAGS.map(t => [t[0], t]));
+const NOTE_WARN = 3, NOTE_DAYS = 14;   // 14 天內 3 次以上＝常出狀況
+const WK = '日一二三四五六';
+const todayStr = () => ymd(Date.now());
+const wkOf = s => WK[new Date(s + 'T12:00:00').getDay()];
+const mdOf = s => +s.slice(5, 7) + '/' + +s.slice(8, 10);
+const noteId = (c, date, full) => 'N' + hash(c + '|' + date + '|' + full);
+const notesOf = d => d.notes || (d.notes = []);
+const stDate = () => S.stDate || todayStr();
+const noteOf = (d, date, full) => notesOf(d).find(n => n.date === date && n.full === full);
+const nCount = n => n.tags.length || (n.memo ? 1 : 0);
+const recentOf = (d, full, days) => notesOf(d).filter(n => n.full === full && (!days || new Date(n.date + 'T23:59:59').getTime() > Date.now() - days * DAY));
+function stShift(n) {
+  const t = new Date(stDate() + 'T12:00:00'); t.setDate(t.getDate() + n);
+  const s = ymd(t.getTime()); S.stDate = s > todayStr() ? todayStr() : s; render();
+}
+function stOpen(i, date) {
+  const d = D(), r = d.roster[i]; if (!r) return;
+  if (date) S.stDate = date;
+  const n = noteOf(d, stDate(), r.full);
+  S.modal = { st: r.full, tags: n ? n.tags.slice() : [], memo: n ? n.memo : '' }; render();
+}
+function stToggle(el, t) {
+  const m = S.modal, i = m.tags.indexOf(t);
+  if (i >= 0) m.tags.splice(i, 1); else m.tags.push(t);
+  el.classList.toggle('on', i < 0);
+}
+function stSave(clear) {
+  const m = S.modal; if (!m || !m.st) return;
+  const d = D(), date = stDate(), full = m.st, old = noteOf(d, date, full);
+  const tags = clear ? [] : TAGS.map(t => t[0]).filter(t => m.tags.includes(t));
+  const mi = $('#stmemo'), memo = clear ? '' : (mi ? mi.value : m.memo).trim().slice(0, 60);
+  S.modal = null;
+  if (!old && !tags.length && !memo || old && old.tags.join() === tags.join() && old.memo === memo) return render();
+  const id = noteId(S.cls, date, full), src = !old || !old.src ? '平板' : old.src.includes('平板') ? old.src : old.src + '＋平板';
+  d.notes = notesOf(d).filter(n => n.id !== id && !(n.date === date && n.full === full));
+  if (tags.length || memo) d.notes.push({ id, cls: S.cls, date, full, tags, memo, src, at: Date.now(), local: 1 });
+  S.q = S.q.filter(o => !(o.t === 'note' && o.id === id && !o.started));   // 還沒上傳的同一筆：用最新的就好
+  S.q.push({ t: 'note', cls: S.cls, id, date, full, tags, memo, src, at: Date.now() });
+  const nick = (d.roster.find(r => r.full === full) || {}).nick || full;
+  toast(tags.length || memo ? '✓ ' + nick + ' 記好了' : nick + ' 的紀錄清掉了');
+  saveAll(); saveQ(); render(); flush();
+}
+function dotsOf(n) {
+  if (!n) return '';
+  const ts = n.tags.length ? n.tags : ['其他'];
+  return ts.slice(0, 3).map(t => `<i class="dot" style="background:${TAG[t][2]}"></i>`).join('') + (ts.length > 3 ? `<small>+${ts.length - 3}</small>` : '');
+}
+function renderSt(d) {
+  const view = LS.get('stv', 'rec');
+  let h = `<div class="seg"><button class="${view === 'rec' ? 'on' : ''}" onclick="LS.set('stv','rec');render()">✍️ 記錄</button><button class="${view === 'log' ? 'on' : ''}" onclick="LS.set('stv','log');render()">📖 看紀錄</button></div>`;
+  if (view === 'log') return h + renderLog(d);
+  const date = stDate(), isToday = date === todayStr();
+  const nN = d.roster.filter(r => noteOf(d, date, r.full)).length;
+  const pend = new Set(S.q.filter(o => o.t === 'note' && o.date === date && o.cls === S.cls).map(o => o.full));
+  h += `<div class="stbar"><button class="nav" onclick="stShift(-1)" aria-label="前一天">‹</button>
+    <div class="day">${mdOf(date)}（${wkOf(date)}）${isToday ? '<small>今天' : '<small>'}・${nN ? nN + ' 人有記' : '還沒記'}</small>${isToday ? '' : '<button onclick="S.stDate=null;render()">回今天</button>'}</div>
+    <button class="nav" onclick="stShift(1)" ${isToday ? 'disabled' : ''} aria-label="後一天">›</button></div>`;
+  h += `<div class="kids st">${d.roster.map((r, i) => {
+    const n = noteOf(d, date, r.full);
+    return `<button class="stk ${n ? 'has' : ''}" onclick="stOpen(${i})"><span class="no">${i + 1}</span>${esc(r.nick)}<span class="dots">${dotsOf(n)}</span>${pend.has(r.full) ? '<span class="up">待上傳</span>' : ''}</button>`;
+  }).join('')}</div>`;
+  return h + '<p class="sthint">點名字記狀況・再點一次可以修改或清掉</p>';
+}
+function renderLog(d) {
+  const days = LS.get('stdays', NOTE_DAYS);
+  let h = `<div class="presets" style="margin:0 0 10px">${[[14, '最近 2 週'], [30, '最近 1 個月'], [0, '全部']].map(([n, t]) =>
+    `<button class="${days === n ? 'on' : ''}" onclick="LS.set('stdays',${n});render()">${t}</button>`).join('')}</div>`;
+  const rows = d.roster.map((r, i) => {
+    const ns = recentOf(d, r.full, days).sort((a, b) => a.date < b.date ? 1 : -1);
+    const warn = recentOf(d, r.full, NOTE_DAYS).reduce((s, n) => s + nCount(n), 0) >= NOTE_WARN;
+    return { r, i, ns, n: ns.reduce((s, x) => s + nCount(x), 0), warn };
+  }).filter(x => x.ns.length).sort((a, b) => b.warn - a.warn || b.n - a.n);
+  if (!rows.length) return h + `<div class="empty">👍 ${days ? '這段時間' : ''}全班都沒有狀況</div>`;
+  h += rows.map(x => {
+    const cnt = {}; x.ns.forEach(n => (n.tags.length ? n.tags : ['其他']).forEach(t => cnt[t] = (cnt[t] || 0) + 1));
+    const open = S.stOpenKid === x.r.full;
+    return `<div class="lcard ${x.warn ? 'warn' : ''}"><button onclick="S.stOpenKid=${open ? 'null' : `'${esc(x.r.full)}'`};render()">
+      <div class="top">${x.warn ? '⚠ ' : ''}${esc(x.r.nick)}<span class="n">${x.n} 次 ${open ? '▾' : '▸'}</span></div>
+      <div class="tg">${TAGS.filter(t => cnt[t[0]]).map(t => `<span>${t[1]} ${t[0]} ×${cnt[t[0]]}</span>`).join('')}</div></button>
+      ${open ? `<div class="tl">${x.ns.map(n => `<div><b>${mdOf(n.date)}（${wkOf(n.date)}）</b><span>${n.tags.map(t => TAG[t][1] + t).join('、') || '💬'}${n.memo ? `<em>${esc(n.memo)}</em>` : ''}</span><button onclick="stOpen(${x.i},'${n.date}')">✏️ 改</button></div>`).join('')}</div>` : ''}</div>`;
+  }).join('');
+  const none = d.roster.length - rows.length;
+  return h + (none ? `<p class="lmore">其他 ${none} 人${days ? '這段時間' : ''}都沒有狀況 👍</p>` : '');
+}
+function stSheet() {
+  const m = S.modal, d = D(), r = d.roster.find(x => x.full === m.st) || { nick: m.st }, date = stDate();
+  const rec = recentOf(d, m.st, NOTE_DAYS).filter(n => n.date !== date), cnt = {};
+  rec.forEach(n => (n.tags.length ? n.tags : ['其他']).forEach(t => cnt[t] = (cnt[t] || 0) + 1));
+  return `<div class="mask" onclick="if(event.target===this)stSave()"><div class="sheet">
+    <div class="sthead"><b>${esc(r.nick)}</b><span>${mdOf(date)}（${wkOf(date)}）${date === todayStr() ? '今天' : ''}</span></div>
+    <div class="stgrid">${TAGS.map(([t, ic, c]) => `<button class="stb ${m.tags.includes(t) ? 'on' : ''}" style="--c:${c}" onclick="stToggle(this,'${t}')"><i>${ic}</i>${t}<span class="ck">✓</span></button>`).join('')}</div>
+    <input id="stmemo" class="memo" type="text" maxlength="60" value="${esc(m.memo)}" placeholder="備註（可不填）例如：放在安親班">
+    <div class="strecent">${rec.length ? '最近 2 週其他天：' + TAGS.filter(t => cnt[t[0]]).map(t => t[1] + '×' + cnt[t[0]]).join('　') : '最近 2 週其他天沒有狀況'}</div>
+    <div class="row">${noteOf(d, date, m.st) ? '<button class="btn danger" onclick="stSave(true)">清掉</button>' : ''}<button class="btn main big" onclick="stSave()">好了</button></div>
+  </div></div>`;
+}
+const modeOf = () => LS.get('mode', 'fx');
+
 function render() {
   theme();
   const app = $('#app');
@@ -411,7 +583,7 @@ function render() {
   let h = `<div class="wrap"><header><img src="logo.png" alt=""><h1>訂正紀錄</h1><span class="sub">SUNNY魔法數學</span>${standalone() ? '' : '<button class="home" onclick="addHome()">📲 加到主畫面</button>'}</header>`;
   const off = !navigator.onLine;
   if (S.q.length) {
-    const marks = S.q.filter(o => o.t === 'mark').length;
+    const marks = S.q.filter(o => o.t === 'mark' || o.t === 'note').length;
     h += `<div class="net wait">${S.syncing ? '⏳ 上傳中…' : (off ? '📴 離線中・' : '') + '還有 ' + (marks || S.q.length) + ' 筆沒上傳（連上網路會自動上傳）'}${S.syncing ? '' : '<button class="btn" onclick="flush()">立即上傳</button>'}</div>`;
   } else if (off) h += '<div class="net off">📴 離線中・照常打勾，連上網路會自動上傳</div>';
   // 2026-11-24 SUNNY：上課時孩子看得到平板 → 「最後 3 位」縮成班級列右邊的小「⚠ N」，SUNNY 點了才展開（不記住，每次都收著）
@@ -423,6 +595,9 @@ function render() {
   }
   const d = D();
   if (!d) { app.innerHTML = h + `<div class="empty">${S.loading ? '讀取中…' : '還沒有資料：請連上網路重新打開一次'}</div></div>` + modal(); return; }
+  const mode = modeOf();
+  h += `<div class="modes"><button class="mode ${mode !== 'st' ? 'on' : ''}" onclick="LS.set('mode','fx');render()">✅ 訂正</button><button class="mode ${mode === 'st' ? 'on' : ''}" onclick="LS.set('mode','st');render()">📋 課堂狀況</button></div>`;
+  if (mode === 'st') { app.innerHTML = h + renderSt(d) + '</div>' + modal(); return; }
   const cat = catOf();
   h += `<div class="cats" style="grid-template-columns:repeat(${catsOf(S.cls).length},1fr)">${catsOf(S.cls).map(([c, n]) => `<button class="cat ${c === cat ? 'on' : ''}" onclick="pickCat('${c}')">${n}</button>`).join('')}</div>`;
   const list = sheets(S.cls, cat), selId = LS.get('sel_' + S.cls + '_' + cat, '');
@@ -461,6 +636,7 @@ function openAddKg() { S.modal = { add: 'kg', name: '', due: dueIn(7) }; render(
 function addKgSuffix(s) { const i = $('#uname'); i.value = i.value.replace(/\s*(期中考|期末考)$/, '') + ' ' + s; i.focus(); }
 function modal() {
   const m = S.modal; if (!m) return '';
+  if (m.st) return stSheet();
   if (m.home) return `<div class="mask" onclick="if(event.target===this){S.modal=null;render()}"><div class="sheet" style="text-align:left">
     <h3><img src="icon-180.png" alt="" style="width:44px;border-radius:10px;vertical-align:middle;margin-right:8px">加到主畫面</h3>
     <div class="howto"><b class="n">1</b><span>按 Safari 上方（iPhone 在下方）的分享鈕 ${SHARE_ICON}</span></div>
@@ -537,7 +713,7 @@ if (S.key) { render(); flush(); if (!S.q.length) loadAll(true); } else render();
 // 離線也打得開：service worker 把網頁存在平板（要先連網打開過一次）
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611242301';
+const VER = '202611261032';
 async function checkNew() {
   if (VER.startsWith('__') || !navigator.onLine) return;
   try {
