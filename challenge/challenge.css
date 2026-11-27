@@ -9,6 +9,8 @@
 .chnow span{flex:1;min-width:0;}
 .chgo{flex:0 0 auto;border:none;border-radius:12px;padding:8px 12px;min-height:42px;cursor:pointer;
   background:linear-gradient(180deg,#FFC94A,#F59E1B);color:#fff;font-family:var(--font);font-weight:800;font-size:15px;box-shadow:0 3px 0 #D97F0A;}
+.chgo.lock,.vplayer .chnow .chgo.lock{background:linear-gradient(180deg,#E4DED6,#C9C1B6);color:#6E655B;box-shadow:0 3px 0 #ABA295;}   /* 還沒看完：灰色，點了浩克提醒「看完才出題」 */
+.chgo.lock img,.vplayer .chnow .chgo.lock img{filter:grayscale(1);opacity:.7;}
 
 .chtop{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;color:#C2650A;margin:2px 2px 12px;}
 .chdots{margin-left:auto;display:flex;gap:6px;}

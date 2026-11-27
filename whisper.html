@@ -718,7 +718,7 @@
   .vsok{background:#F3E2C4;color:#6B3A12;}
 </style>
 <link rel="stylesheet" href="calc/calc.css?v=1795248181586">
-<link rel="stylesheet" href="challenge/challenge.css?v=1795595596254">
+<link rel="stylesheet" href="challenge/challenge.css?v=1795739150529">
 </head>
 <body>
 <div class="wrap">
@@ -825,8 +825,8 @@
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
 <script src="v/list.js?v=1795594483220"></script>
-<script src="challenge/data.js?v=1795595596254"></script>
-<script src="challenge/challenge.js?v=1795595596254"></script>
+<script src="challenge/data.js?v=1795739150529"></script>
+<script src="challenge/challenge.js?v=1795739150529"></script>
 <script>
 /* ============================================================
    ▼▼▼  想改內容，只要改這裡  ▼▼▼
@@ -1135,6 +1135,52 @@ let VIDS=[], SOON=[];   // SOON＝快要首映的影片（後台 soon，2026-11-
 const isNew=v=>{const t=Date.parse(v.date);return !!t && Date.now()-t<7*86400000;};
 const seenSet=()=>{try{return new Set(JSON.parse(lsGet("wh_watched")||"[]"));}catch(e){return new Set();}};
 const markSeen=id=>{const s=seenSet();s.add(id);lsSet("wh_watched",JSON.stringify([...s].slice(-300)));WH_SYNC();};
+
+/* ---------- ⏱ 真的看完了嗎（SUNNY 2026-11-27）：記「正常往前播」播過哪幾秒，拖曳跳過去的不算 ----------
+   看到 WATCH_OK（85%）才算看完：打 ✅、通知 SUNNY（view_done）、小挑戰才解鎖（challenge.js 用 watchedOK）
+   wh_watch＝{影片代號:{d:長度秒, s:"每秒一格，看過＝1"}}，只留最近 40 支；中途離開下次接著算 */
+const WATCH_OK=0.85;
+const wAll=()=>{try{return JSON.parse(lsGet("wh_watch")||"{}");}catch(e){return {};}};
+const wRatio=id=>{const w=wAll()[id];if(!w||!(w.d>0))return 0;return (w.s.match(/1/g)||[]).length/Math.max(1,Math.floor(w.d));};
+window.watchedOK=id=>{const w=wAll()[id];return !!(w&&w.ok);};
+window.watchLeft=id=>{const w=wAll()[id],d=w&&w.d>0?w.d:0;return d?Math.max(0,Math.ceil(d*WATCH_OK-wRatio(id)*Math.floor(d))):null;};   // 還差幾秒
+let WT=null;
+// p＝{t:目前秒數, d:長度, playing:正在播嗎, alive:播放器還在嗎}；mp4 和 YouTube 播放器都用這個
+window.vidPlayer=el=>({t:()=>el.currentTime,d:()=>el.duration,playing:()=>!el.paused&&!el.ended,alive:()=>document.contains(el)});
+window.watchTrack=(id,p)=>{
+  clearInterval(WT); let lastT=null;
+  WT=setInterval(()=>{
+    let t,d,pl; try{ if(!p.alive()){clearInterval(WT);return;} t=p.t(); d=p.d(); pl=p.playing(); }catch(e){return;}
+    if(!(d>0)||!pl){ lastT=null; return; }
+    const dt=lastT==null?-1:t-lastT; lastT=t;
+    if(!(dt>0&&dt<=2.5)) return;   // 剛開始、暫停、往前／往後拖曳 → 這一格不算
+    const all=wAll(), D=Math.floor(d), w=all[id]&&all[id].d===D?all[id]:{d:D,s:"0".repeat(D+1),ok:all[id]&&all[id].ok};
+    const a=w.s.split(""); for(let k=Math.floor(t-dt);k<=Math.floor(t)&&k<a.length;k++) if(k>=0) a[k]="1";
+    w.s=a.join(""); w.at=Date.now(); all[id]=w;
+    const done=!w.ok&&(w.s.match(/1/g)||[]).length>=Math.floor(D*WATCH_OK);
+    if(done) w.ok=1;
+    const keep=Object.entries(all).sort((x,y)=>(y[1].at||0)-(x[1].at||0)).slice(0,40);
+    lsSet("wh_watch",JSON.stringify(Object.fromEntries(keep)));
+    if(done) watchDone(id,D);
+  },1000);
+};
+function watchDone(id,d){
+  markSeen(id);
+  if(qs("preview")!=="1") fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({mode:"view_done",classId:CH.id,name:(lsGet("wh_name")||"").trim(),id,len:d})}).catch(()=>{});
+  window.dispatchEvent(new CustomEvent("wh-watched",{detail:id}));
+}
+window.watchGap=id=>{const w=wAll()[id];if(!w)return 0;const k=w.s.indexOf("0");return k<0?0:Math.max(0,k-2);};   // 第一個還沒看到的地方（往前留 2 秒）
+// 第一次過關小挑戰 → 跟 SUNNY 說（後台補寄「也過了小挑戰」）
+window.reportPass=id=>{ if(qs("preview")==="1") return; fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+  body:JSON.stringify({mode:"view_pass",classId:CH.id,name:(lsGet("wh_name")||"").trim(),id})}).catch(()=>{}); };
+// 沒小挑戰、又沒有高畫質檔的影片（YouTube 嵌入）也要知道看到哪 → 用 YouTube 播放器 API
+let ytApiP=null;
+const ytApi=()=>ytApiP||(ytApiP=new Promise(res=>{
+  if(window.YT&&YT.Player) return res();
+  const prev=window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady=()=>{prev&&prev();res();};
+  const s=document.createElement("script"); s.src="https://www.youtube.com/iframe_api"; document.head.appendChild(s);
+}));
 
 /* ---------- 🏆 換平板也接得上：過關紀錄＋看過的影片，用「班級＋名字」存到樹洞後台 ---------- */
 // 先合併後台的到這支手機，再把合併後的送回後台（兩邊都留最早過關的日期）
@@ -1568,8 +1614,11 @@ const nowTitle=v=>{ const t=vTitle(v); return `<span class="nt"><b>${escH(t.main
 window.nowTitle=nowTitle;
 function hasFile(id){ return !!(window.LOCAL_VIDS&&LOCAL_VIDS.includes(id)); }
 function ytEmbed(id,v){
-  $("vplayer").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1"
+  $("vplayer").innerHTML=`<iframe id="ytEm" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
     allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="now">${nowTitle(v)}<a class="ytout" href="https://youtu.be/${encodeURIComponent(id)}" target="_blank" rel="noopener">📺 畫面不清楚？用 YouTube 看</a></div>`;
+  const fr=$("ytEm");
+  ytApi().then(()=>{ if(!document.contains(fr)) return; const pl=new YT.Player(fr);
+    watchTrack(id,{t:()=>pl.getCurrentTime(),d:()=>pl.getDuration(),playing:()=>pl.getPlayerState()===1,alive:()=>document.contains(fr)}); });
 }
 function play(id){
   const v=VIDS.find(x=>x.id===id); if(!v) return;
@@ -1577,12 +1626,11 @@ function play(id){
   if(window.CHAL&&CHAL.has(id)) CHAL.mount(id,v);   // 有小挑戰的影片：看完跳出題目
   else if(hasFile(id)){   // 有高畫質影片檔：直接播（壞掉就退回 YouTube）
     $("vplayer").innerHTML=`<video src="v/${encodeURIComponent(id)}.mp4" controls autoplay playsinline preload="auto"></video><div class="now">${nowTitle(v)}</div>`;
-    const el=$("vplayer").querySelector("video"); trackPos(el,id); el.onerror=()=>{ if($("vplayer").contains(el)) ytEmbed(id,v); };
+    const el=$("vplayer").querySelector("video"); trackPos(el,id); watchTrack(id,vidPlayer(el)); el.onerror=()=>{ if($("vplayer").contains(el)) ytEmbed(id,v); };
   }
   else ytEmbed(id,v);
   $("vplayer").classList.add("show");
-  markSeen(id);
-  // 觀看紀錄（SUNNY 要看每天／每週哪部影片被看幾次）
+  // ✅ 看過＝真的看到 85%（watchTrack 會打勾＋通知 SUNNY）；點開只記「觀看紀錄」，不寄信（2026-11-27）
   fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:JSON.stringify({mode:"view",classId:CH.id,name:(lsGet("wh_name")||"").trim(),id})}).catch(()=>{});
   document.querySelectorAll("#vroom [data-play]").forEach(b=>b.classList.toggle("playing",b.dataset.play===id));

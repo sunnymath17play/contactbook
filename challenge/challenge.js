@@ -19,7 +19,10 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return 
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const IMG = "challenge/img/";
 const passed = () => { try { return JSON.parse(lsGet("wh_ch_pass") || "{}"); } catch (e) { return {}; } };
-const savePass = id => { const p = passed(); p[id] = p[id] || new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p)); sync(); };
+const savePass = id => { const p = passed(), first = !p[id]; p[id] = p[id] || new Date().toISOString().slice(0, 10); lsSet("wh_ch_pass", JSON.stringify(p)); sync(); if (first && window.reportPass) reportPass(id); };
+// 防呆（SUNNY 2026-11-27）：影片真的看到 85%（whisper.html watchTrack）才能挑戰；已過關的、測試連結不擋
+const canGo = id => !!passed()[id] || TESTER || !window.watchedOK || watchedOK(id);
+const goLabel = id => passed()[id] ? "再挑戰一次" : canGo(id) ? "看完小挑戰" : "看完才能挑戰";
 const sync = () => { if (window.WH_SYNC) window.WH_SYNC(); };   // 過關紀錄送到樹洞後台（換平板也接得上）
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const allVids = () => { try { return VIDS; } catch (e) { return []; } };   // 樹洞的影片清單（這個班現在年級）
@@ -28,6 +31,7 @@ const allVids = () => { try { return VIDS; } catch (e) { return []; } };   // �
 let api = null, yt = null, cur = null, seg = null, segTimer = null;
 function loadAPI(){
   if (api) return api;
+  if (window.ytApi) return (api = ytApi());
   api = new Promise(res => {
     if (window.YT && YT.Player) return res();
     const prev = window.onYouTubeIframeAPIReady;
@@ -44,16 +48,18 @@ async function mount(id, v){
   // 2026-10-31 改版：題目＋出處兩行（whisper.html 的 nowTitle），右邊一顆大大的「看完小挑戰」
   $("vplayer").innerHTML = `<div id="chYT"></div>
     <div class="now chnow">${window.nowTitle ? nowTitle(v) : `<span class="nt"><b>${esc(v.title)}</b></span>`}
-      <button type="button" class="chgo" id="chGo"><img src="th/trophy.png" alt="">${passed()[id] ? "再挑戰一次" : "看完小挑戰"}</button></div>`;
-  $("chGo").onclick = () => intro();
+      <button type="button" class="chgo${canGo(id) ? "" : " lock"}" id="chGo"><img src="th/trophy.png" alt="">${goLabel(id)}</button></div>`;
+  $("chGo").onclick = () => canGo(id) ? intro() : notYet(false);
   if (window.LOCAL_VIDS && LOCAL_VIDS.includes(id)) return mountFile(id);
   await loadAPI();
   if (!cur || cur.id !== id) return;
   yt = new YT.Player("chYT", {
     host: "https://www.youtube-nocookie.com", videoId: id,
     playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1 },
-    events: { onStateChange: e => { if (e.data === 0 && !seg && cur && cur.id === id && !$("vroom").classList.contains("chal-on")) intro(); } }
+    events: { onStateChange: e => { if (e.data === 0 && !seg && cur && cur.id === id && !$("vroom").classList.contains("chal-on")) ended(); } }
   });
+  const p = yt;
+  if (window.watchTrack) watchTrack(id, { t: () => p.getCurrentTime(), d: () => p.getDuration(), playing: () => p.getPlayerState() === 1, alive: () => yt === p && cur && cur.id === id });
   // 沒有高畫質檔、用 YouTube 播的：平板可能很糊 → 給「用 YouTube 看」按鈕
   const now = document.querySelector("#vplayer .chnow span");
   if (now && !now.querySelector(".ytout")) now.insertAdjacentHTML("beforeend", `<a class="ytout" href="https://youtu.be/${encodeURIComponent(id)}" target="_blank" rel="noopener">📺 畫面不清楚？用 YouTube 看</a>`);
@@ -66,7 +72,8 @@ function mountFile(id){
   yt = { seekTo: t => { v.currentTime = t; }, playVideo: () => { const p = v.play(); p && p.catch(() => {}); }, pauseVideo: () => v.pause(),
     getCurrentTime: () => v.currentTime, getPlayerState: () => v.ended ? 0 : v.paused ? 2 : 1, destroy: () => { v.pause(); v.removeAttribute("src"); v.load(); } };
   if (window.trackPos) trackPos(v, id);   // 記住看到哪一秒（影片教室最上面「上次看到一半」）
-  v.addEventListener("ended", () => { if (!seg && cur && cur.id === id && !$("vroom").classList.contains("chal-on")) intro(); });
+  if (window.watchTrack) watchTrack(id, vidPlayer(v));   // 記真的看了哪幾秒（看完才解鎖小挑戰）
+  v.addEventListener("ended", () => { if (!seg && cur && cur.id === id && !$("vroom").classList.contains("chal-on")) ended(); });
   v.addEventListener("error", async () => {
     if (!cur || cur.id !== id || !$("vplayer").contains(v)) return;
     v.outerHTML = `<div id="chYT"></div>`; yt = null;
@@ -85,6 +92,25 @@ function panel(html, full){
 function hide(){ $("vroom").classList.remove("chal-on", "chal-full"); const p = $("chal"); if (p) p.innerHTML = ""; }
 const face = (n, cls = "") => `<img class="chface ${cls}" src="${IMG}face_${n}.png" alt="浩克">`;
 const say = (n, t) => `<div class="chsay">${face(n)}<div class="chbub">${t}</div></div>`;
+
+// 影片播完：真的看完 → 出題；跳著看（拖到最後）→ 請他回去把沒看到的看完
+function ended(){ if (cur) canGo(cur.id) ? intro() : notYet(true); }
+function notYet(skipped){
+  if (!cur) return;
+  const id = cur.id, left = window.watchLeft ? watchLeft(id) : null, gap = window.watchGap ? watchGap(id) : 0;
+  const mins = left == null ? "" : left < 60 ? "不到 1 分鐘" : "大約 " + Math.ceil(left / 60) + " 分鐘";
+  try { yt && yt.pauseVideo && yt.pauseVideo(); } catch (e) {}
+  panel(`<div class="chtop"><img class="chic" src="th/trophy.png" alt="">看完小挑戰</div>
+    ${say(skipped ? "oh" : "think", skipped
+      ? "你好像有<b>跳著看</b>喔～<br>有些地方還沒看到，把沒看到的看完，浩克再出題考你！"
+      : `影片要<b>看完</b>，浩克才出題喔！${mins ? `<br>還差${mins}，加油～` : ""}`)}
+    <button type="button" class="chbtn big" id="chKeep">${gap > 0 ? "從沒看到的地方接著看" : "繼續看影片"}</button>
+    <button type="button" class="chlink" id="chLater">先不要，回影片清單</button>`);
+  $("chKeep").onclick = () => { hide(); try { if (skipped || gap > 0) yt.seekTo(gap, true); yt.playVideo(); } catch (e) {} };
+  $("chLater").onclick = hide;
+}
+// 看到 85% 那一刻（whisper.html 發 wh-watched）→ 按鈕解鎖
+window.addEventListener("wh-watched", e => { const b = $("chGo"); if (b && cur && cur.id === e.detail) { b.classList.remove("lock"); b.innerHTML = `<img src="th/trophy.png" alt="">${goLabel(cur.id)}`; } });
 
 function intro(){
   if (!cur) return;
