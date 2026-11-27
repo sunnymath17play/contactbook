@@ -824,7 +824,7 @@
 
 <!-- 🏆 看完小挑戰（題目＋程式在 challenge/，由 程式碼影片小挑戰uild.cjs 產生） -->
 <!-- 有高畫質影片檔的影片（v/<YouTube編號>.mp4，由 程式碼\樹洞\video_files.cjs 產生）：直接播，不經過 YouTube（平板才不會糊） -->
-<script src="v/list.js?v=1795594483220"></script>
+<script src="v/list.js?v=1795757036530"></script>
 <script src="challenge/data.js?v=1795742279374"></script>
 <script src="challenge/challenge.js?v=1795742279374"></script>
 <script>
@@ -1294,7 +1294,7 @@ const bySrc=(a,b)=>{const A=srcOf(a),B=srcOf(b);const x=chOrd(a),y=chOrd(b);
   return srcRank(A.src)-srcRank(B.src)||A.order-B.order||(x!=null&&y!=null?x-y:0);};
 let FIND_SRC="講義A";
 const thumb=id=>`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
-const UNIT_ICON=[["好好玩","th/u/fun.png"],["浩克","th/hulkwave.png"],["圓","th/u/circle.png"],["周長","th/u/perimeter.png"],["多邊形","th/u/polygon.png"],["三角形","th/u/triangle.png"],
+const UNIT_ICON=[["好好玩","th/u/fun.png"],["說說話","th/u/talk.png"],["浩克","th/hulkwave.png"],["圓","th/u/circle.png"],["周長","th/u/perimeter.png"],["多邊形","th/u/polygon.png"],["三角形","th/u/triangle.png"],
   ["三角板","th/u/setsquare.png"],["角","th/u/protractor.png"],["因數","th/u/factors.png"],["倍數","th/u/factors.png"],["分數","th/u/fraction.png"],
   ["乘","th/u/times.png"],["除","th/u/divide.png"],["加","th/u/addsub.png"],["減","th/u/addsub.png"],["公分","th/u/ruler.png"],["毫米","th/u/ruler.png"],
   ["長度","th/u/ruler.png"],["比","th/u/balance.png"],["時","th/u/clock.png"],["面積","th/u/area.png"],["數","th/u/numbers.png"]];
@@ -1502,7 +1502,7 @@ function drawRoom(){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
     let solarOn=false; try{ solarOn=SOLAR_ON; }catch(e){}   // 只有玩能量站的班才放專區（其他班照樣在單元裡看得到）
     const solar=solarOn?VIDS.filter(v=>srcOf(v).src==="太陽能量站"):[];
-    const isHulk=v=>/浩克/.test(v.unit||""), hulk=VIDS.filter(isHulk), onlyHulk=hulk.length&&hulk.length===VIDS.length;   // 2026-11-08：只有浩克介紹（換季後）→ 不顯示空的最新影片／選單元
+    const isHulk=v=>/認識浩克/.test(v.unit||""),   // 2026-11-27：只有「認識浩克」收進小按鈕；「浩克跟你說說話」是自己的單元方塊 hulk=VIDS.filter(isHulk), onlyHulk=hulk.length&&hulk.length===VIDS.length;   // 2026-11-08：只有浩克介紹（換季後）→ 不顯示空的最新影片／選單元
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
     w.innerHTML=shareBtn()+meBox()+`
@@ -1514,7 +1514,7 @@ function drawRoom(){
       <div class="vh"><span class="vpill blue"><i class="pl"></i>最新影片</span>${VIDS.length>1?'<small>左右滑</small>':""}</div>
       <div class="vrow">${VIDS.filter(v=>!isHulk(v)).slice(0,6).map(card).join("")}</div>
       <div class="vh"><span class="vpill orange"><img src="th/book.png" alt="">選單元</span></div>`}
-      <div class="vunits">${units().filter(([u])=>!/浩克/.test(u)&&!/四則/.test(u)).map(([u,vs],i)=>{ const c=UNIT_COLORS[i%UNIT_COLORS.length], p=unitProg(vs,seen);
+      <div class="vunits">${units().filter(([u])=>!/認識浩克/.test(u)&&!/四則/.test(u)).map(([u,vs],i)=>{ const c=UNIT_COLORS[i%UNIT_COLORS.length], p=unitProg(vs,seen);
         return `<button class="vunit" type="button" data-unit="${escH(u)}" style="background:${c[0]}">${fresh(vs)?'<span class="vdot">新</span>':""}
           <img src="${iconOf(u)}" alt=""><span class="ut"><b>${escH(u)}</b>${bar(p,c[1])}<small>${p.t} ${p.n}/${p.d}</small></span><span class="go" style="color:${c[1]}">›</span></button>`; }).join("")}</div>
       ${solar.length?`<button class="vwide solar" type="button" data-unit="__solar">${fresh(solar)?'<span class="vdot">新</span>':""}<img src="th/solar_icon.png" alt="">
