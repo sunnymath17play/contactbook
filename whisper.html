@@ -1502,7 +1502,7 @@ function drawRoom(){
     const ask=VIDS.filter(v=>v.type==="ask"), school=VIDS.filter(v=>srcOf(v).src==="校卷複習");
     let solarOn=false; try{ solarOn=SOLAR_ON; }catch(e){}   // 只有玩能量站的班才放專區（其他班照樣在單元裡看得到）
     const solar=solarOn?VIDS.filter(v=>srcOf(v).src==="太陽能量站"):[];
-    const isHulk=v=>/認識浩克/.test(v.unit||""),   // 2026-11-27：只有「認識浩克」收進小按鈕；「浩克跟你說說話」是自己的單元方塊 hulk=VIDS.filter(isHulk), onlyHulk=hulk.length&&hulk.length===VIDS.length;   // 2026-11-08：只有浩克介紹（換季後）→ 不顯示空的最新影片／選單元
+    const isHulk=v=>/認識浩克/.test(v.unit||""),   /* 2026-11-27：只有「認識浩克」收進小按鈕；「浩克跟你說說話」是自己的單元方塊 */ hulk=VIDS.filter(isHulk), onlyHulk=hulk.length&&hulk.length===VIDS.length;   // 2026-11-08：只有浩克介紹（換季後）→ 不顯示空的最新影片／選單元
     const fresh=vs=>vs.some(v=>isNew(v)&&!seen.has(v.id));
     const watched=VIDS.filter(v=>seen.has(v.id)).length, certs=window.CHAL&&CHAL.certs?CHAL.certs():0;
     w.innerHTML=shareBtn()+meBox()+`
