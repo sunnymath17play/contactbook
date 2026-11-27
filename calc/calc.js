@@ -35,10 +35,14 @@ if (ENDED() && !TESTER) return;   // 下架後整個不出現
 if (!CALC_OPEN && !TESTER) { why("測試記號沒有存起來（瀏覽器可能是無痕模式）"); return; }
 if (qs("preview") === "1") return;
 const C = window.CalcCore, CHEER = window.CALC_CHEER || { ok: ["答對了！"], streak: [], reset: ["沒關係，再來一次！"], stamp: ["今天 5 題全對！"] };
+// 每天幾題：三年級 2026-11-28 起 3 題、其他 5 題（calc_core perDay，後台也用同一份）
+const TODAY_TW = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+const PER = () => (S && S.perDay) || C.perDay(GRADE, TODAY_TW);
 const RULES = [
   "⏰ <b>計算挑戰和拆彈特攻隊只到 2027 年 6 月 30 日</b>，之後就下架了。想拿計算王獎狀，要趕快開始、每天都做！",
-  "每天 5 題；做完就要等明天才有新題目。",
+  "每天 " + C.perDay(GRADE, TODAY_TW) + " 題；做完就要等明天才有新題目。",
   "每一題<b>第一次按「完成」就對</b>，才算「連續答對」。",
+  "改第二次還是錯：浩克給你答案，回紙上對照找錯；<b>連兩天都卡住</b>，就帶計算本找 SUNNY 一起看。",
   "🔁 <b>重做卡</b>：每蓋 3 個全對章送 1 張。答錯時自動用掉一張，再算一次；算對了，連續照樣 +1！",
   "🛡️ <b>免歸零卡</b>：每連續答對 20 題送 1 張。答錯（或重做也錯）時自動用掉一張，連續題數保住。",
   "💾 <b>存檔點</b>：連續到 50、100、150 題會存檔。兩種卡都用完時答錯，只退回存檔點，不會回到 0。",
@@ -93,7 +97,7 @@ const NEW_RIB = () => bombIsNew() ? `<span class="cnewrib"><img src="${IMG}bomb_
 // ---------- 首頁方塊（放在影片教室、寵物蛋下面） ----------
 const tile = document.createElement("button");
 tile.type = "button"; tile.className = "ctile hop"; tile.id = "ctile";
-tile.innerHTML = NEW_RIB() + `<img class="ic" src="${IMG}tile.png" alt="" onerror="this.style.visibility='hidden'"><span class="tx"><b>計算挑戰</b><small id="ctileSub">每天 5 題，挑戰連續答對！</small></span><span class="go">›</span>`;
+tile.innerHTML = NEW_RIB() + `<img class="ic" src="${IMG}tile.png" alt="" onerror="this.style.visibility='hidden'"><span class="tx"><b>計算挑戰</b><small id="ctileSub">每天 ${C.perDay(GRADE, TODAY_TW)} 題，挑戰連續答對！</small></span><span class="go">›</span>`;
 // 排版（SUNNY 2026-11-04：計算挑戰和影片教室都是正事，放在一起）：
 // 第一排「影片教室｜計算挑戰」並排；寵物蛋（好玩的）移到下面變成一條
 const tiles = el("tiles");
@@ -106,7 +110,7 @@ tile.onclick = () => openRoom();
 // 影片教室裡也放入口（平板 QR code &v=1 會直接進影片教室，看不到樹洞首頁）
 const vbar = document.createElement("button");
 vbar.type = "button"; vbar.className = "cvbar";
-vbar.innerHTML = NEW_RIB() + `<img src="${IMG}tile.png" alt=""><span><b>計算挑戰</b><small id="cvbarSub">每天 5 題，挑戰連續答對！</small></span><i>›</i>`;
+vbar.innerHTML = NEW_RIB() + `<img src="${IMG}tile.png" alt=""><span><b>計算挑戰</b><small id="cvbarSub">每天 ${C.perDay(GRADE, TODAY_TW)} 題，挑戰連續答對！</small></span><i>›</i>`;
 vbar.onclick = () => openRoom();
 const vbody = el("vbody"); if (vbody) { const pc = el("petcard3"); if (pc) vbody.insertBefore(vbar, pc); else vbody.prepend(vbar); }
 
@@ -169,12 +173,12 @@ async function drawHome(reload) {
     <div class="cstreak"><div class="cnum"><small>已經連續答對</small><b>${S.streak}</b><small>題</small></div>
       <div class="cbar"><i style="width:${pct}%"></i></div><div class="cgoal">連續答對 ${S.goal} 題 → 計算王獎狀（還差 ${Math.max(0, S.goal - S.streak)} 題）</div>
       <div class="ccheer">${esc(homeCheer())}</div></div>
-    <div class="ctoday"><div class="ct">今天的 5 題 <span class="cdots">${dots}</span></div>
+    <div class="ctoday"><div class="ct">今天的 ${S.perDay} 題 <span class="cdots">${dots}</span></div>
       ${S.pend && S.pend === doneN ? `<button class="cbtn big" id="credo">🔁 重做第 ${doneN} 題（已用重做卡）</button>` : ""}
-      ${left > 0 ? `<button class="cbtn big${S.pend && S.pend === doneN ? " gray" : ""}" id="cgo">${doneN ? `繼續第 ${doneN + 1} 題` : "開始今天的 5 題"}</button>` : S.pend && S.pend === doneN ? "" : `<div class="cdone">今天做完了！明天再來挑戰 💪</div>`}
+      ${left > 0 ? `<button class="cbtn big${S.pend && S.pend === doneN ? " gray" : ""}" id="cgo">${doneN ? `繼續第 ${doneN + 1} 題` : `開始今天的 ${S.perDay} 題`}</button>` : S.pend && S.pend === doneN ? "" : `<div class="cdone">今天做完了！明天再來挑戰 💪</div>`}
       ${left > 0 && skipInfo(doneN + 1) ? (skipInfo(doneN + 1).weak ? weakHTML(skipInfo(doneN + 1).weak) : `<button class="cbtn big gray" id="cskip">${ico("⏭️")} 跳過第 ${doneN + 1} 題（還能跳 ${skipInfo(doneN + 1).left} 題）</button>`) : ""}</div>
     ${itemsHTML()}
-    <div class="ccard"><div class="ct">我的集章卡 <small>（5 題全對蓋一個章）</small></div><div class="cstamps">${stampsHTML()}</div></div>
+    <div class="ccard"><div class="ct">我的集章卡 <small>（${S.perDay} 題全對蓋一個章）</small></div><div class="cstamps">${stampsHTML()}</div></div>
     <div class="ccard"><div class="ct">計算王獎狀 <small>已拿到 ${S.certs.length}／${S.maxCert} 張</small></div>
       ${S.certs.length ? S.certs.map(c => `<button class="ccert" data-n="${c.n}">🏆 ${c.n > 1 ? "傳奇" : ""}計算王獎狀（${c.date.slice(5).replace("-", "/")}）${c.gift ? `　🎁 ${esc(c.gift)}` : c.opts ? "　🎁 還沒選禮物，點我選！" : ""}</button>`).join("") : `<div class="csmall">連續答對 ${S.goal} 題就能拿到，再找 SUNNY 領獎品！</div>`}</div>
     <div class="cfoot"><button class="crule" id="crule">📜 挑戰規則</button><button class="crule" id="cpad">📲 用平板做</button></div>`;
@@ -186,7 +190,7 @@ async function drawHome(reload) {
   el("crule").onclick = showRules;
   el("cpad").onclick = showPad;
   w.querySelectorAll(".ccert").forEach(b => b.onclick = () => showCert(+b.dataset.n));
-  if (!lsG("wh_calc_rules2") || GRADE === 4 && !lsG("wh_calc_rules3") || GRADE === 3 && !lsG("wh_calc_rules4")) { lsS("wh_calc_rules2", "1"); lsS("wh_calc_rules3", "1"); lsS("wh_calc_rules4", "1"); showRules(); }   // 2026-11-11 三年級開放跳題 → 三年級再看一次   // 2026-11-10 四年級新增跳題規則 → 再看一次   // 2026-11-07 新增道具規則 → 每個孩子再看一次
+  if (!lsG("wh_calc_rules2") || GRADE === 4 && !lsG("wh_calc_rules3") || GRADE === 3 && !lsG("wh_calc_rules4") || !lsG("wh_calc_rules5")) { lsS("wh_calc_rules2", "1"); lsS("wh_calc_rules3", "1"); lsS("wh_calc_rules4", "1"); lsS("wh_calc_rules5", "1"); showRules(); }   // 2026-11-27 三年級改每天 3 題＋卡住改給答案 → 每個孩子再看一次   // 2026-11-11 三年級開放跳題 → 三年級再看一次   // 2026-11-10 四年級新增跳題規則 → 再看一次   // 2026-11-07 新增道具規則 → 每個孩子再看一次
 }
 function itemsHTML() {
   if (S.redo === undefined) return "";   // 後台還沒更新
@@ -397,8 +401,9 @@ async function submit() {
   }
   // 第二次：自己改對了就過；還是錯就一步一步教
   if (local.ok) { log({ attempt: 2 }); Q.done = true; Q.wrong.clear(); drawQ({ html: "改對了！👍 這一題你學會了。", cls: "ok" }); return; }
-  log({ attempt: 2, taught: true });
-  askSunny();
+  let r = null;
+  try { r = await api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, cells: Q.kid.map(x => x.join("")), attempt: 2, taught: true }); } catch (e) {}
+  stuck(r);
 }
 async function submitAns() {
   if (!Q.ans) { drawQ({ html: Q.L.kind === "d" ? "✏️ 先在紙上算好，再把商打進來喔！" : "✏️ 先在紙上算好，再把答案打進來喔！", cls: "warn" }); return; }
@@ -434,13 +439,16 @@ async function submitAns() {
     if (!r || !r.ok) { Q.attempt = 1; drawQ({ html: "現在送不出去，再按一次「完成」。", cls: "warn" }); return; }
     S = Object.assign(S, r); Q.redo = false;
     if (r.redoOk) { Q.ansBad = false; Q.badField = undefined; return right(r, "🔁 重做成功！"); }
-    if (r.redoOk === false) { askSunny(missText(r)); return; }
+    if (r.redoOk === false) { stuck(r, missText(r)); return; }
     // 後台沒有這一題的重做紀錄（例如已經交過下一題）→ 照一般第二次
   }
   // 第二次：自己改對了就過；還是錯就一步一步教（看完整直式）
-  else api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 2, taught: !chk.ok }).catch(() => {});
-  if (chk.ok) { Q.done = true; Q.ansBad = false; Q.badField = undefined; drawQ({ html: "改對了！👍 這一題你學會了。", cls: "ok" }); return; }
-  askSunny();
+  if (chk.ok) { api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 2, taught: false }).catch(() => {}); Q.done = true; Q.ansBad = false; Q.badField = undefined; drawQ({ html: "改對了！👍 這一題你學會了。", cls: "ok" }); return; }
+  Q.busy = true; drawQ({ html: "浩克改改看…", cls: "tip" });
+  let r = null;
+  try { r = await api(null, { mode: "calc", classId: CH.id, name: myName(), idx: Q.idx, answer, attempt: 2, taught: true }); } catch (e) {}
+  Q.busy = false;
+  stuck(r);
 }
 // 答錯之後用了什麼（後台決定）：重做卡／免歸零卡／存檔點／歸零
 function missText(r) {
@@ -475,6 +483,13 @@ const ASK_SUNNY = [
   ["你已經很接近了！", "答案只差一點點，問題一定藏在計算本的某一步裡。帶去給 SUNNY 看，把它找出來，計算王獎狀就離你更近一步！"],
   ["浩克跟你約好喔！", "下次上課記得帶計算本去找 SUNNY，花一分鐘問清楚，比自己猜十次還有用！問完你就會發現：原來這麼簡單！"],
 ];
+// 第二次還錯（卡住）：後台看「上一個有做的日子也卡住過」才回 askSunny → 帶計算本找 SUNNY；只卡一天 → 給正確答案、回紙上對照（SUNNY 2026-11-27）
+function stuck(r, missed) { if (r && r.askSunny) askSunny(missed); else showAns(missed); }
+function showAns(missed) {
+  Q.done = true; Q.ansBad = false; Q.badField = undefined; Q.wrong.clear();
+  const pr = String(Q.p.ans).split("…"), a = Q.L.kind === "d" ? `商 <b>${esc(pr[0])}</b>${+pr[1] ? `，餘數 <b>${esc(pr[1])}</b>` : ""}` : `<b>${esc(pr[0])}</b>`;
+  drawQ({ html: `答案是 ${a}，回紙上對照，找找哪一步不一樣！${missed ? "<small>" + missed + "</small>" : ""}`, cls: "warn" });
+}
 function askSunny(missed) {
   Q.done = true; Q.ansBad = false; Q.badField = undefined; Q.wrong.clear();
   const [t, s] = ASK_SUNNY[(Q.idx + (S.streak || 0)) % ASK_SUNNY.length];
@@ -500,8 +515,8 @@ function teach() {
 function reward() {
   const m = document.createElement("div"); m.className = "creward";
   const n = S.stamps.length, st = ((n - 1) % STAMPS) + 1;
-  m.innerHTML = `<div class="rw"><img class="rf" src="${IMG}reward_1.png" alt="" onerror="this.style.display='none'"><div class="rt">${S.first.indexOf(2) >= 0 ? "今天做的題目全對！" : "今天 5 題全對！"}</div>
-    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp))}</div>${Q && Q.gotRedo ? ico('<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>') : ""}${Q && Q.pet ? `<div class="rs rpet">${petLine(Q.pet)}</div>${petCard()}` : ""}<small>點一下關掉</small></div>`;
+  m.innerHTML = `<div class="rw"><img class="rf" src="${IMG}reward_1.png" alt="" onerror="this.style.display='none'"><div class="rt">${S.first.indexOf(2) >= 0 ? "今天做的題目全對！" : `今天 ${S.perDay} 題全對！`}</div>
+    <div class="rstamp"><img src="${IMG}stamp_${st}.png" alt="" onerror="this.style.display='none'"></div><div class="rs">${esc(pick(CHEER.stamp).replace(/5 題/g, S.perDay + " 題"))}</div>${Q && Q.gotRedo ? ico('<div class="rs">🔁 蓋滿 ' + S.redoEvery + ' 個章，送你一張重做卡！</div>') : ""}${Q && Q.pet ? `<div class="rs rpet">${petLine(Q.pet)}</div>${petCard()}` : ""}<small>點一下關掉</small></div>`;
   room.appendChild(m);
   // 4 格只播一次（約 1.8 秒）停在蓋章那一格；3.5 秒後自己關，也可以點一下關掉
   let f = 1, done = false; const tm = setInterval(() => { f += 1; const im = m.querySelector(".rf"); if (im) im.src = `${IMG}reward_${f}.png`; if (f >= 4) { clearInterval(tm); m.classList.add("stamped"); } }, 450);
@@ -526,7 +541,7 @@ const BOMB_RULES = [
 const RANK_IMG = t => IMG + "bomb_rank" + ({ "見習隊員": 1, "特攻隊長": 2, "傳奇拆彈王": 3 }[t] || 1) + ".png";
 function tabsHTML() {
   if (GRADE !== BOMB_GRADE) return "";
-  return `<div class="ctabs"><button type="button" class="ctab${TAB === "calc" ? " on" : ""}" data-tab="calc"><img src="${IMG}tile.png" alt="">每日 5 題</button>
+  return `<div class="ctabs"><button type="button" class="ctab${TAB === "calc" ? " on" : ""}" data-tab="calc"><img src="${IMG}tile.png" alt="">每日 ${PER()} 題</button>
     <button type="button" class="ctab bomb${TAB === "bomb" ? " on" : ""}${bombIsNew() ? " isnew" : ""}" data-tab="bomb"><img src="${IMG}bomb_hero.png" alt="">拆彈特攻隊${bombIsNew() ? '<span class="cnewb">NEW</span>' : ""}</button></div>`;
 }
 function bindTabs() {

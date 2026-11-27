@@ -177,7 +177,11 @@ function create(rand) {
   return G;
 }
 
-// 樹洞計算挑戰：每天 5 題（種子＝日期＋年級＋名字：同一天重整不變、同學之間不一樣）
+// 每天幾題：三年級 2026-11-28 起 3 題（SUNNY 2026-11-27：熱度掉、三年級做到灰心 → 減量），其他 5 題
+const G3_FEW_FROM = '2026-11-28';
+function perDay(grade, date) { return grade === 3 && date >= G3_FEW_FROM ? 3 : 5; }
+
+// 樹洞計算挑戰：每天 5 題（三年級 11/28 起 3 題）（種子＝日期＋年級＋名字：同一天重整不變、同學之間不一樣）
 function dailySet(grade, date, name) {
   const rand = rng(hashStr(`${grade}|${date}|${name}`)), G = create(rand), P = G.P;
   const dayNo = Math.floor(Date.parse(date + 'T00:00:00Z') / 86400000);   // 用日期當「第幾天」決定單雙日的變化
@@ -192,7 +196,7 @@ function dailySet(grade, date, name) {
     3: { add: () => P.add(G.g3Add()), sub: k => P.sub(G.g3Sub(dayNo + k)), mul: k => P.mul1(G.g3Mul(dayNo + k)) },
     4: { add: () => P.add(G.g4Add()), sub: k => P.sub(G.g4Sub((dayNo + k) % 2 === 0)), mul: k => (k ? P.mul1(G.g4Mul1()) : P.mul2(G.g4Mul2())), div: k => P.div(G.g4Div((dayNo + k) % 2)) },
   }[grade === 3 ? 3 : 4];
-  const kinds = Object.keys(mk), extra = grade === 3 ? [kinds[dayNo % 3], kinds[(dayNo + 1) % 3]] : [kinds[dayNo % 4]];   // 三年級：3 種＋2 題輪流（三天一輪剛好平均）；四年級：4 種＋1 題輪流
+  const kinds = Object.keys(mk), extra = grade === 3 && date >= G3_FEW_FROM ? [] : grade === 3 ? [kinds[dayNo % 3], kinds[(dayNo + 1) % 3]] : [kinds[dayNo % 4]];   // 三年級：3 種＋2 題輪流（三天一輪剛好平均）；四年級：4 種＋1 題輪流
   list = kinds.map(k => mk[k](0)).concat(extra.map(k => mk[k](1)));
   for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
   return list.map((p, i) => Object.assign(p, { id: `${date}-${i + 1}` }));
@@ -384,5 +388,5 @@ function teachSteps(L) {
   return S;
 }
 
-return { isGiven, optionalZero, carryMap, grade, classify, teachSteps, rng, hashStr, digits, addCols, subCols, mul1Cols, nCarry, consecutive, vLayout, addLayout, subLayout, mul1Layout, mul2Layout, mul3Layout, divSteps, divLayout, blankOf, diffCells, checkLayout, create, dailySet, BOMB_TYPES, bombOk, bombMake, bombSet };
+return { perDay, isGiven, optionalZero, carryMap, grade, classify, teachSteps, rng, hashStr, digits, addCols, subCols, mul1Cols, nCarry, consecutive, vLayout, addLayout, subLayout, mul1Layout, mul2Layout, mul3Layout, divSteps, divLayout, blankOf, diffCells, checkLayout, create, dailySet, BOMB_TYPES, bombOk, bombMake, bombSet };
 });

@@ -335,3 +335,5 @@
 .cend em{display:block;font-style:normal;font-weight:900;font-size:18px;color:#D35400}
 .cend.hot{background:#FDE3E0;border-color:#E74C3C;color:#8E1B10}
 .cend.hot em{color:#C0392B}
+/* 2026-11-27：6/30 倒數橫幅在作答畫面會變成左邊一條直欄、把題目擠出畫面（.cbody 作答時是橫向 flex）→ 作答時不顯示，首頁照常顯示 */
+.vroom.croom.qmode .cend{display:none;}
