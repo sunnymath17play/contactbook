@@ -348,7 +348,7 @@ async function flush() {
       if (o.t === 'add') await api({ mode: 'addUnit', cls: o.cls, id: o.id, cat: o.cat, name: o.name, at: o.at, due: o.due || 0, state: o.state || '', orig: o.orig || '' });
       if (o.t === 'edit') await api(Object.assign({ mode: 'editUnit', id: o.id }, o.f || { due: o.due || 0 }));
       if (o.t === 'mark') await sendMark(o);
-      if (o.t === 'note') await api({ mode: 'setNote', cls: o.cls, id: o.id, date: o.date, full: o.full, tags: o.tags, memo: o.memo, src: o.src || '平板', at: o.at });
+      if (o.t === 'note') { o.started = 1; await api({ mode: 'setNote', cls: o.cls, id: o.id, date: o.date, full: o.full, tags: o.tags, memo: o.memo, src: o.src || '平板', at: o.at }); await sendGood(o); }
       S.q.shift(); n++;
     } catch (e) {
       if (e.net) stop = true;
@@ -386,6 +386,16 @@ async function sendMark(o) {
     try { await post(PETS[o.cls], { mode: 'add', names: [o.full], reason: '訂正取消', pts: -o.refund, src: '訂正紀錄' }); toast(nick + ' 寵物蛋 -' + o.refund); }
     catch (e) { if (e.net) throw e; toast('⚠ 寵物蛋沒扣回（' + nick + ' -' + o.refund + '），跟浩克說'); }
   }
+}
+
+// 2026-11-28 SUNNY：「表現很棒」連動寵物蛋（當天第一次 +2、之後每次 +1，點數在寵物蛋「設定」）
+// 寵物蛋後台照「這天按了幾次」補到該有的數，重送不會重複加；按 −1／清掉＝扣回按錯的
+async function sendGood(o) {
+  if (o.good == null || !PETS[o.cls]) return;
+  const d = S.all[o.cls], nick = ((d.roster.find(r => r.full === o.full) || {}).nick) || o.full;
+  try { const r = await post(PETS[o.cls], { mode: 'good', name: o.full, date: o.date, n: o.good, src: '課堂狀況' });
+    if (r.pts) toast('🐾 ' + nick + ' 寵物蛋 ' + (r.pts > 0 ? '+' : '') + r.pts); }
+  catch (e) { if (e.net) throw e; toast('⚠ 寵物蛋加點沒成功（' + nick + '），狀況有記到'); }
 }
 
 // 從後台拿全部班級；還沒上傳的動作疊回去（才不會一重新整理勾勾就不見）
@@ -508,7 +518,7 @@ function goWatch(i) {
   const w = S.watchView[i]; S.cls = w.cls; LS.set('cls', w.cls); LS.set('cat_' + w.cls, w.cat || 'jy'); LS.set('sel_' + w.cls + '_' + (w.cat || 'jy'), w.id); render();
 }
 
-// ---------- 📋 課堂狀況（2026-11-26 SUNNY：沒帶講義、沒帶作業、沒寫完、不認真、分心…；不跟寵物蛋連動） ----------
+// ---------- 📋 課堂狀況（2026-11-26 SUNNY：沒帶講義、沒帶作業、沒寫完、不認真、分心…；只有「表現很棒」連動寵物蛋加點，其他不扣點） ----------
 // 一個孩子一天一筆；編號＝班級|日期|姓名（離線重送、浩克補記都對到同一筆）
 const TAGS = [['沒帶講義', '📕', '#E5484D'], ['沒帶作業', '📒', '#F08C00'], ['作業沒寫完', '✏️', '#8E4EC6'],
   ['作業不認真', '🌀', '#0B84C6'], ['上課分心', '👀', '#1F9D63'], ['其他', '💬', '#64748B'], ['表現很棒', '🌟', '#E09B00']];
@@ -561,7 +571,8 @@ function stSave(clear) {
   d.notes = notesOf(d).filter(n => n.id !== id && !(n.date === date && n.full === full));
   if (tags.length || memo) d.notes.push({ id, cls: S.cls, date, full, tags, memo, src, at: Date.now(), local: 1 });
   S.q = S.q.filter(o => !(o.t === 'note' && o.id === id && !o.started));   // 還沒上傳的同一筆：用最新的就好
-  S.q.push({ t: 'note', cls: S.cls, id, date, full, tags, memo, src, at: Date.now() });
+  const g = cntOf(tags, GOOD), g0 = old ? cntOf(old.tags, GOOD) : 0;
+  S.q.push({ t: 'note', cls: S.cls, id, date, full, tags, memo, src, at: Date.now(), good: PETS[S.cls] && (g || g0) ? g : null });
   const nick = (d.roster.find(r => r.full === full) || {}).nick || full;
   toast(tags.length || memo ? '✓ ' + nick + ' 記好了' : nick + ' 的紀錄清掉了');
   saveAll(); saveQ(); render(); flush();
@@ -621,6 +632,7 @@ function stSheet() {
       return `<div class="stb multi ${t === GOOD ? 'good' : ''} ${k ? 'on' : ''}" style="--c:${c}" role="button" onclick="stMulti('${t}',1)">${t === GOOD ? '<img src="good.png" alt="">' : ''}<span class="lb">${t}</span>${k ? `<b class="x">×${k}</b><button class="minus" onclick="event.stopPropagation();stMulti('${t}',-1)">−1</button>` : '<span class="ck plus">＋</span>'}</div>`;
     }).join('')}</div>
     <input id="stmemo" class="memo" type="text" maxlength="60" value="${esc(m.memo)}" placeholder="備註（可不填）例如：放在安親班">
+    ${PETS[S.cls] ? '<div class="strecent">🐾 表現很棒會幫寵物蛋加點（當天第一次 +2，之後每次 +1）</div>' : ''}
     <div class="strecent">${rec.length ? '最近 2 週其他天：' + TAGS.filter(t => cnt[t[0]]).map(t => t[0] + ' ' + cnt[t[0]] + ' 次').join('、') : '最近 2 週其他天沒有狀況'}</div>
     <div class="row">${noteOf(d, date, m.st) ? '<button class="btn danger" onclick="stSave(true)">清掉</button>' : ''}<button class="btn main big" onclick="stSave()">好了</button></div>
   </div></div>`;
@@ -771,7 +783,7 @@ if (S.key) { render(); flush(); if (!S.q.length) loadAll(true); } else render();
 // 離線也打得開：service worker 把網頁存在平板（要先連網打開過一次）
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 // 自動換新版：iPad Safari／主畫面會暫存舊網頁，開啟時偷偷抓最新的比對版本，不一樣就自動重新載入（VER 由 tasks.cjs deploy 蓋上）
-const VER = '202611261100';
+const VER = '202611281659';
 async function checkNew() {
   if (VER.startsWith('__') || !navigator.onLine) return;
   try {
